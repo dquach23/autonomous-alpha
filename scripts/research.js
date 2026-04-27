@@ -14,15 +14,42 @@ const OUTPUT_PATH = path.join(__dirname, "../public/picks.json");
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+// 100-stock universe covering all major sectors and market caps
 const STOCK_UNIVERSE = [
+  // ── Mega-Cap Tech / AI / Semiconductors (20) ──
   "NVDA","MSFT","AAPL","AMZN","GOOGL","META","TSLA","AVGO","TSM","AMD",
+  "QCOM","MU","ARM","MRVL","ANET","ORCL","ADBE","INTU","NFLX","UBER",
+
+  // ── Cybersecurity / Cloud / Enterprise SaaS (8) ──
+  "PANW","CRWD","ZS","PLTR","SNOW","CRM","NOW","NET",
+
+  // ── Healthcare / Biotech / MedTech (15) ──
   "LLY","NVO","UNH","JNJ","ABBV","MRK","PFE","AMGN",
+  "ISRG","BSX","TMO","VRTX","REGN","GILD","ELV",
+
+  // ── Financials / Fintech (10) ──
   "BRK.B","JPM","BAC","GS","MS","V","MA",
-  "XOM","CVX","OXY","SLB","EOG",
+  "AXP","BLK","SPGI",
+
+  // ── Energy / Oil & Gas / Pipelines (8) ──
+  "XOM","CVX","OXY","SLB","EOG","COP","MPC","WMB",
+
+  // ── Industrials / Defense / Aerospace (10) ──
   "ETN","NEE","PWR","VST","CEG",
-  "PANW","CRWD","ZS","PLTR","SNOW","CRM","NOW",
+  "RTX","LMT","NOC","CAT","GE",
+
+  // ── Consumer Discretionary / Staples / Retail (10) ──
   "COST","WMT","HD","TJX","SBUX",
-  "EMR","CAT","DE","HON","GE",
+  "NKE","MCD","LOW","TGT","BKNG",
+
+  // ── Industrials / Diversified / Materials (9) ──
+  "EMR","HON","DE","LIN","APD","NEM","FCX","ALB","SHW",
+
+  // ── REITs / Infrastructure (5) ──
+  "AMT","PLD","EQIX","WELL","O",
+
+  // ── High-Growth / Emerging Leaders (5) ──
+  "ALAB","ONTO","FLUT","CELH","ENPH",
 ];
 
 const TODAY = new Date().toDateString();
@@ -152,8 +179,8 @@ async function runPhase(phaseConfig) {
   console.log(`\n  🔍 Running: ${phaseConfig.label}...`);
 
   const response = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 1500,
+    model: "claude-sonnet-4-6",
+    max_tokens: 2000,
     tools: [{ type: "web_search_20250305", name: "web_search" }],
     system: `You are an autonomous financial research AI. Today is ${TODAY}. 
 Use web search to find CURRENT, REAL market data and news. Be specific and data-driven. 

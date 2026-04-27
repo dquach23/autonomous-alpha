@@ -197,9 +197,6 @@ export default function App() {
       paddingBottom: 80,
     }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800;900&family=DM+Mono:wght@400;500&display=swap');
-        * { box-sizing:border-box; margin:0; padding:0; }
-        body { background:#070910; }
         button { font-family:inherit; }
         ::-webkit-scrollbar { width:3px; }
         ::-webkit-scrollbar-thumb { background:#1a2035; border-radius:2px; }
@@ -224,18 +221,12 @@ export default function App() {
               AUTONOMOUS ALPHA
             </div>
             <div style={{ fontSize:10, color:C.muted, letterSpacing:"0.1em", fontWeight:600 }}>
-              AI STOCK INTELLIGENCE · AUTO-UPDATED DAILY
+              AI STOCK INTELLIGENCE · AUTO-UPDATED WEEKLY
             </div>
           </div>
-          <div style={{display:"flex",alignItems:"center",gap:8}}>
           {data?.macroOutlook && data.macroOutlook !== "Pending" && (
             <Tag color={outlookColor}>{data.macroOutlook}</Tag>
           )}
-          <button onClick={()=>loadData(true)} disabled={refreshing} title="Refresh"
-            style={{background:"none",border:'1px solid '+C.border,borderRadius:8,padding:"5px 10px",cursor:"pointer",color:refreshing?C.muted:C.accent,fontSize:16,lineHeight:1,opacity:refreshing?0.5:1,transition:"all 0.2s"}}>
-            {refreshing ? "⏳" : "↻"}
-          </button>
-        </div>
         </div>
 
         {/* Tab bar */}
@@ -301,7 +292,7 @@ export default function App() {
                 <div style={{ fontSize:40, marginBottom:12 }}>📡</div>
                 <div style={{ fontWeight:700, color:C.text, marginBottom:8 }}>Awaiting First Run</div>
                 <div style={{ color:C.muted, fontSize:13, lineHeight:1.7 }}>
-                  The GitHub Actions workflow runs 3x daily on weekdays (9 AM, 1 PM & 5 PM ET).{"\n"}
+                  The GitHub Actions workflow runs every Sunday at 8:00 AM UTC.{"\n"}
                   You can also trigger it manually from your GitHub repository's Actions tab.
                 </div>
               </Card>
@@ -360,9 +351,9 @@ export default function App() {
               <Card style={{ marginBottom:10 }}>
                 <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
                   {[
-                    { icon:"📡", title:"Autonomous Research", desc:"3x daily on weekdays (9 AM, 1 PM & 5 PM ET), a GitHub Actions workflow automatically runs a 6-phase AI research cycle using Claude AI with live web search." },
+                    { icon:"📡", title:"Autonomous Research", desc:"Every Sunday at 8 AM UTC, a GitHub Actions workflow automatically runs a 6-phase AI research cycle using Claude AI with live web search." },
                     { icon:"🔍", title:"6 Research Phases", desc:"Macro climate → Sector rotation → Price momentum → Smart money tracking → Risk assessment → Final picks synthesis." },
-                    { icon:"🏆", title:"Top 5 Picks", desc:"The AI synthesizes all research to select the 5 best stocks for a minimum 1-year hold, scored 0-100 with rationale and risk." },
+                    { icon:"🏆", title:"Top 5 Picks", desc:"The AI synthesizes all research to select the 5 best stocks from a 100-stock universe for a minimum 1-year hold, scored 0-100 with rationale and risk." },
                     { icon:"📱", title:"Always Fresh", desc:"This app reads from picks.json which is automatically updated in GitHub after every weekly cycle. Pull down to refresh." },
                     { icon:"⚡", title:"Manual Trigger", desc:"Don't want to wait until Sunday? Go to your GitHub repo → Actions → Weekly Stock Research → Run workflow." },
                   ].map(item => (
@@ -381,31 +372,38 @@ export default function App() {
             <Section title="Stock Universe">
               <Card>
                 <div style={{ fontSize:12, color:C.muted, lineHeight:1.7, marginBottom:10 }}>
-                  The AI researches and selects from this curated universe of 50 high-quality stocks across all major sectors:
+                  The AI researches and selects from this curated universe of 100 high-quality stocks across all major sectors:
                 </div>
-                <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
-                  {[
-                    "NVDA","MSFT","AAPL","AMZN","GOOGL","META","TSLA","AVGO","TSM","AMD",
-                    "LLY","NVO","UNH","JNJ","ABBV","MRK","PFE","AMGN",
-                    "BRK.B","JPM","BAC","GS","MS","V","MA",
-                    "XOM","CVX","OXY","SLB","EOG",
-                    "ETN","NEE","PWR","VST","CEG",
-                    "PANW","CRWD","ZS","PLTR","SNOW","CRM","NOW",
-                    "COST","WMT","HD","TJX","SBUX",
-                    "EMR","CAT","DE","HON","GE",
-                  ].map(t => <Tag key={t} color={C.accent}>{t}</Tag>)}
-                </div>
+                {[
+                  { label:"Mega-Cap Tech / AI / Semis", color:C.accent, tickers:["NVDA","MSFT","AAPL","AMZN","GOOGL","META","TSLA","AVGO","TSM","AMD","QCOM","MU","ARM","MRVL","ANET","ORCL","ADBE","INTU","NFLX","UBER"] },
+                  { label:"Cybersecurity / Cloud / SaaS", color:C.blue, tickers:["PANW","CRWD","ZS","PLTR","SNOW","CRM","NOW","NET"] },
+                  { label:"Healthcare / Biotech / MedTech", color:C.purple, tickers:["LLY","NVO","UNH","JNJ","ABBV","MRK","PFE","AMGN","ISRG","BSX","TMO","VRTX","REGN","GILD","ELV"] },
+                  { label:"Financials / Fintech", color:C.gold, tickers:["BRK.B","JPM","BAC","GS","MS","V","MA","AXP","BLK","SPGI"] },
+                  { label:"Energy / Oil & Gas / Pipelines", color:C.orange, tickers:["XOM","CVX","OXY","SLB","EOG","COP","MPC","WMB"] },
+                  { label:"Industrials / Defense / Aerospace", color:C.blue, tickers:["ETN","NEE","PWR","VST","CEG","RTX","LMT","NOC","CAT","GE"] },
+                  { label:"Consumer / Retail", color:C.accent, tickers:["COST","WMT","HD","TJX","SBUX","NKE","MCD","LOW","TGT","BKNG"] },
+                  { label:"Materials / Diversified Industrial", color:C.muted, tickers:["EMR","HON","DE","LIN","APD","NEM","FCX","ALB","SHW"] },
+                  { label:"REITs / Infrastructure", color:C.purple, tickers:["AMT","PLD","EQIX","WELL","O"] },
+                  { label:"High-Growth / Emerging Leaders", color:C.red, tickers:["ALAB","ONTO","FLUT","CELH","ENPH"] },
+                ].map(group => (
+                  <div key={group.label} style={{ marginBottom:12 }}>
+                    <div style={{ fontSize:10, color:group.color, fontWeight:700, letterSpacing:"0.08em", marginBottom:6, textTransform:"uppercase" }}>{group.label}</div>
+                    <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
+                      {group.tickers.map(t => <Tag key={t} color={group.color}>{t}</Tag>)}
+                    </div>
+                  </div>
+                ))}
               </Card>
             </Section>
 
             <Section title="System Info">
               <Card>
                 {[
-                  ["Research schedule", "3x daily on weekdays (9 AM, 1 PM, 5 PM ET)"],
+                  ["Research schedule", "Every Sunday 8:00 AM UTC"],
                   ["AI model", "Claude Sonnet (Anthropic)"],
                   ["Web search", "Live data via Anthropic tools"],
                   ["Minimum hold", "1 year (ideally 3–5 years)"],
-                  ["Universe size", "50 curated stocks"],
+                  ["Universe size", "100 curated stocks"],
                   ["Research phases", "6 sequential phases"],
                 ].map(([k, v]) => (
                   <div key={k} style={{ display:"flex", justifyContent:"space-between", padding:"8px 0", borderBottom:`1px solid ${C.border}` }}>
