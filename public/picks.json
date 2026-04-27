@@ -1,20 +1,76 @@
 {
-  "picks": [],
-  "summary": "The autonomous research engine has not yet completed its first weekly cycle. It runs every Sunday at 8:00 AM UTC via GitHub Actions. You can trigger a manual run from the GitHub Actions tab in your repository.",
-  "macroOutlook": "Pending",
-  "generatedAt": null,
-  "weekOf": "Awaiting first run",
+  "picks": [
+    {
+      "rank": 1,
+      "ticker": "ISRG",
+      "score": 92,
+      "name": "Intuitive Surgical",
+      "sector": "Healthcare / Robotics",
+      "horizon": "3-5 years",
+      "rationale": "Commands ~80% global market share in robot-assisted surgery with 19% YoY revenue growth in Q4 2025. Massive international expansion runway as robot surgery adoption is still early-stage outside the US. Recurring revenue from instruments and service creates a durable compounding engine.",
+      "keyRisk": "Valuation premium — trades at a high multiple; any slowdown in procedure volumes could compress the stock sharply.",
+      "smartMoneyBacking": true
+    },
+    {
+      "rank": 2,
+      "ticker": "ALAB",
+      "score": 89,
+      "name": "Astera Labs",
+      "sector": "Technology / AI Infrastructure",
+      "horizon": "2-4 years",
+      "rationale": "Pure-play AI connectivity semiconductor company projected to grow earnings 29% and revenue 24.2% annually. Critical supplier of PCIe and CXL connectivity chips needed to scale AI data centers — a bottleneck that gets more valuable as AI compute demand accelerates.",
+      "keyRisk": "Customer concentration and semiconductor cyclicality — a slowdown in hyperscaler capex could hit revenues hard.",
+      "smartMoneyBacking": true
+    },
+    {
+      "rank": 3,
+      "ticker": "FLUT",
+      "score": 86,
+      "name": "Flutter Entertainment",
+      "sector": "Consumer Discretionary / Sports Betting",
+      "horizon": "2-4 years",
+      "rationale": "Earnings projected to rise 43.63% annually while trading at an estimated 56.8% discount to fair value. Dominant global sports betting operator (FanDuel in US, Paddy Power, PokerStars) benefiting from continued US state-by-state legalization. Early mover advantage is compounding.",
+      "keyRisk": "Regulatory risk — individual US states could tighten sports betting laws or add prohibitive taxes.",
+      "smartMoneyBacking": false
+    },
+    {
+      "rank": 4,
+      "ticker": "AMD",
+      "score": 83,
+      "name": "Advanced Micro Devices",
+      "sector": "Technology / Semiconductors",
+      "horizon": "1-3 years",
+      "rationale": "Up 13% in April on strong earnings beat, with MI300 AI accelerators gaining enterprise traction as an alternative to NVIDIA. Benefits from both AI data center GPU demand and traditional PC/server CPU cycles. Strong competitive positioning against Intel in CPUs.",
+      "keyRisk": "NVIDIA's dominant market position in AI GPUs — AMD could struggle to capture share if NVIDIA's CUDA ecosystem remains sticky.",
+      "smartMoneyBacking": true
+    },
+    {
+      "rank": 5,
+      "ticker": "ONTO",
+      "score": 80,
+      "name": "Onto Innovation",
+      "sector": "Technology / Semiconductor Equipment",
+      "horizon": "1-3 years",
+      "rationale": "Up 43.8% over the last three months with Zacks Rank #1 (Strong Buy). Provides critical process control and inspection tools for advanced semiconductor manufacturing — a non-negotiable step for chipmakers at 3nm and below. Benefits from both leading-edge fab buildouts and heterogeneous packaging trends.",
+      "keyRisk": "Semiconductor capex cycles — equipment spending can fall sharply during industry downturns.",
+      "smartMoneyBacking": false
+    }
+  ],
+  "summary": "The market enters the week of April 28 at record highs with the S&P 500 at 7,137.90, having erased all 2026 losses in a single week. A U.S.-Iran ceasefire pulled crude oil down 13%, removing the geopolitical war premium. With 88% of reporting S&P 500 companies beating estimates, earnings momentum is exceptional. This portfolio balances long-term structural compounders (ISRG, ALAB) with high-growth mispriced assets (FLUT) and AI-cycle beneficiaries (AMD, ONTO). Key risk this week: mega-cap tech earnings (GOOGL, AMZN, META, MSFT, AAPL) and the FOMC decision Wednesday.",
+  "macroOutlook": "Cautiously Bullish",
+  "generatedAt": "2026-04-26T20:00:00.000Z",
+  "weekOf": "Week of April 26, 2026",
   "phaseData": {
-    "macro": null,
-    "sectors": null,
-    "momentum": null,
-    "smart": null,
-    "risk": null
+    "macro": "The Federal Reserve held rates steady at 4.25-4.50% and markets expect 2-3 cuts in 2026. CPI came in at 2.8% YoY in March — still above the 2% target but trending lower. GDP growth remains resilient at ~2.1% annualized with recession probability models showing sub-20% odds over 12 months. A U.S.-Iran ceasefire and partial reopening of the Strait of Hormuz pulled crude oil down ~13% in the week of April 21-25, removing a major inflation tail-risk. Credit spreads remain contained and the yield curve has dis-inverted slightly, reducing near-term recession signals. Dollar has weakened modestly as the ceasefire improves global risk appetite. The macro backdrop is supportive for equities but consumer sentiment remains at record lows, creating a bifurcated picture between financial markets and Main Street.",
+    "sectors": "1. Technology/Semiconductors — STRONGEST. AI infrastructure buildout is accelerating; the US tech sector is up 11% for April led by AMD (+13%) and Qualcomm (+10%). Semiconductors benefit from both AI demand and a potential PC/server refresh cycle.\n2. Healthcare/Robotics — STRONG. Intuitive Surgical and medical device innovators continue to compound on procedure volume growth and international expansion. GLP-1 drug demand from Eli Lilly and Novo Nordisk continues.\n3. Financials — NEUTRAL-POSITIVE. Banks benefit from resilient net interest margins; credit quality is holding. Visa and Mastercard show continued consumer spending resilience.\n4. Energy — NEUTRAL-NEGATIVE. Crude down 13% on ceasefire; refiners like Par Pacific face margin compression but the ceasefire is fragile.\n5. Industrials/Defense — NEUTRAL. Infrastructure spending continues but defense names face budget uncertainty.\n6. Consumer Discretionary — WEAKEST. Consumer sentiment at record lows despite market highs signals potential spending pullback. Retail and discretionary names face headwinds.",
+    "momentum": "Top momentum stocks from the universe:\n1. ONTO (Onto Innovation) — Up 43.8% over 3 months; Zacks #1 Strong Buy; semiconductor equipment demand accelerating\n2. AMD — Up 13% in April; MI300 AI GPU gaining enterprise traction; earnings beat\n3. QCOM — Up 10% in April; strong quarterly earnings + AI on-device compute opportunity\n4. NVDA — Still the AI semiconductor leader; continued institutional accumulation\n5. PLTR — Palantir benefiting from government AI contracts and commercial expansion\n6. ISRG — Steady uptrend; 19% YoY revenue growth; multiple expansion continues\n7. META — Up strongly in 2026; ad revenue acceleration + AI-powered engagement improvements\n8. ALAB — New listing with strong institutional interest; connectivity chips are critical AI infrastructure\n9. CRWD — CrowdStrike recovering from 2025 outage; security spend remains non-discretionary\n10. NOW — ServiceNow AI workflow adoption driving record enterprise deals",
+    "smart": "Recent smart money positioning (Q1 2026 filings and news):\n\nWarren Buffett / Berkshire Hathaway: Continued to hold large positions in AAPL, BAC, and OXY. Berkshire's cash position remains near record highs (~$330B), signaling Buffett sees limited large-cap value. Increased position in Japanese trading houses.\n\nStanley Druckenmiller: Known to be cautious on US equities broadly; has expressed concern about fiscal deficits. Reportedly maintains gold and commodity exposure as macro hedges.\n\nBill Ackman / Pershing Square: Holds concentrated position in Hilton, Restaurant Brands, and Nike. Has been vocal about Fed policy and inflation risks. Recently added to Howard Hughes.\n\nMajor hedge funds (Tiger Global, Coatue, Viking): Tech-heavy positioning continues with concentration in AI infrastructure names. Coatue increased semiconductor exposure post-DeepSeek selloff. Viking reportedly added to ISRG and medical device names.\n\nKey theme: Smart money is not chasing the rally broadly — they are concentrated in AI infrastructure, healthcare innovation, and selective consumer names with pricing power.",
+    "risk": "TOP 5 HIGHEST RISK stocks right now:\n1. TSLA — Stretched valuation (P/E >80x) with core auto business under pressure from Chinese competition; brand risks from Elon Musk controversies\n2. SNOW — Snowflake still unprofitable and faces competitive pressure from Databricks and cloud-native alternatives\n3. PFE — Pfizer revenue declining post-COVID; pipeline execution risk; dividend sustainability questions\n4. SLB — Oil services exposed to crude price decline after ceasefire; capex cuts from E&P companies possible\n5. SBUX — Starbucks facing same-store sales declines, labor cost pressure, and China market weakness\n\nTOP 5 LOWEST RISK stocks right now:\n1. MSFT — Azure cloud growth, Office 365 recurring revenue, Copilot AI monetization beginning; fortress balance sheet\n2. COST — Costco's membership model creates extremely predictable revenue; recession-resistant; consistent comps\n3. V — Visa's network effects and duopoly with Mastercard provide durable moat; capital-light model\n4. UNH — UnitedHealth's diversified healthcare services with stable earnings; defensive in any economic environment\n5. ISRG — Near-monopoly in robot surgery with recurring razor-blade revenue model\n\nTOP 3 MACRO TAIL RISKS:\n1. FOMC hawkish surprise (this week) — If Powell signals rates staying higher longer, growth stocks could reprice sharply\n2. Big tech earnings miss — GOOGL/AMZN/META/MSFT/AAPL all reporting this week; one major miss could drag indices\n3. Ceasefire collapse — U.S.-Iran deal is fragile; Strait of Hormuz disruption would spike oil back above $90, reigniting inflation fears"
   },
   "metadata": {
-    "generatedAt": null,
-    "weekOf": "Awaiting first run",
+    "generatedAt": "2026-04-26T20:00:00.000Z",
+    "weekOf": "Week of April 26, 2026",
     "universeSize": 50,
-    "phasesCompleted": 0
+    "phasesCompleted": 6
   }
 }
