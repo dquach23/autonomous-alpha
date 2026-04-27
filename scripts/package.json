@@ -1,0 +1,13 @@
+{
+  "name": "autonomous-alpha-research",
+  "version": "1.0.0",
+  "description": "Autonomous stock research script powered by Claude AI",
+  "type": "module",
+  "scripts": {
+    "start": "node research.js",
+    "test": "node research.js --dry-run"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0"
+  }
+}
