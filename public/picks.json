@@ -1,0 +1,20 @@
+{
+  "picks": [],
+  "summary": "The autonomous research engine has not yet completed its first weekly cycle. It runs every Sunday at 8:00 AM UTC via GitHub Actions. You can trigger a manual run from the GitHub Actions tab in your repository.",
+  "macroOutlook": "Pending",
+  "generatedAt": null,
+  "weekOf": "Awaiting first run",
+  "phaseData": {
+    "macro": null,
+    "sectors": null,
+    "momentum": null,
+    "smart": null,
+    "risk": null
+  },
+  "metadata": {
+    "generatedAt": null,
+    "weekOf": "Awaiting first run",
+    "universeSize": 50,
+    "phasesCompleted": 0
+  }
+}
