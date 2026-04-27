@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-// ââ Palette âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── Palette ───────────────────────────────────────────────────────────────────
 const C = {
   bg:      "#070910",
   surface: "#0d1018",
@@ -25,9 +25,9 @@ const OUTLOOK_COLOR = {
   "Pending": C.muted,
 };
 
-// ââ Helpers âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function formatDate(iso) {
-  if (!iso) return "â";
+  if (!iso) return "—";
   return new Date(iso).toLocaleDateString("en-US", {
     month: "long", day: "numeric", year: "numeric",
     hour: "2-digit", minute: "2-digit",
@@ -74,7 +74,7 @@ function Section({ title, children }) {
   );
 }
 
-// ââ Stock Pick Card âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── Stock Pick Card ───────────────────────────────────────────────────────────
 function PickCard({ pick }) {
   const [expanded, setExpanded] = useState(false);
   const rankColor = [C.gold, "#c0c0c0", "#cd7f32", C.accent, C.blue][pick.rank - 1] || C.accent;
@@ -100,7 +100,7 @@ function PickCard({ pick }) {
           </div>
           <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4 }}>
             <Tag color={rankColor}>Score {pick.score}/100</Tag>
-            {pick.smartMoneyBacking && <Tag color={C.purple}>Smart Money â</Tag>}
+            {pick.smartMoneyBacking && <Tag color={C.purple}>Smart Money ✓</Tag>}
           </div>
         </div>
 
@@ -120,12 +120,12 @@ function PickCard({ pick }) {
           onClick={() => setExpanded(!expanded)}
           style={{ background:"none", border:"none", color: C.muted, fontSize:11, cursor:"pointer", padding:0, display:"flex", alignItems:"center", gap:4 }}
         >
-          {expanded ? "â²" : "â¼"} {expanded ? "Hide" : "Show"} key risk
+          {expanded ? "▲" : "▼"} {expanded ? "Hide" : "Show"} key risk
         </button>
 
         {expanded && (
           <div style={{ marginTop:8, background:`${C.red}10`, border:`1px solid ${C.red}20`, borderRadius:6, padding:"8px 10px" }}>
-            <span style={{ fontSize:11, color:C.red, fontWeight:700 }}>â  KEY RISK: </span>
+            <span style={{ fontSize:11, color:C.red, fontWeight:700 }}>⚠ KEY RISK: </span>
             <span style={{ fontSize:12, color:`${C.red}cc` }}>{pick.keyRisk}</span>
           </div>
         )}
@@ -134,7 +134,7 @@ function PickCard({ pick }) {
   );
 }
 
-// ââ Phase Detail ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── Phase Detail ──────────────────────────────────────────────────────────────
 function PhaseDetail({ label, icon, color, content }) {
   const [open, setOpen] = useState(false);
   if (!content) return null;
@@ -150,7 +150,7 @@ function PhaseDetail({ label, icon, color, content }) {
       >
         <span style={{ fontSize:16 }}>{icon}</span>
         <span style={{ flex:1, fontSize:13, fontWeight:700, color: open ? color : C.text }}>{label}</span>
-        <span style={{ color: C.muted, fontSize:12 }}>{open ? "â²" : "â¼"}</span>
+        <span style={{ color: C.muted, fontSize:12 }}>{open ? "▲" : "▼"}</span>
       </button>
       {open && (
         <div style={{
@@ -158,7 +158,7 @@ function PhaseDetail({ label, icon, color, content }) {
           borderRadius:"0 0 10px 10px", padding:"14px 16px",
         }}>
           <p style={{ color: C.muted, fontSize:12.5, lineHeight:1.8, whiteSpace:"pre-wrap", margin:0 }}>
-            {content.length > 1200 ? content.slice(0, 1200) + "â¦" : content}
+            {content.length > 1200 ? content.slice(0, 1200) + "…" : content}
           </p>
         </div>
       )}
@@ -166,14 +166,14 @@ function PhaseDetail({ label, icon, color, content }) {
   );
 }
 
-// ââ Tabs ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── Tabs ──────────────────────────────────────────────────────────────────────
 const TABS = [
-  { id:"picks",    label:"ð Picks"    },
-  { id:"research", label:"ð¬ Research" },
-  { id:"about",    label:"â¹ï¸ About"    },
+  { id:"picks",    label:"🏆 Picks"    },
+  { id:"research", label:"🔬 Research" },
+  { id:"about",    label:"ℹ️ About"    },
 ];
 
-// ââ Main App ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── Main App ──────────────────────────────────────────────────────────────────
 export default function App() {
   const [data, setData]   = useState(null);
   const [error, setError] = useState(null);
@@ -208,7 +208,7 @@ export default function App() {
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
       `}</style>
 
-      {/* ââ Header ââ */}
+      {/* ── Header ── */}
       <div style={{
         background: C.surface, borderBottom:`1px solid ${C.border}`,
         padding:"env(safe-area-inset-top, 0px) 20px 0",
@@ -224,12 +224,18 @@ export default function App() {
               AUTONOMOUS ALPHA
             </div>
             <div style={{ fontSize:10, color:C.muted, letterSpacing:"0.1em", fontWeight:600 }}>
-              AI STOCK INTELLIGENCE Â· AUTO-UPDATED DAILY
+              AI STOCK INTELLIGENCE · AUTO-UPDATED DAILY
             </div>
           </div>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
           {data?.macroOutlook && data.macroOutlook !== "Pending" && (
             <Tag color={outlookColor}>{data.macroOutlook}</Tag>
           )}
+          <button onClick={()=>loadData(true)} disabled={refreshing} title="Refresh"
+            style={{background:"none",border:'1px solid '+C.border,borderRadius:8,padding:"5px 10px",cursor:"pointer",color:refreshing?C.muted:C.accent,fontSize:16,lineHeight:1,opacity:refreshing?0.5:1,transition:"all 0.2s"}}>
+            {refreshing ? "⏳" : "↻"}
+          </button>
+        </div>
         </div>
 
         {/* Tab bar */}
@@ -249,24 +255,24 @@ export default function App() {
         </div>
       </div>
 
-      {/* ââ Content ââ */}
+      {/* ── Content ── */}
       <div style={{ padding:"20px 16px", animation:"fadeIn 0.3s ease" }}>
 
         {loading && (
           <div style={{ textAlign:"center", padding:"60px 0" }}>
             <div style={{ width:32, height:32, border:`3px solid ${C.accent}`, borderTopColor:"transparent", borderRadius:"50%", animation:"spin 0.8s linear infinite", margin:"0 auto 16px" }} />
-            <div style={{ color:C.muted, fontSize:14 }}>Loading picksâ¦</div>
+            <div style={{ color:C.muted, fontSize:14 }}>Loading picks…</div>
           </div>
         )}
 
         {error && (
           <Card accent={C.red}>
-            <div style={{ color:C.red, fontWeight:700, marginBottom:6 }}>â  Load Error</div>
+            <div style={{ color:C.red, fontWeight:700, marginBottom:6 }}>⚠ Load Error</div>
             <div style={{ color:C.muted, fontSize:13 }}>{error}</div>
           </Card>
         )}
 
-        {/* ââ PICKS TAB ââ */}
+        {/* ── PICKS TAB ── */}
         {!loading && !error && tab === "picks" && (
           <>
             {/* Week header */}
@@ -292,7 +298,7 @@ export default function App() {
             {/* No picks yet */}
             {(!data?.picks || data.picks.length === 0) && (
               <Card style={{ textAlign:"center", padding:"40px 20px" }}>
-                <div style={{ fontSize:40, marginBottom:12 }}>ð¡</div>
+                <div style={{ fontSize:40, marginBottom:12 }}>📡</div>
                 <div style={{ fontWeight:700, color:C.text, marginBottom:8 }}>Awaiting First Run</div>
                 <div style={{ color:C.muted, fontSize:13, lineHeight:1.7 }}>
                   The GitHub Actions workflow runs 3x daily on weekdays (9 AM, 1 PM & 5 PM ET).{"\n"}
@@ -309,13 +315,13 @@ export default function App() {
             {/* Disclaimer */}
             <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:"12px 14px", marginTop:8 }}>
               <div style={{ fontSize:10, color:C.muted, lineHeight:1.7 }}>
-                â ï¸ <strong style={{ color:C.muted }}>Not financial advice.</strong> AI-generated research for informational purposes only. Always conduct your own due diligence. Investing involves risk of loss.
+                ⚠️ <strong style={{ color:C.muted }}>Not financial advice.</strong> AI-generated research for informational purposes only. Always conduct your own due diligence. Investing involves risk of loss.
               </div>
             </div>
           </>
         )}
 
-        {/* ââ RESEARCH TAB ââ */}
+        {/* ── RESEARCH TAB ── */}
         {!loading && !error && tab === "research" && (
           <>
             <div style={{ marginBottom:16, color:C.muted, fontSize:13 }}>
@@ -323,11 +329,11 @@ export default function App() {
             </div>
 
             {[
-              { id:"macro",    label:"Macro Climate",         icon:"ð", color:C.blue   },
-              { id:"sectors",  label:"Sector Rotation",       icon:"âï¸",  color:C.gold   },
-              { id:"momentum", label:"Price & Earnings Momentum", icon:"ð", color:C.accent },
-              { id:"smart",    label:"Smart Money Tracking",  icon:"ð§ ", color:C.purple },
-              { id:"risk",     label:"Risk Assessment",       icon:"ð¡ï¸",  color:C.red    },
+              { id:"macro",    label:"Macro Climate",         icon:"🌍", color:C.blue   },
+              { id:"sectors",  label:"Sector Rotation",       icon:"⚙️",  color:C.gold   },
+              { id:"momentum", label:"Price & Earnings Momentum", icon:"📈", color:C.accent },
+              { id:"smart",    label:"Smart Money Tracking",  icon:"🧠", color:C.purple },
+              { id:"risk",     label:"Risk Assessment",       icon:"🛡️",  color:C.red    },
             ].map(ph => (
               <PhaseDetail
                 key={ph.id}
@@ -340,25 +346,25 @@ export default function App() {
 
             {!data?.phaseData?.macro && (
               <div style={{ textAlign:"center", padding:"40px 0", color:C.muted }}>
-                <div style={{ fontSize:32, marginBottom:8 }}>ð¬</div>
+                <div style={{ fontSize:32, marginBottom:8 }}>🔬</div>
                 Research data will appear here after the first GitHub Actions run.
               </div>
             )}
           </>
         )}
 
-        {/* ââ ABOUT TAB ââ */}
+        {/* ── ABOUT TAB ── */}
         {tab === "about" && (
           <>
             <Section title="How It Works">
               <Card style={{ marginBottom:10 }}>
                 <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
                   {[
-                    { icon:"ð¡", title:"Autonomous Research", desc:"3x daily on weekdays (9 AM, 1 PM & 5 PM ET), a GitHub Actions workflow automatically runs a 6-phase AI research cycle using Claude AI with live web search." },
-                    { icon:"ð", title:"6 Research Phases", desc:"Macro climate â Sector rotation â Price momentum â Smart money tracking â Risk assessment â Final picks synthesis." },
-                    { icon:"ð", title:"Top 5 Picks", desc:"The AI synthesizes all research to select the 5 best stocks for a minimum 1-year hold, scored 0-100 with rationale and risk." },
-                    { icon:"ð±", title:"Always Fresh", desc:"This app reads from picks.json which is automatically updated in GitHub after every weekly cycle. Pull down to refresh." },
-                    { icon:"â¡", title:"Manual Trigger", desc:"Don't want to wait until Sunday? Go to your GitHub repo â Actions â Weekly Stock Research â Run workflow." },
+                    { icon:"📡", title:"Autonomous Research", desc:"3x daily on weekdays (9 AM, 1 PM & 5 PM ET), a GitHub Actions workflow automatically runs a 6-phase AI research cycle using Claude AI with live web search." },
+                    { icon:"🔍", title:"6 Research Phases", desc:"Macro climate → Sector rotation → Price momentum → Smart money tracking → Risk assessment → Final picks synthesis." },
+                    { icon:"🏆", title:"Top 5 Picks", desc:"The AI synthesizes all research to select the 5 best stocks for a minimum 1-year hold, scored 0-100 with rationale and risk." },
+                    { icon:"📱", title:"Always Fresh", desc:"This app reads from picks.json which is automatically updated in GitHub after every weekly cycle. Pull down to refresh." },
+                    { icon:"⚡", title:"Manual Trigger", desc:"Don't want to wait until Sunday? Go to your GitHub repo → Actions → Weekly Stock Research → Run workflow." },
                   ].map(item => (
                     <div key={item.title} style={{ display:"flex", gap:12, paddingBottom:14, borderBottom:`1px solid ${C.border}` }}>
                       <span style={{ fontSize:20, flexShrink:0 }}>{item.icon}</span>
@@ -398,7 +404,7 @@ export default function App() {
                   ["Research schedule", "3x daily on weekdays (9 AM, 1 PM, 5 PM ET)"],
                   ["AI model", "Claude Sonnet (Anthropic)"],
                   ["Web search", "Live data via Anthropic tools"],
-                  ["Minimum hold", "1 year (ideally 3â5 years)"],
+                  ["Minimum hold", "1 year (ideally 3–5 years)"],
                   ["Universe size", "50 curated stocks"],
                   ["Research phases", "6 sequential phases"],
                 ].map(([k, v]) => (
