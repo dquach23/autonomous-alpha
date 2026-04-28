@@ -12,7 +12,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const OUTPUT_PATH = path.join(__dirname, "../public/picks.json");
+const PUBLIC_DIR  = path.join(__dirname, "../public");
+const OUTPUT_PATH = path.join(PUBLIC_DIR, "picks.json");
 const REPORTS_DIR = path.join(__dirname, "../reports");
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -317,25 +318,154 @@ Use web search sparingly — at most 1 search. Only search if you need to verify
 }
 
 // ─── Robust JSON extraction ───────────────────────────────────────────────────
+// Strategy:
+//   1. Strip ```json … ``` fences (and bare ``` fences) from anywhere in the
+//      payload, plus leading/trailing whitespace.
+//   2. Try a direct JSON.parse on the trimmed string.
+//   3. Walk the string with a string-aware bracket-depth tracker to find every
+//      balanced {…} or […] block and parse the largest one that succeeds. This
+//      is more robust than first/last brace because it correctly handles braces
+//      inside string literals.
+//   4. On total failure, dump the raw payload to
+//      reports/last-bad-response-<timestamp>.txt and throw a richer Error that
+//      includes the byte offset and a 200-char window around it.
+function stripFences(text) {
+  let out = text.trim();
+  // ```json … ```  (multi-line, with optional language tag)
+  const fenced = /^```(?:json|javascript|js)?\s*\n?([\s\S]*?)\n?```\s*$/i.exec(out);
+  if (fenced) return fenced[1].trim();
+  // Bare leading/trailing fence (line-anchored, more permissive)
+  out = out.replace(/^\s*```(?:json|javascript|js)?\s*\r?\n?/i, "");
+  out = out.replace(/\r?\n?```\s*$/i, "");
+  return out.trim();
+}
+
+function findBalancedJSONCandidates(text) {
+  const out = [];
+  for (let start = 0; start < text.length; start++) {
+    const opener = text[start];
+    if (opener !== "{" && opener !== "[") continue;
+    const closer = opener === "{" ? "}" : "]";
+    let depth = 0;
+    let inString = false;
+    let escape = false;
+    for (let i = start; i < text.length; i++) {
+      const c = text[i];
+      if (escape) { escape = false; continue; }
+      if (inString) {
+        if (c === "\\") { escape = true; continue; }
+        if (c === "\"")  { inString = false; continue; }
+        continue;
+      }
+      if (c === "\"")     { inString = true; continue; }
+      else if (c === opener) depth++;
+      else if (c === closer) {
+        depth--;
+        if (depth === 0) {
+          out.push(text.slice(start, i + 1));
+          break;
+        }
+      }
+    }
+  }
+  // Try the largest candidates first
+  out.sort((a, b) => b.length - a.length);
+  return out;
+}
+
+function dumpBadPayload(text, errorMsg) {
+  try {
+    fs.mkdirSync(REPORTS_DIR, { recursive: true });
+    const ts = new Date().toISOString().replace(/[:.]/g, "-");
+    const dumpPath = path.join(REPORTS_DIR, `last-bad-response-${ts}.txt`);
+    fs.writeFileSync(
+      dumpPath,
+      `// JSON parse failure at ${new Date().toISOString()}\n` +
+      `// Error: ${errorMsg}\n` +
+      `// Payload length: ${text.length} bytes\n` +
+      `// ─────────────────────────────────────────────────────────────\n\n` +
+      text
+    );
+    console.error(`  📝 Bad payload dumped to ${dumpPath}`);
+    return dumpPath;
+  } catch (err) {
+    console.error("  ⚠️  Could not dump bad payload:", err.message);
+    return null;
+  }
+}
+
+function buildRichError(parseError, src) {
+  const m = /position\s+(\d+)/i.exec(parseError.message || "");
+  if (!m) return new Error(`${parseError.message} (payload length ${src.length} bytes)`);
+  const pos = parseInt(m[1], 10);
+  const lo = Math.max(0, pos - 100);
+  const hi = Math.min(src.length, pos + 100);
+  const window = src.slice(lo, hi).replace(/\n/g, "\\n");
+  const arrow  = " ".repeat(pos - lo) + "^";
+  return new Error(
+    `${parseError.message}\n` +
+    `  at byte ${pos} of ${src.length}\n` +
+    `  context (±100 chars):\n  ${window}\n  ${arrow}`
+  );
+}
+
 function extractJSON(text) {
-  // Try direct parse first (ideal case — model followed instructions)
-  try { return JSON.parse(text.trim()); } catch {}
-
-  // Strip markdown code fences if present
-  const stripped = text
-    .replace(/^```(?:json)?\s*/im, "")
-    .replace(/\s*```\s*$/im, "")
-    .trim();
-  try { return JSON.parse(stripped); } catch {}
-
-  // Extract outermost { ... } block
-  const firstBrace = text.indexOf("{");
-  const lastBrace  = text.lastIndexOf("}");
-  if (firstBrace !== -1 && lastBrace > firstBrace) {
-    try { return JSON.parse(text.slice(firstBrace, lastBrace + 1)); } catch {}
+  if (typeof text !== "string") {
+    throw new Error(`extractJSON expected string, got ${typeof text}`);
   }
 
-  throw new Error("No valid JSON found in response");
+  // 1. Strip fences + trim
+  const stripped = stripFences(text);
+
+  // 2. Direct parse
+  let directErr = null;
+  try { return JSON.parse(stripped); }
+  catch (e) { directErr = e; }
+
+  // 3. Balanced-bracket candidates (largest first)
+  const candidates = findBalancedJSONCandidates(stripped);
+  let lastErr = directErr;
+  for (const c of candidates) {
+    try { return JSON.parse(c); }
+    catch (e) { lastErr = e; }
+  }
+
+  // 4. Last-ditch: outermost {…} (legacy fallback for stubborn payloads)
+  const firstBrace = stripped.indexOf("{");
+  const lastBrace  = stripped.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    const slice = stripped.slice(firstBrace, lastBrace + 1);
+    try { return JSON.parse(slice); }
+    catch (e) { lastErr = e; }
+  }
+
+  // Total failure — quarantine and throw richer error
+  dumpBadPayload(text, lastErr?.message || "unknown");
+  throw buildRichError(lastErr || new Error("No valid JSON found"), stripped);
+}
+
+// ─── Quarantine an unparseable picks.json ────────────────────────────────────
+// Called at the start of a cycle: if the previous run left a corrupt picks.json
+// behind, move it aside (rather than letting the next run silently overwrite or
+// half-merge with it).
+function quarantineBadPicksFile() {
+  if (!fs.existsSync(OUTPUT_PATH)) return null;
+  let raw;
+  try { raw = fs.readFileSync(OUTPUT_PATH, "utf8"); }
+  catch { return null; }
+  try { JSON.parse(raw); return null; /* file is fine */ }
+  catch (err) {
+    const ts = new Date().toISOString().replace(/[:.]/g, "-");
+    const badPath = path.join(PUBLIC_DIR, `picks.bad.${ts}.json`);
+    try {
+      fs.renameSync(OUTPUT_PATH, badPath);
+      console.warn(`  ⚠️  picks.json was unparseable (${err.message}); quarantined to ${badPath}`);
+      return badPath;
+    } catch (renameErr) {
+      console.error("  ❌ Failed to quarantine bad picks.json:", renameErr.message);
+      return null;
+    }
+  }
 }
 
 // ─── Generate weekly markdown report ─────────────────────────────────────────
@@ -391,11 +521,21 @@ async function runResearch() {
   else             console.log("⚡ Tue–Fri — stable phases served from cache");
   console.log("━".repeat(60));
 
+  // ── Quarantine an unparseable picks.json before we go any further ──
+  // (Prevents a corrupt file from shadowing a successful run, and keeps a copy
+  //  for forensic inspection.)
+  quarantineBadPicksFile();
+
   // ── Read existing picks.json to preserve weekly report + phase cache ──
   let existingData = {};
   try {
     existingData = JSON.parse(fs.readFileSync(OUTPUT_PATH, "utf8"));
-  } catch { /* first run, no existing data */ }
+  } catch (err) {
+    // First run, missing file, or quarantined. Either way, treat as empty.
+    if (err.code !== "ENOENT") {
+      console.warn(`  ⚠️  Could not read existing ${OUTPUT_PATH}: ${err.message}`);
+    }
+  }
 
   // Decide whether cached stable phases are usable
   const useCache = !fullRefresh && isCacheValid(existingData);
