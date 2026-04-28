@@ -1,6 +1,8 @@
 /**
- * Autonomous Alpha - Daily Research Engine (3x/day)
+ * Autonomous Alpha - Daily Research Engine (1x/day at market close)
  * Runs 6 research phases using Claude AI + web search
+ * Stable phases (macro, sectors, smart money) are cached for 28h and only
+ * delta-updated on Tue–Sat, cutting searches and tokens by ~60% on most days.
  * Saves results to ../public/picks.json for the frontend to consume
  */
 
@@ -15,12 +17,56 @@ const REPORTS_DIR = path.join(__dirname, "../reports");
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-// ── Determine which of 3 daily cycles this is based on UTC hour ───────────────
+// ── Single daily run at market close ─────────────────────────────────────────
 function getCycleInfo() {
-  const hour = new Date().getUTCHours();
-  if (hour >= 12 && hour < 16) return { number: 1, label: "Pre-Market",   timeET: "9:00 AM ET"  };
-  if (hour >= 16 && hour < 20) return { number: 2, label: "Midday",       timeET: "1:00 PM ET"  };
-  return                               { number: 3, label: "After-Market", timeET: "5:00 PM ET"  };
+  return { number: 1, label: "After-Market", timeET: "5:00 PM ET" };
+}
+
+// ── Phase caching ─────────────────────────────────────────────────────────────
+// Stable phases (macro climate, sector rotation, smart money) change slowly —
+// reuse yesterday's output and do a quick delta search instead of full research.
+// Volatile phases (momentum, risk) always run fresh since they track daily prices.
+// Full refresh every Sunday (weekly report) and Monday (weekend gap).
+const CACHE_TTL_MS  = 28 * 60 * 60 * 1000; // 28 hours
+const STABLE_PHASES = new Set(["macro", "sectors", "smart"]);
+
+function isCacheValid(existingData) {
+  if (!existingData?.generatedAt) return false;
+  const ageMs = Date.now() - new Date(existingData.generatedAt).getTime();
+  return ageMs < CACHE_TTL_MS;
+}
+
+function needsFullRefresh() {
+  const day = new Date().getUTCDay();
+  return day === 0 || day === 1; // Sunday (weekly report) or Monday (weekend gap)
+}
+
+// Delta prompts: pass cached context, ask for targeted 1-search update
+function getDeltaPrompt(phaseId, cachedText) {
+  const snippet = cachedText.slice(0, 2000);
+  const map = {
+    macro: `You are an expert macro economist. Today is ${TODAY}.
+Yesterday's macro analysis:
+---
+${snippet}
+---
+Do at most 1 web search to check for significant macro developments since yesterday (new Fed signals, a surprise inflation/GDP print, or a major market-moving event). If nothing material has changed, briefly confirm the prior analysis still holds and note any minor updates. Keep your response concise — 2–3 short paragraphs.`,
+
+    sectors: `You are a sector rotation strategist. Today is ${TODAY}.
+Yesterday's sector rotation analysis:
+---
+${snippet}
+---
+Do at most 1 web search to check for notable sector leadership shifts since yesterday. Update the ranking only if materially new information has emerged; otherwise confirm it holds. Keep your response concise.`,
+
+    smart: `You are an expert tracker of institutional investors. Today is ${TODAY}.
+Recent smart money tracking data (past 1–2 days):
+---
+${snippet}
+---
+Do at most 1 web search for new 13F disclosures, block trades, or public statements by major hedge funds or billionaire investors since this analysis. Smart money moves are stable short-term — only surface genuinely new information. Keep your response concise.`,
+  };
+  return map[phaseId];
 }
 
 function isSunday() {
@@ -232,7 +278,8 @@ async function runPhase(phaseConfig, maxTokens = 4000) {
     tools: [{ type: "web_search_20250305", name: "web_search" }],
     system: `You are an autonomous financial research AI. Today is ${TODAY}.
 Use web search to find CURRENT, REAL market data and news. Be specific and data-driven.
-Cite actual numbers, company names, and recent events. Avoid vague generalities.`,
+Cite actual numbers, company names, and recent events. Avoid vague generalities.
+SEARCH LIMIT: Use at most 2 web searches per phase. Choose your queries carefully to get the most signal per search.`,
     messages: [{ role: "user", content: phaseConfig.prompt }],
   });
 
@@ -244,6 +291,29 @@ Cite actual numbers, company names, and recent events. Avoid vague generalities.
 
   console.log(`  ✅ ${phaseConfig.label} complete (${text.length} chars)`);
   return text;
+}
+
+// ─── Run a delta (cached) phase — 1 search, smaller token budget ─────────────
+async function runDeltaPhase(phaseId, phaseLabel, cachedText) {
+  console.log(`\n  ⚡ Delta update: ${phaseLabel} (cache hit)...`);
+
+  const response = await client.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 1500,
+    tools: [{ type: "web_search_20250305", name: "web_search" }],
+    system: `You are an autonomous financial research AI. Today is ${TODAY}.
+Use web search sparingly — at most 1 search. Only search if you need to verify a specific recent development since yesterday.`,
+    messages: [{ role: "user", content: getDeltaPrompt(phaseId, cachedText) }],
+  });
+
+  const updateText = response.content
+    .filter((b) => b.type === "text")
+    .map((b) => b.text)
+    .join("\n");
+
+  console.log(`  ✅ ${phaseLabel} delta complete (${updateText.length} chars)`);
+  // Merge: keep cached context visible to picks synthesis, append today's update
+  return cachedText + "\n\n--- TODAY'S UPDATE ---\n" + updateText;
 }
 
 // ─── Robust JSON extraction ───────────────────────────────────────────────────
@@ -309,20 +379,28 @@ async function runResearch() {
   const cycle     = getCycleInfo();
   const todayDate = new Date().toISOString().slice(0, 10);
   const sunday    = isSunday();
+  const fullRefresh = needsFullRefresh();
   const weekLabel = getWeekLabel();
 
   console.log("━".repeat(60));
   console.log("🚀 AUTONOMOUS ALPHA - Daily Research Engine");
   console.log(`📅 ${TODAY}`);
-  console.log(`🔄 Cycle ${cycle.number}/3: ${cycle.label} (${cycle.timeET})`);
-  if (sunday) console.log("📋 Sunday — weekly report will be generated");
+  console.log(`🔄 ${cycle.label} (${cycle.timeET})`);
+  if (sunday)      console.log("📋 Sunday — full refresh + weekly report");
+  else if (fullRefresh) console.log("🔄 Monday — full refresh (weekend gap)");
+  else             console.log("⚡ Tue–Fri — stable phases served from cache");
   console.log("━".repeat(60));
 
-  // ── Read existing picks.json to preserve weekly report ──
+  // ── Read existing picks.json to preserve weekly report + phase cache ──
   let existingData = {};
   try {
     existingData = JSON.parse(fs.readFileSync(OUTPUT_PATH, "utf8"));
   } catch { /* first run, no existing data */ }
+
+  // Decide whether cached stable phases are usable
+  const useCache = !fullRefresh && isCacheValid(existingData);
+  const cachedPhases = existingData?.phaseData ?? {};
+  const usedCachedPhases = [];
 
   // ── Run research phases 1–5 ──
   const collected = {};
@@ -330,7 +408,14 @@ async function runResearch() {
 
   for (const phase of phases.slice(0, 5)) {
     try {
-      collected[phase.id] = await runPhase(phase, 4000);
+      if (useCache && STABLE_PHASES.has(phase.id) && cachedPhases[phase.id]) {
+        // Delta update: pass cache + do ≤1 search for what changed
+        collected[phase.id] = await runDeltaPhase(phase.id, phase.label, cachedPhases[phase.id]);
+        usedCachedPhases.push(phase.id);
+      } else {
+        // Full fresh research with ≤2 searches
+        collected[phase.id] = await runPhase(phase, 4000);
+      }
       await new Promise(r => setTimeout(r, 2000));
     } catch (err) {
       console.error(`  ❌ Phase ${phase.label} failed:`, err.message);
@@ -338,7 +423,11 @@ async function runResearch() {
     }
   }
 
-  // ── Run picks phase with larger token budget ──
+  if (useCache && usedCachedPhases.length > 0) {
+    console.log(`\n  💾 Cache used for: ${usedCachedPhases.join(", ")} (saved ${usedCachedPhases.length * 2} searches)`);
+  }
+
+  // ── Run picks phase with larger token budget (no web search — pure synthesis) ──
   console.log("\n  🏆 Generating Top 5 Picks (synthesizing all phases)...");
   let picks = null;
   try {
@@ -361,12 +450,8 @@ async function runResearch() {
     };
   }
 
-  // ── Calculate cycles completed today ──
-  const prevDate             = existingData?.todayDate;
-  const prevCyclesCompleted  = existingData?.cyclesCompletedToday || 0;
-  const cyclesCompletedToday = (prevDate === todayDate)
-    ? Math.max(prevCyclesCompleted, cycle.number)
-    : cycle.number;
+  // ── Cycle tracking (single daily run) ──
+  const cyclesCompletedToday = 1;
 
   // ── Build / preserve weekly report ──
   let weeklyReport = existingData?.weeklyReport ?? null;
@@ -424,11 +509,13 @@ async function runResearch() {
     },
 
     metadata: {
-      generatedAt:      new Date().toISOString(),
-      weekOf:           weekLabel,
-      universeSize:     STOCK_UNIVERSE.length,
-      phasesCompleted:  Object.keys(collected).length,
-      isWeeklySunday:   sunday,
+      generatedAt:        new Date().toISOString(),
+      weekOf:             weekLabel,
+      universeSize:       STOCK_UNIVERSE.length,
+      phasesCompleted:    Object.keys(collected).length,
+      isWeeklySunday:     sunday,
+      usedCachedPhases:   usedCachedPhases,
+      fullRefresh:        fullRefresh || sunday,
     },
 
     ...(picks.error ? { error: picks.error } : {}),
@@ -438,10 +525,13 @@ async function runResearch() {
   fs.mkdirSync(path.dirname(OUTPUT_PATH), { recursive: true });
   fs.writeFileSync(OUTPUT_PATH, JSON.stringify(output, null, 2));
 
+  const cacheNote = usedCachedPhases.length > 0
+    ? ` | Cached: ${usedCachedPhases.join(", ")}`
+    : " | Full refresh";
   console.log("\n" + "━".repeat(60));
   console.log(`✅ Results saved to ${OUTPUT_PATH}`);
   console.log(`📊 Macro Outlook: ${output.macroOutlook} | Defensive Score: ${output.defensiveScore}/10`);
-  console.log(`🔄 Cycle ${cycle.number}/3 complete | ${cyclesCompletedToday}/3 cycles today`);
+  console.log(`🔄 ${cycle.label} run complete${cacheNote}`);
   console.log("━".repeat(60));
 
   return output;

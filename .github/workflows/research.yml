@@ -2,11 +2,7 @@ name: Daily Market Research
 
 on:
   schedule:
-    # Pre-market: 9:00 AM ET weekdays = 13:00 UTC
-    - cron: '0 13 * * 1-5'
-    # Midday: 1:00 PM ET weekdays = 17:00 UTC
-    - cron: '0 17 * * 1-5'
-    # After-market: 5:00 PM ET weekdays = 21:00 UTC
+    # After-market close: 5:00 PM ET weekdays = 21:00 UTC (single daily run)
     - cron: '0 21 * * 1-5'
   workflow_dispatch:
 
