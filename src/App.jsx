@@ -14,15 +14,24 @@ const C = {
   purple:  "#c084fc",
   red:     "#ff4d6d",
   orange:  "#ff8c42",
+  green:   "#22c55e",
+  shield:  "#60a5fa",
 };
 
 const OUTLOOK_COLOR = {
-  "Bullish": C.accent,
-  "Cautiously Bullish": C.blue,
-  "Neutral": C.gold,
-  "Cautious": C.orange,
-  "Bearish": C.red,
-  "Pending": C.muted,
+  "Bullish":           C.accent,
+  "Cautiously Bullish":C.blue,
+  "Neutral":           C.gold,
+  "Cautious":          C.orange,
+  "Bearish":           C.red,
+  "Pending":           C.muted,
+};
+
+const CATEGORY_COLOR = {
+  growth:    C.accent,
+  defensive: C.shield,
+  value:     C.gold,
+  income:    C.purple,
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -57,7 +66,9 @@ function Card({ children, accent, style = {} }) {
       overflow: "hidden",
       ...style,
     }}>
-      {accent && <div style={{ position:"absolute", top:0, left:0, width:3, height:"100%", background: accent }} />}
+      {accent && (
+        <div style={{ position: "absolute", top: 0, left: 0, width: 3, height: "100%", background: accent }} />
+      )}
       {children}
     </div>
   );
@@ -66,7 +77,10 @@ function Card({ children, accent, style = {} }) {
 function Section({ title, children }) {
   return (
     <div style={{ marginBottom: 24 }}>
-      <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
+      <div style={{
+        fontSize: 11, color: C.muted, fontWeight: 700,
+        letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12,
+      }}>
         {title}
       </div>
       {children}
@@ -74,67 +88,159 @@ function Section({ title, children }) {
   );
 }
 
-// ── Stock Pick Card ───────────────────────────────────────────────────────────
-function PickCard({ pick }) {
-  const [expanded, setExpanded] = useState(false);
-  const rankColor = [C.gold, "#c0c0c0", "#cd7f32", C.accent, C.blue][pick.rank - 1] || C.accent;
+// ── Connection + Cycle Status Bar ─────────────────────────────────────────────
+function StatusBar({ data, connected }) {
+  if (!connected) {
+    return (
+      <div style={{ display: "flex", gap: 8, alignItems: "center", padding: "6px 0 10px" }}>
+        <span style={{
+          display: "flex", alignItems: "center", gap: 5,
+          background: `${C.red}18`, border: `1px solid ${C.red}30`,
+          borderRadius: 20, padding: "4px 10px",
+          fontSize: 11, fontWeight: 700, color: C.red,
+        }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.red }} />
+          DISCONNECTED
+        </span>
+      </div>
+    );
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  const isToday     = data?.todayDate === today;
+  const cycles      = data?.cyclesCompletedToday || 0;
+  const allDone     = cycles >= 3;
+  const cycleLabel  = data?.dailyCycleLabel || "";
+  const statusColor = isToday ? (allDone ? C.accent : C.gold) : C.muted;
 
   return (
-    <Card accent={rankColor} style={{ marginBottom: 10 }}>
+    <div style={{ display: "flex", gap: 7, alignItems: "center", padding: "6px 0 10px", flexWrap: "wrap" }}>
+      {/* Live / Cached badge */}
+      <span style={{
+        display: "flex", alignItems: "center", gap: 5,
+        background: `${statusColor}18`, border: `1px solid ${statusColor}30`,
+        borderRadius: 20, padding: "4px 10px",
+        fontSize: 11, fontWeight: 700, color: statusColor,
+      }}>
+        <span style={{
+          width: 6, height: 6, borderRadius: "50%",
+          background: statusColor,
+          animation: isToday ? "pulse 2s infinite" : "none",
+        }} />
+        {isToday ? "LIVE" : "CACHED"}
+      </span>
+
+      {/* Cycle count badge */}
+      {data && (
+        <span style={{
+          display: "flex", alignItems: "center", gap: 5,
+          background: `${allDone ? C.accent : C.gold}18`,
+          border: `1px solid ${allDone ? C.accent : C.gold}30`,
+          borderRadius: 20, padding: "4px 10px",
+          fontSize: 11, fontWeight: 700,
+          color: allDone ? C.accent : C.gold,
+        }}>
+          {allDone ? "✓" : "🔄"} {cycles}/3 daily cycles
+          {cycleLabel ? ` · ${cycleLabel}` : ""}
+        </span>
+      )}
+
+      {/* Defensive score badge */}
+      {data?.defensiveScore != null && (
+        <span style={{
+          background: `${C.shield}18`, border: `1px solid ${C.shield}30`,
+          borderRadius: 20, padding: "4px 10px",
+          fontSize: 11, fontWeight: 700, color: C.shield,
+        }}>
+          🛡 Defense {data.defensiveScore}/10
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ── Stock Pick Card ───────────────────────────────────────────────────────────
+function PickCard({ pick, compact = false }) {
+  const [expanded, setExpanded] = useState(false);
+  const rankColor = [C.gold, "#c0c0c0", "#cd7f32", C.accent, C.blue][pick.rank - 1] || C.accent;
+  const isDefensive = pick.category === "defensive";
+
+  return (
+    <Card accent={isDefensive ? C.shield : rankColor} style={{ marginBottom: 10 }}>
       <div style={{ paddingLeft: 8 }}>
         {/* Header row */}
-        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
           <div style={{
             width: 26, height: 26, borderRadius: "50%",
-            background: `${rankColor}22`, border: `1px solid ${rankColor}55`,
+            background: `${isDefensive ? C.shield : rankColor}22`,
+            border: `1px solid ${isDefensive ? C.shield : rankColor}55`,
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontWeight: 900, color: rankColor, fontSize: 12, flexShrink: 0,
+            fontWeight: 900, color: isDefensive ? C.shield : rankColor, fontSize: 12, flexShrink: 0,
           }}>
-            {pick.rank}
+            {isDefensive ? "🛡" : pick.rank}
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ display:"flex", alignItems:"baseline", gap:8 }}>
-              <span style={{ fontSize: 22, fontWeight: 900, color: C.text, letterSpacing: "-0.02em" }}>{pick.ticker}</span>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+              <span style={{ fontSize: 22, fontWeight: 900, color: C.text, letterSpacing: "-0.02em" }}>
+                {pick.ticker}
+              </span>
               <span style={{ fontSize: 12, color: C.muted }}>{pick.name}</span>
             </div>
           </div>
-          <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4 }}>
-            <Tag color={rankColor}>Score {pick.score}/100</Tag>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+            <Tag color={isDefensive ? C.shield : rankColor}>Score {pick.score}/100</Tag>
             {pick.smartMoneyBacking && <Tag color={C.purple}>Smart Money ✓</Tag>}
           </div>
         </div>
 
         {/* Meta row */}
-        <div style={{ display:"flex", gap:6, marginBottom:10, flexWrap:"wrap" }}>
-          {pick.sector && <Tag color={C.blue}>{pick.sector}</Tag>}
-          {pick.horizon && <Tag color={C.gold}>{pick.horizon}</Tag>}
+        <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
+          {pick.sector    && <Tag color={C.blue}>{pick.sector}</Tag>}
+          {pick.horizon   && <Tag color={C.gold}>{pick.horizon}</Tag>}
+          {pick.category  && (
+            <Tag color={CATEGORY_COLOR[pick.category] || C.muted}>
+              {pick.category.toUpperCase()}
+            </Tag>
+          )}
         </div>
 
         {/* Rationale */}
-        <p style={{ color: C.muted, fontSize: 13, lineHeight: 1.7, margin: "0 0 10px" }}>
-          {pick.rationale}
-        </p>
+        {!compact && (
+          <p style={{ color: C.muted, fontSize: 13, lineHeight: 1.7, margin: "0 0 10px" }}>
+            {pick.rationale}
+          </p>
+        )}
 
         {/* Risk (expandable) */}
-        <button
-          onClick={() => setExpanded(!expanded)}
-          style={{ background:"none", border:"none", color: C.muted, fontSize:11, cursor:"pointer", padding:0, display:"flex", alignItems:"center", gap:4 }}
-        >
-          {expanded ? "▲" : "▼"} {expanded ? "Hide" : "Show"} key risk
-        </button>
-
-        {expanded && (
-          <div style={{ marginTop:8, background:`${C.red}10`, border:`1px solid ${C.red}20`, borderRadius:6, padding:"8px 10px" }}>
-            <span style={{ fontSize:11, color:C.red, fontWeight:700 }}>⚠ KEY RISK: </span>
-            <span style={{ fontSize:12, color:`${C.red}cc` }}>{pick.keyRisk}</span>
-          </div>
+        {!compact && (
+          <>
+            <button
+              onClick={() => setExpanded(!expanded)}
+              style={{
+                background: "none", border: "none", color: C.muted,
+                fontSize: 11, cursor: "pointer", padding: 0,
+                display: "flex", alignItems: "center", gap: 4,
+              }}
+            >
+              {expanded ? "▲" : "▼"} {expanded ? "Hide" : "Show"} key risk
+            </button>
+            {expanded && (
+              <div style={{
+                marginTop: 8, background: `${C.red}10`,
+                border: `1px solid ${C.red}20`, borderRadius: 6, padding: "8px 10px",
+              }}>
+                <span style={{ fontSize: 11, color: C.red, fontWeight: 700 }}>⚠ KEY RISK: </span>
+                <span style={{ fontSize: 12, color: `${C.red}cc` }}>{pick.keyRisk}</span>
+              </div>
+            )}
+          </>
         )}
       </div>
     </Card>
   );
 }
 
-// ── Phase Detail ──────────────────────────────────────────────────────────────
+// ── Phase Detail (Research tab) ───────────────────────────────────────────────
 function PhaseDetail({ label, icon, color, content }) {
   const [open, setOpen] = useState(false);
   if (!content) return null;
@@ -143,21 +249,28 @@ function PhaseDetail({ label, icon, color, content }) {
       <button
         onClick={() => setOpen(!open)}
         style={{
-          width:"100%", background: C.card, border:`1px solid ${open ? color+"44" : C.border}`,
-          borderRadius: 10, padding:"12px 14px", display:"flex", alignItems:"center",
-          gap:10, cursor:"pointer", color: C.text, textAlign:"left",
+          width: "100%", background: C.card,
+          border: `1px solid ${open ? color + "44" : C.border}`,
+          borderRadius: 10, padding: "12px 14px",
+          display: "flex", alignItems: "center", gap: 10,
+          cursor: "pointer", color: C.text, textAlign: "left",
         }}
       >
-        <span style={{ fontSize:16 }}>{icon}</span>
-        <span style={{ flex:1, fontSize:13, fontWeight:700, color: open ? color : C.text }}>{label}</span>
-        <span style={{ color: C.muted, fontSize:12 }}>{open ? "▲" : "▼"}</span>
+        <span style={{ fontSize: 16 }}>{icon}</span>
+        <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: open ? color : C.text }}>
+          {label}
+        </span>
+        <span style={{ color: C.muted, fontSize: 12 }}>{open ? "▲" : "▼"}</span>
       </button>
       {open && (
         <div style={{
-          background: C.surface, border:`1px solid ${C.border}`, borderTop:"none",
-          borderRadius:"0 0 10px 10px", padding:"14px 16px",
+          background: C.surface, border: `1px solid ${C.border}`,
+          borderTop: "none", borderRadius: "0 0 10px 10px", padding: "14px 16px",
         }}>
-          <p style={{ color: C.muted, fontSize:12.5, lineHeight:1.8, whiteSpace:"pre-wrap", margin:0 }}>
+          <p style={{
+            color: C.muted, fontSize: 12.5, lineHeight: 1.8,
+            whiteSpace: "pre-wrap", margin: 0,
+          }}>
             {content.length > 1200 ? content.slice(0, 1200) + "…" : content}
           </p>
         </div>
@@ -168,60 +281,71 @@ function PhaseDetail({ label, icon, color, content }) {
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 const TABS = [
-  { id:"picks",    label:"🏆 Picks"    },
-  { id:"research", label:"🔬 Research" },
-  { id:"about",    label:"ℹ️ About"    },
+  { id: "picks",    label: "🏆 Picks"    },
+  { id: "weekly",   label: "📋 Weekly"   },
+  { id: "research", label: "🔬 Research" },
+  { id: "about",    label: "ℹ️ About"    },
 ];
 
 // ── Main App ──────────────────────────────────────────────────────────────────
 export default function App() {
-  const [data, setData]   = useState(null);
-  const [error, setError] = useState(null);
-  const [tab, setTab]     = useState("picks");
-  const [loading, setLoading] = useState(true);
+  const [data, setData]         = useState(null);
+  const [error, setError]       = useState(null);
+  const [tab, setTab]           = useState("picks");
+  const [loading, setLoading]   = useState(true);
+  const [connected, setConnected] = useState(false);
 
   useEffect(() => {
     fetch("/picks.json?t=" + Date.now())
       .then(r => r.json())
-      .then(d => { setData(d); setLoading(false); })
-      .catch(e => { setError(e.message); setLoading(false); });
+      .then(d => {
+        setData(d);
+        setConnected(true);
+        setLoading(false);
+      })
+      .catch(e => {
+        setError(e.message);
+        setConnected(false);
+        setLoading(false);
+      });
   }, []);
 
   const outlookColor = data ? (OUTLOOK_COLOR[data.macroOutlook] || C.muted) : C.muted;
+  const weeklyData   = data?.weeklyReport;
 
   return (
     <div style={{
-      background: C.bg, minHeight:"100vh", color: C.text,
-      fontFamily:"'DM Sans','Segoe UI',sans-serif",
-      maxWidth: 480, margin:"0 auto",
+      background: C.bg, minHeight: "100vh", color: C.text,
+      fontFamily: "'DM Sans','Segoe UI',sans-serif",
+      maxWidth: 480, margin: "0 auto",
       paddingBottom: 80,
     }}>
       <style>{`
-        button { font-family:inherit; }
-        ::-webkit-scrollbar { width:3px; }
-        ::-webkit-scrollbar-thumb { background:#1a2035; border-radius:2px; }
-        @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes spin { to{transform:rotate(360deg)} }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        button { font-family: inherit; }
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-thumb { background: #1a2035; border-radius: 2px; }
+        @keyframes fadeIn  { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes spin    { to{transform:rotate(360deg)} }
+        @keyframes pulse   { 0%,100%{opacity:1} 50%{opacity:0.4} }
       `}</style>
 
-      {/* ── Header ── */}
+      {/* ── Sticky Header ── */}
       <div style={{
-        background: C.surface, borderBottom:`1px solid ${C.border}`,
-        padding:"env(safe-area-inset-top, 0px) 20px 0",
-        position:"sticky", top:0, zIndex:100,
+        background: C.surface, borderBottom: `1px solid ${C.border}`,
+        padding: "env(safe-area-inset-top, 0px) 20px 0",
+        position: "sticky", top: 0, zIndex: 100,
       }}>
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"14px 0 0" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0 0" }}>
           <div>
             <div style={{
-              fontWeight:900, fontSize:19, letterSpacing:"-0.03em",
-              background:`linear-gradient(90deg,${C.accent},${C.blue})`,
-              WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
+              fontWeight: 900, fontSize: 19, letterSpacing: "-0.03em",
+              background: `linear-gradient(90deg,${C.accent},${C.blue})`,
+              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
             }}>
               AUTONOMOUS ALPHA
             </div>
-            <div style={{ fontSize:10, color:C.muted, letterSpacing:"0.1em", fontWeight:600 }}>
-              AI STOCK INTELLIGENCE · AUTO-UPDATED WEEKLY
+            <div style={{ fontSize: 10, color: C.muted, letterSpacing: "0.1em", fontWeight: 600 }}>
+              AI STOCK INTELLIGENCE · 3× DAILY RESEARCH
             </div>
           </div>
           {data?.macroOutlook && data.macroOutlook !== "Pending" && (
@@ -229,16 +353,19 @@ export default function App() {
           )}
         </div>
 
+        {/* Connection + Cycle Status */}
+        <StatusBar data={data} connected={connected} />
+
         {/* Tab bar */}
-        <div style={{ display:"flex", marginTop:10 }}>
+        <div style={{ display: "flex", marginTop: 2 }}>
           {TABS.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} style={{
-              flex:1, background:"transparent", border:"none",
-              borderBottom:`2px solid ${tab===t.id ? C.accent : "transparent"}`,
-              padding:"10px 4px", cursor:"pointer",
-              color: tab===t.id ? C.accent : C.muted,
-              fontWeight: tab===t.id ? 700 : 500, fontSize:13,
-              transition:"all 0.2s",
+              flex: 1, background: "transparent", border: "none",
+              borderBottom: `2px solid ${tab === t.id ? C.accent : "transparent"}`,
+              padding: "10px 2px", cursor: "pointer",
+              color: tab === t.id ? C.accent : C.muted,
+              fontWeight: tab === t.id ? 700 : 500, fontSize: 12,
+              transition: "all 0.2s",
             }}>
               {t.label}
             </button>
@@ -247,84 +374,186 @@ export default function App() {
       </div>
 
       {/* ── Content ── */}
-      <div style={{ padding:"20px 16px", animation:"fadeIn 0.3s ease" }}>
+      <div style={{ padding: "20px 16px", animation: "fadeIn 0.3s ease" }}>
 
+        {/* Loading spinner */}
         {loading && (
-          <div style={{ textAlign:"center", padding:"60px 0" }}>
-            <div style={{ width:32, height:32, border:`3px solid ${C.accent}`, borderTopColor:"transparent", borderRadius:"50%", animation:"spin 0.8s linear infinite", margin:"0 auto 16px" }} />
-            <div style={{ color:C.muted, fontSize:14 }}>Loading picks…</div>
+          <div style={{ textAlign: "center", padding: "60px 0" }}>
+            <div style={{
+              width: 32, height: 32, border: `3px solid ${C.accent}`,
+              borderTopColor: "transparent", borderRadius: "50%",
+              animation: "spin 0.8s linear infinite", margin: "0 auto 16px",
+            }} />
+            <div style={{ color: C.muted, fontSize: 14 }}>Loading picks…</div>
           </div>
         )}
 
+        {/* Load error */}
         {error && (
           <Card accent={C.red}>
-            <div style={{ color:C.red, fontWeight:700, marginBottom:6 }}>⚠ Load Error</div>
-            <div style={{ color:C.muted, fontSize:13 }}>{error}</div>
+            <div style={{ color: C.red, fontWeight: 700, marginBottom: 6 }}>⚠ Load Error</div>
+            <div style={{ color: C.muted, fontSize: 13 }}>{error}</div>
           </Card>
         )}
 
-        {/* ── PICKS TAB ── */}
+        {/* ════════════ PICKS TAB ════════════ */}
         {!loading && !error && tab === "picks" && (
           <>
-            {/* Week header */}
-            <div style={{ marginBottom:20 }}>
-              <div style={{ fontSize:13, color:C.muted, marginBottom:4 }}>
-                {data?.metadata?.weekOf || data?.weekOf || "Awaiting first run"}
+            {/* Cycle header */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 14, color: C.text, fontWeight: 700, marginBottom: 2 }}>
+                {data?.todayLabel || data?.metadata?.weekOf || "Daily Research"}
               </div>
-              <div style={{ fontSize:11, color:C.muted }}>
-                Generated: {formatDate(data?.metadata?.generatedAt || data?.generatedAt)}
+              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 4 }}>
+                {data?.dailyCycleLabel && (
+                  <Tag color={C.blue}>{data.dailyCycleLabel} ({data.dailyCycleTimeET})</Tag>
+                )}
+                {data?.dailyCycleNumber && (
+                  <Tag color={C.accent}>Cycle {data.dailyCycleNumber}/3</Tag>
+                )}
+              </div>
+              <div style={{ fontSize: 11, color: C.muted }}>
+                Updated: {formatDate(data?.generatedAt || data?.metadata?.generatedAt)}
               </div>
             </div>
 
-            {/* Summary */}
+            {/* Research cycle error banner */}
+            {data?.error && (
+              <Card accent={C.red} style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 11, color: C.red, fontWeight: 700, marginBottom: 4 }}>
+                  ⚠ Research Cycle Error
+                </div>
+                <div style={{ fontSize: 12, color: `${C.red}cc` }}>{data.error}</div>
+              </Card>
+            )}
+
+            {/* AI Synthesis */}
             {data?.summary && (
-              <Card style={{ marginBottom:20 }}>
-                <div style={{ fontSize:11, color:C.gold, fontWeight:700, letterSpacing:"0.08em", marginBottom:8 }}>
+              <Card style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 11, color: C.gold, fontWeight: 700, letterSpacing: "0.08em", marginBottom: 8 }}>
                   AI SYNTHESIS
                 </div>
-                <p style={{ color:C.text, fontSize:13.5, lineHeight:1.8 }}>{data.summary}</p>
+                <p style={{ color: C.text, fontSize: 13.5, lineHeight: 1.8 }}>{data.summary}</p>
               </Card>
             )}
 
             {/* No picks yet */}
             {(!data?.picks || data.picks.length === 0) && (
-              <Card style={{ textAlign:"center", padding:"40px 20px" }}>
-                <div style={{ fontSize:40, marginBottom:12 }}>📡</div>
-                <div style={{ fontWeight:700, color:C.text, marginBottom:8 }}>Awaiting First Run</div>
-                <div style={{ color:C.muted, fontSize:13, lineHeight:1.7 }}>
-                  The GitHub Actions workflow runs every Sunday at 8:00 AM UTC.{"\n"}
-                  You can also trigger it manually from your GitHub repository's Actions tab.
+              <Card style={{ textAlign: "center", padding: "40px 20px" }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>📡</div>
+                <div style={{ fontWeight: 700, color: C.text, marginBottom: 8 }}>Awaiting Research Cycle</div>
+                <div style={{ color: C.muted, fontSize: 13, lineHeight: 1.7 }}>
+                  Runs automatically 3× daily on weekdays:{"\n"}
+                  9 AM · 1 PM · 5 PM ET{"\n\n"}
+                  Or trigger manually from GitHub → Actions.
                 </div>
               </Card>
             )}
 
-            {/* Pick cards */}
-            <Section title={`Top ${data?.picks?.length || 0} Picks`}>
-              {data?.picks?.map(p => <PickCard key={p.ticker} pick={p} />)}
-            </Section>
+            {/* Pick cards — growth picks */}
+            {data?.picks?.filter(p => p.category !== "defensive").length > 0 && (
+              <Section title={`Top Picks · ${data.picks.filter(p => p.category !== "defensive").length} Growth/Value`}>
+                {data.picks
+                  .filter(p => p.category !== "defensive")
+                  .map(p => <PickCard key={p.ticker} pick={p} />)}
+              </Section>
+            )}
+
+            {/* Defensive picks section */}
+            {data?.picks?.filter(p => p.category === "defensive").length > 0 && (
+              <Section title={`🛡 Defensive Picks`}>
+                <Card accent={C.shield} style={{ marginBottom: 12, padding: "10px 14px" }}>
+                  <p style={{ fontSize: 12, color: `${C.shield}cc`, margin: 0, lineHeight: 1.6 }}>
+                    Defensive Score {data.defensiveScore}/10 — AI has recommended capital preservation positions for this environment.
+                  </p>
+                </Card>
+                {data.picks
+                  .filter(p => p.category === "defensive")
+                  .map(p => <PickCard key={p.ticker} pick={p} />)}
+              </Section>
+            )}
 
             {/* Disclaimer */}
-            <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:"12px 14px", marginTop:8 }}>
-              <div style={{ fontSize:10, color:C.muted, lineHeight:1.7 }}>
-                ⚠️ <strong style={{ color:C.muted }}>Not financial advice.</strong> AI-generated research for informational purposes only. Always conduct your own due diligence. Investing involves risk of loss.
+            <div style={{
+              background: C.surface, border: `1px solid ${C.border}`,
+              borderRadius: 10, padding: "12px 14px", marginTop: 8,
+            }}>
+              <div style={{ fontSize: 10, color: C.muted, lineHeight: 1.7 }}>
+                ⚠️ <strong style={{ color: C.muted }}>Not financial advice.</strong>{" "}
+                AI-generated research for informational purposes only. Always conduct your own due diligence. Investing involves risk of loss.
               </div>
             </div>
           </>
         )}
 
-        {/* ── RESEARCH TAB ── */}
+        {/* ════════════ WEEKLY TAB ════════════ */}
+        {!loading && !error && tab === "weekly" && (
+          <>
+            {weeklyData ? (
+              <>
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 14, color: C.text, fontWeight: 700, marginBottom: 4 }}>
+                    {weeklyData.weekOf}
+                  </div>
+                  <div style={{ fontSize: 11, color: C.muted }}>
+                    Generated: {formatDate(weeklyData.generatedAt)}
+                  </div>
+                </div>
+
+                {weeklyData.summary && (
+                  <Card style={{ marginBottom: 20 }}>
+                    <div style={{ fontSize: 11, color: C.gold, fontWeight: 700, letterSpacing: "0.08em", marginBottom: 8 }}>
+                      WEEKLY AI SYNTHESIS
+                    </div>
+                    <p style={{ color: C.text, fontSize: 13.5, lineHeight: 1.8 }}>{weeklyData.summary}</p>
+                  </Card>
+                )}
+
+                <Section title={`Weekly Top ${weeklyData.picks?.length || 0} Picks`}>
+                  {weeklyData.picks?.map(p => <PickCard key={p.ticker + "-weekly"} pick={p} />)}
+                </Section>
+
+                {/* Weekly macro outlook */}
+                {weeklyData.macroOutlook && (
+                  <div style={{ marginTop: 8 }}>
+                    <div style={{ fontSize: 11, color: C.muted, marginBottom: 8 }}>WEEKLY MACRO OUTLOOK</div>
+                    <Tag color={OUTLOOK_COLOR[weeklyData.macroOutlook] || C.muted}>
+                      {weeklyData.macroOutlook}
+                    </Tag>
+                    {weeklyData.defensiveScore != null && (
+                      <span style={{ marginLeft: 8 }}>
+                        <Tag color={C.shield}>Defensive Score {weeklyData.defensiveScore}/10</Tag>
+                      </span>
+                    )}
+                  </div>
+                )}
+              </>
+            ) : (
+              <Card style={{ textAlign: "center", padding: "40px 20px" }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
+                <div style={{ fontWeight: 700, color: C.text, marginBottom: 8 }}>No Weekly Report Yet</div>
+                <div style={{ color: C.muted, fontSize: 13, lineHeight: 1.7 }}>
+                  Weekly reports are generated every Sunday and saved here.{"\n"}
+                  Daily picks appear in the Picks tab.
+                </div>
+              </Card>
+            )}
+          </>
+        )}
+
+        {/* ════════════ RESEARCH TAB ════════════ */}
         {!loading && !error && tab === "research" && (
           <>
-            <div style={{ marginBottom:16, color:C.muted, fontSize:13 }}>
+            <div style={{ marginBottom: 16, color: C.muted, fontSize: 13 }}>
               Full research data from the latest automated cycle:
             </div>
 
             {[
-              { id:"macro",    label:"Macro Climate",         icon:"🌍", color:C.blue   },
-              { id:"sectors",  label:"Sector Rotation",       icon:"⚙️",  color:C.gold   },
-              { id:"momentum", label:"Price & Earnings Momentum", icon:"📈", color:C.accent },
-              { id:"smart",    label:"Smart Money Tracking",  icon:"🧠", color:C.purple },
-              { id:"risk",     label:"Risk Assessment",       icon:"🛡️",  color:C.red    },
+              { id: "macro",    label: "Macro Climate",             icon: "🌍", color: C.blue   },
+              { id: "sectors",  label: "Sector Rotation",           icon: "⚙️",  color: C.gold   },
+              { id: "momentum", label: "Price & Earnings Momentum", icon: "📈", color: C.accent },
+              { id: "smart",    label: "Smart Money Tracking",      icon: "🧠", color: C.purple },
+              { id: "risk",     label: "Risk Assessment",           icon: "🛡️",  color: C.red    },
             ].map(ph => (
               <PhaseDetail
                 key={ph.id}
@@ -336,32 +565,36 @@ export default function App() {
             ))}
 
             {!data?.phaseData?.macro && (
-              <div style={{ textAlign:"center", padding:"40px 0", color:C.muted }}>
-                <div style={{ fontSize:32, marginBottom:8 }}>🔬</div>
-                Research data will appear here after the first GitHub Actions run.
+              <div style={{ textAlign: "center", padding: "40px 0", color: C.muted }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>🔬</div>
+                Research data will appear here after the first cycle runs.
               </div>
             )}
           </>
         )}
 
-        {/* ── ABOUT TAB ── */}
+        {/* ════════════ ABOUT TAB ════════════ */}
         {tab === "about" && (
           <>
             <Section title="How It Works">
-              <Card style={{ marginBottom:10 }}>
-                <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+              <Card style={{ marginBottom: 10 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   {[
-                    { icon:"📡", title:"Autonomous Research", desc:"Every Sunday at 8 AM UTC, a GitHub Actions workflow automatically runs a 6-phase AI research cycle using Claude AI with live web search." },
-                    { icon:"🔍", title:"6 Research Phases", desc:"Macro climate → Sector rotation → Price momentum → Smart money tracking → Risk assessment → Final picks synthesis." },
-                    { icon:"🏆", title:"Top 5 Picks", desc:"The AI synthesizes all research to select the 5 best stocks from a 100-stock universe for a minimum 1-year hold, scored 0-100 with rationale and risk." },
-                    { icon:"📱", title:"Always Fresh", desc:"This app reads from picks.json which is automatically updated in GitHub after every weekly cycle. Pull down to refresh." },
-                    { icon:"⚡", title:"Manual Trigger", desc:"Don't want to wait until Sunday? Go to your GitHub repo → Actions → Weekly Stock Research → Run workflow." },
+                    { icon: "📡", title: "Autonomous Daily Research", desc: "3× every weekday (9 AM, 1 PM, 5 PM ET), GitHub Actions automatically runs a 6-phase AI research cycle using Claude AI with live web search." },
+                    { icon: "🔍", title: "6 Research Phases", desc: "Macro climate → Sector rotation → Price momentum → Smart money tracking → Risk assessment → Final picks synthesis." },
+                    { icon: "🛡", title: "Defensive Category", desc: "The AI evaluates whether the macro environment warrants defensive positioning — it can pick bond ETFs (TLT, IEF), gold (GLD), dividend ETFs (SCHD, VYM), utilities, or staples alongside growth stocks." },
+                    { icon: "🏆", title: "Daily + Weekly Picks", desc: "Daily cycles update the Picks tab in real-time. Every Sunday the AI generates a formal weekly report saved to the Weekly tab." },
+                    { icon: "📱", title: "Live Status", desc: "The header shows LIVE status and how many of today's 3 cycles have completed. Green = fresh data today." },
+                    { icon: "⚡", title: "Manual Trigger", desc: "Go to GitHub repo → Actions → Daily Market Research → Run workflow to trigger a cycle immediately." },
                   ].map(item => (
-                    <div key={item.title} style={{ display:"flex", gap:12, paddingBottom:14, borderBottom:`1px solid ${C.border}` }}>
-                      <span style={{ fontSize:20, flexShrink:0 }}>{item.icon}</span>
+                    <div key={item.title} style={{
+                      display: "flex", gap: 12, paddingBottom: 14,
+                      borderBottom: `1px solid ${C.border}`,
+                    }}>
+                      <span style={{ fontSize: 20, flexShrink: 0 }}>{item.icon}</span>
                       <div>
-                        <div style={{ fontWeight:700, fontSize:13, color:C.text, marginBottom:3 }}>{item.title}</div>
-                        <div style={{ fontSize:12, color:C.muted, lineHeight:1.7 }}>{item.desc}</div>
+                        <div style={{ fontWeight: 700, fontSize: 13, color: C.text, marginBottom: 3 }}>{item.title}</div>
+                        <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.7 }}>{item.desc}</div>
                       </div>
                     </div>
                   ))}
@@ -369,26 +602,32 @@ export default function App() {
               </Card>
             </Section>
 
-            <Section title="Stock Universe">
+            <Section title="Stock Universe (115 tickers)">
               <Card>
-                <div style={{ fontSize:12, color:C.muted, lineHeight:1.7, marginBottom:10 }}>
-                  The AI researches and selects from this curated universe of 100 high-quality stocks across all major sectors:
+                <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.7, marginBottom: 10 }}>
+                  The AI researches and selects from this curated universe of 115 tickers across all major sectors — including a new Defensive category:
                 </div>
                 {[
-                  { label:"Mega-Cap Tech / AI / Semis", color:C.accent, tickers:["NVDA","MSFT","AAPL","AMZN","GOOGL","META","TSLA","AVGO","TSM","AMD","QCOM","MU","ARM","MRVL","ANET","ORCL","ADBE","INTU","NFLX","UBER"] },
-                  { label:"Cybersecurity / Cloud / SaaS", color:C.blue, tickers:["PANW","CRWD","ZS","PLTR","SNOW","CRM","NOW","NET"] },
-                  { label:"Healthcare / Biotech / MedTech", color:C.purple, tickers:["LLY","NVO","UNH","JNJ","ABBV","MRK","PFE","AMGN","ISRG","BSX","TMO","VRTX","REGN","GILD","ELV"] },
-                  { label:"Financials / Fintech", color:C.gold, tickers:["BRK.B","JPM","BAC","GS","MS","V","MA","AXP","BLK","SPGI"] },
-                  { label:"Energy / Oil & Gas / Pipelines", color:C.orange, tickers:["XOM","CVX","OXY","SLB","EOG","COP","MPC","WMB"] },
-                  { label:"Industrials / Defense / Aerospace", color:C.blue, tickers:["ETN","NEE","PWR","VST","CEG","RTX","LMT","NOC","CAT","GE"] },
-                  { label:"Consumer / Retail", color:C.accent, tickers:["COST","WMT","HD","TJX","SBUX","NKE","MCD","LOW","TGT","BKNG"] },
-                  { label:"Materials / Diversified Industrial", color:C.muted, tickers:["EMR","HON","DE","LIN","APD","NEM","FCX","ALB","SHW"] },
-                  { label:"REITs / Infrastructure", color:C.purple, tickers:["AMT","PLD","EQIX","WELL","O"] },
-                  { label:"High-Growth / Emerging Leaders", color:C.red, tickers:["ALAB","ONTO","FLUT","CELH","ENPH"] },
+                  { label: "Mega-Cap Tech / AI / Semis",           color: C.accent, tickers: ["NVDA","MSFT","AAPL","AMZN","GOOGL","META","TSLA","AVGO","TSM","AMD","QCOM","MU","ARM","MRVL","ANET","ORCL","ADBE","INTU","NFLX","UBER"] },
+                  { label: "Cybersecurity / Cloud / SaaS",         color: C.blue,   tickers: ["PANW","CRWD","ZS","PLTR","SNOW","CRM","NOW","NET"] },
+                  { label: "Healthcare / Biotech / MedTech",       color: C.purple, tickers: ["LLY","NVO","UNH","JNJ","ABBV","MRK","PFE","AMGN","ISRG","BSX","TMO","VRTX","REGN","GILD","ELV"] },
+                  { label: "Financials / Fintech",                 color: C.gold,   tickers: ["BRK.B","JPM","BAC","GS","MS","V","MA","AXP","BLK","SPGI"] },
+                  { label: "Energy / Oil & Gas / Pipelines",       color: C.orange, tickers: ["XOM","CVX","OXY","SLB","EOG","COP","MPC","WMB"] },
+                  { label: "Industrials / Defense / Aerospace",    color: C.blue,   tickers: ["ETN","NEE","PWR","VST","CEG","RTX","LMT","NOC","CAT","GE"] },
+                  { label: "Consumer / Retail",                    color: C.accent, tickers: ["COST","WMT","HD","TJX","SBUX","NKE","MCD","LOW","TGT","BKNG"] },
+                  { label: "Materials / Diversified Industrial",   color: C.muted,  tickers: ["EMR","HON","DE","LIN","APD","NEM","FCX","ALB","SHW"] },
+                  { label: "REITs / Infrastructure",               color: C.purple, tickers: ["AMT","PLD","EQIX","WELL","O"] },
+                  { label: "High-Growth / Emerging Leaders",       color: C.red,    tickers: ["ALAB","ONTO","FLUT","CELH","ENPH"] },
+                  { label: "🛡 Defensive / Bonds / Safe Haven",    color: C.shield, tickers: ["KO","PG","PEP","CL","PM","VZ","T","D","SO","DUK","TLT","IEF","GLD","SCHD","VYM"] },
                 ].map(group => (
-                  <div key={group.label} style={{ marginBottom:12 }}>
-                    <div style={{ fontSize:10, color:group.color, fontWeight:700, letterSpacing:"0.08em", marginBottom:6, textTransform:"uppercase" }}>{group.label}</div>
-                    <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
+                  <div key={group.label} style={{ marginBottom: 12 }}>
+                    <div style={{
+                      fontSize: 10, color: group.color, fontWeight: 700,
+                      letterSpacing: "0.08em", marginBottom: 6, textTransform: "uppercase",
+                    }}>
+                      {group.label}
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
                       {group.tickers.map(t => <Tag key={t} color={group.color}>{t}</Tag>)}
                     </div>
                   </div>
@@ -399,16 +638,21 @@ export default function App() {
             <Section title="System Info">
               <Card>
                 {[
-                  ["Research schedule", "Every Sunday 8:00 AM UTC"],
-                  ["AI model", "Claude Sonnet (Anthropic)"],
-                  ["Web search", "Live data via Anthropic tools"],
-                  ["Minimum hold", "1 year (ideally 3–5 years)"],
-                  ["Universe size", "100 curated stocks"],
-                  ["Research phases", "6 sequential phases"],
+                  ["Research schedule",  "3× daily weekdays (9 AM, 1 PM, 5 PM ET)"],
+                  ["Weekly reports",     "Every Sunday — saved to Weekly tab"],
+                  ["AI model",           "Claude Sonnet (Anthropic)"],
+                  ["Web search",         "Live data via Anthropic tools"],
+                  ["Minimum hold",       "1 year (ideally 3–5 years)"],
+                  ["Universe size",      "115 tickers (incl. defensive)"],
+                  ["Research phases",    "6 sequential phases"],
+                  ["Defensive scoring",  "1–10 scale auto-adjusts picks"],
                 ].map(([k, v]) => (
-                  <div key={k} style={{ display:"flex", justifyContent:"space-between", padding:"8px 0", borderBottom:`1px solid ${C.border}` }}>
-                    <span style={{ fontSize:12, color:C.muted }}>{k}</span>
-                    <span style={{ fontSize:12, color:C.text, fontWeight:600 }}>{v}</span>
+                  <div key={k} style={{
+                    display: "flex", justifyContent: "space-between",
+                    padding: "8px 0", borderBottom: `1px solid ${C.border}`,
+                  }}>
+                    <span style={{ fontSize: 12, color: C.muted }}>{k}</span>
+                    <span style={{ fontSize: 12, color: C.text, fontWeight: 600, textAlign: "right", maxWidth: "60%" }}>{v}</span>
                   </div>
                 ))}
               </Card>
@@ -418,7 +662,7 @@ export default function App() {
       </div>
 
       {/* Bottom safe area */}
-      <div style={{ height:"env(safe-area-inset-bottom, 20px)" }} />
+      <div style={{ height: "env(safe-area-inset-bottom, 20px)" }} />
     </div>
   );
 }
