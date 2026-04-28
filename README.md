@@ -1,6 +1,6 @@
 # 📈 Autonomous Alpha
 
-An AI-powered stock intelligence system that **automatically researches the market every week** and delivers a ranked Top 5 long-term stock picks — all without any manual input.
+An AI-powered stock intelligence system that **automatically researches the market every weekday after market close** and delivers a ranked Top 5 long-term stock picks — all without any manual input.
 
 Built with Claude AI (Anthropic), GitHub Actions, React, and deployable to Vercel for iPhone access as a PWA.
 
@@ -9,7 +9,7 @@ Built with Claude AI (Anthropic), GitHub Actions, React, and deployable to Verce
 ## How It Works
 
 ```
-Every Sunday 8AM UTC
+Every weekday at 21:00 UTC (5 PM ET, after market close)
        ↓
 GitHub Actions triggers research.js
        ↓
@@ -27,6 +27,11 @@ Git commit pushed automatically
        ↓
 Vercel redeploys → iPhone app updates
 ```
+
+The three "stable" phases (macro, sector rotation, smart money) are cached for
+28 hours and only get a quick delta-update on Tue–Fri, cutting search and token
+usage by ~60% on most days. A full refresh runs every Sunday (weekly report) and
+Monday (weekend gap).
 
 ---
 
@@ -67,11 +72,11 @@ Done! It now lives on your iPhone like a native app. 🎉
 
 ## Triggering a Manual Run
 
-Don't want to wait until Sunday?
+Don't want to wait for the next market close?
 
 1. Go to your GitHub repo
 2. Click **Actions** tab
-3. Click **Weekly Stock Research**
+3. Click **Daily Market Research**
 4. Click **Run workflow** → **Run workflow**
 
 Results appear in the app within ~3-5 minutes.
@@ -84,11 +89,14 @@ Edit `scripts/research.js` — find the `STOCK_UNIVERSE` array and add/remove ti
 
 ## Changing the Schedule
 
-Edit `.github/workflows/weekly-research.yml`:
+Edit `.github/workflows/research.yml`:
 ```yaml
-- cron: '0 8 * * 0'   # Every Sunday at 8:00 AM UTC
+- cron: '0 21 * * 1-5'   # 21:00 UTC = 5 PM ET, weekdays only
 ```
 Cron format: `minute hour day month weekday`
+
+The pull is once per day. Multiple runs per day waste API credit and create
+inconsistent state in `picks.json` if two cycles overlap.
 
 ---
 
@@ -98,7 +106,7 @@ Cron format: `minute hour day month weekday`
 autonomous-alpha/
 ├── .github/
 │   └── workflows/
-│       └── weekly-research.yml   # GitHub Actions schedule
+│       └── research.yml          # GitHub Actions schedule (daily)
 ├── scripts/
 │   ├── research.js               # AI research engine (runs in Actions)
 │   └── package.json
@@ -106,8 +114,9 @@ autonomous-alpha/
 │   ├── App.jsx                   # React frontend
 │   └── main.jsx
 ├── public/
-│   ├── picks.json                # Auto-updated weekly results
+│   ├── picks.json                # Auto-updated daily results
 │   └── manifest.json             # PWA config for iPhone
+├── reports/                      # Sunday weekly markdown reports
 ├── index.html
 ├── vite.config.js
 ├── vercel.json
@@ -118,11 +127,11 @@ autonomous-alpha/
 
 ## Cost Estimate
 
-- **GitHub Actions**: Free (well within free tier — runs once/week, ~5 min)
+- **GitHub Actions**: Free (well within free tier — runs once per weekday, ~5 min)
 - **Vercel**: Free (static site hosting)
-- **Anthropic API**: ~$0.10–0.30 per weekly run (6 phases with web search)
+- **Anthropic API**: ~$0.10–0.30 per daily run (6 phases with web search; phase caching cuts cost on Tue–Fri)
 
-Monthly cost: **< $2**
+Monthly cost: **< $5**
 
 ---
 

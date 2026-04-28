@@ -109,7 +109,7 @@ function StatusBar({ data, connected }) {
   const today = new Date().toISOString().slice(0, 10);
   const isToday     = data?.todayDate === today;
   const cycles      = data?.cyclesCompletedToday || 0;
-  const allDone     = cycles >= 3;
+  const allDone     = cycles >= 1; // schedule is now once-daily
   const cycleLabel  = data?.dailyCycleLabel || "";
   const statusColor = isToday ? (allDone ? C.accent : C.gold) : C.muted;
 
@@ -140,7 +140,7 @@ function StatusBar({ data, connected }) {
           fontSize: 11, fontWeight: 700,
           color: allDone ? C.accent : C.gold,
         }}>
-          {allDone ? "✓" : "🔄"} {cycles}/3 daily cycles
+          {allDone ? "✓" : "🔄"} {cycles}/1 daily cycle
           {cycleLabel ? ` · ${cycleLabel}` : ""}
         </span>
       )}
@@ -296,18 +296,53 @@ export default function App() {
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    fetch("/picks.json?t=" + Date.now())
-      .then(r => r.json())
-      .then(d => {
-        setData(d);
+    let cancelled = false;
+    async function load() {
+      try {
+        const res = await fetch("/picks.json?t=" + Date.now());
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status} ${res.statusText} fetching /picks.json`);
+        }
+        // Read as text first so we can surface a useful parse error if the
+        // cached file is malformed (rather than the generic
+        // "Research Cycle Error" the data path would render).
+        const raw = await res.text();
+        let parsed;
+        try {
+          parsed = JSON.parse(raw);
+        } catch (parseErr) {
+          if (cancelled) return;
+          const m = /position\s+(\d+)/i.exec(parseErr.message || "");
+          const pos = m ? parseInt(m[1], 10) : null;
+          let detail = parseErr.message;
+          if (pos != null) {
+            detail += ` (byte ${pos} of ${raw.length})`;
+            const lo = Math.max(0, pos - 60);
+            const hi = Math.min(raw.length, pos + 60);
+            const ctx = raw.slice(lo, hi).replace(/\s+/g, " ");
+            detail += `\n…${ctx}…`;
+          }
+          setError(`Cached picks unparseable — see error below\n${detail}`);
+          // We did connect to the file — it's the file itself that's bad.
+          setConnected(true);
+          setLoading(false);
+          return;
+        }
+        if (cancelled) return;
+        setData(parsed);
         setConnected(true);
         setLoading(false);
-      })
-      .catch(e => {
+      } catch (e) {
+        if (cancelled) return;
         setError(e.message);
         setConnected(false);
         setLoading(false);
-      });
+      }
+    }
+    load();
+    // No interval polling: data refreshes once daily on the server, so
+    // re-fetching aggressively wastes bandwidth. A page reload is enough.
+    return () => { cancelled = true; };
   }, []);
 
   const outlookColor = data ? (OUTLOOK_COLOR[data.macroOutlook] || C.muted) : C.muted;
@@ -345,7 +380,7 @@ export default function App() {
               AUTONOMOUS ALPHA
             </div>
             <div style={{ fontSize: 10, color: C.muted, letterSpacing: "0.1em", fontWeight: 600 }}>
-              AI STOCK INTELLIGENCE · 3× DAILY RESEARCH
+              AI STOCK INTELLIGENCE · DAILY RESEARCH
             </div>
           </div>
           {data?.macroOutlook && data.macroOutlook !== "Pending" && (
@@ -392,7 +427,7 @@ export default function App() {
         {error && (
           <Card accent={C.red}>
             <div style={{ color: C.red, fontWeight: 700, marginBottom: 6 }}>⚠ Load Error</div>
-            <div style={{ color: C.muted, fontSize: 13 }}>{error}</div>
+            <div style={{ color: C.muted, fontSize: 12, lineHeight: 1.6, whiteSpace: "pre-wrap", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }}>{error}</div>
           </Card>
         )}
 
@@ -409,7 +444,7 @@ export default function App() {
                   <Tag color={C.blue}>{data.dailyCycleLabel} ({data.dailyCycleTimeET})</Tag>
                 )}
                 {data?.dailyCycleNumber && (
-                  <Tag color={C.accent}>Cycle {data.dailyCycleNumber}/3</Tag>
+                  <Tag color={C.accent}>Cycle {data.dailyCycleNumber}/1</Tag>
                 )}
               </div>
               <div style={{ fontSize: 11, color: C.muted }}>
@@ -443,8 +478,8 @@ export default function App() {
                 <div style={{ fontSize: 40, marginBottom: 12 }}>📡</div>
                 <div style={{ fontWeight: 700, color: C.text, marginBottom: 8 }}>Awaiting Research Cycle</div>
                 <div style={{ color: C.muted, fontSize: 13, lineHeight: 1.7 }}>
-                  Runs automatically 3× daily on weekdays:{"\n"}
-                  9 AM · 1 PM · 5 PM ET{"\n\n"}
+                  Runs automatically once daily on weekdays:{"\n"}
+                  5 PM ET (after market close){"\n\n"}
                   Or trigger manually from GitHub → Actions.
                 </div>
               </Card>
@@ -580,11 +615,11 @@ export default function App() {
               <Card style={{ marginBottom: 10 }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   {[
-                    { icon: "📡", title: "Autonomous Daily Research", desc: "3× every weekday (9 AM, 1 PM, 5 PM ET), GitHub Actions automatically runs a 6-phase AI research cycle using Claude AI with live web search." },
+                    { icon: "📡", title: "Autonomous Daily Research", desc: "Once every weekday at 5 PM ET (after market close), GitHub Actions automatically runs a 6-phase AI research cycle using Claude AI with live web search." },
                     { icon: "🔍", title: "6 Research Phases", desc: "Macro climate → Sector rotation → Price momentum → Smart money tracking → Risk assessment → Final picks synthesis." },
                     { icon: "🛡", title: "Defensive Category", desc: "The AI evaluates whether the macro environment warrants defensive positioning — it can pick bond ETFs (TLT, IEF), gold (GLD), dividend ETFs (SCHD, VYM), utilities, or staples alongside growth stocks." },
-                    { icon: "🏆", title: "Daily + Weekly Picks", desc: "Daily cycles update the Picks tab in real-time. Every Sunday the AI generates a formal weekly report saved to the Weekly tab." },
-                    { icon: "📱", title: "Live Status", desc: "The header shows LIVE status and how many of today's 3 cycles have completed. Green = fresh data today." },
+                    { icon: "🏆", title: "Daily + Weekly Picks", desc: "The daily cycle updates the Picks tab after market close. Every Sunday the AI generates a formal weekly report saved to the Weekly tab." },
+                    { icon: "📱", title: "Live Status", desc: "The header shows LIVE status once today's daily cycle has completed. Green = fresh data today." },
                     { icon: "⚡", title: "Manual Trigger", desc: "Go to GitHub repo → Actions → Daily Market Research → Run workflow to trigger a cycle immediately." },
                   ].map(item => (
                     <div key={item.title} style={{
@@ -638,7 +673,7 @@ export default function App() {
             <Section title="System Info">
               <Card>
                 {[
-                  ["Research schedule",  "3× daily weekdays (9 AM, 1 PM, 5 PM ET)"],
+                  ["Research schedule",  "Once daily weekdays (5 PM ET, after market close)"],
                   ["Weekly reports",     "Every Sunday — saved to Weekly tab"],
                   ["AI model",           "Claude Sonnet (Anthropic)"],
                   ["Web search",         "Live data via Anthropic tools"],
