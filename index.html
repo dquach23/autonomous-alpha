@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 
     <!-- iOS PWA configuration -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -46,7 +46,17 @@
         font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'DM Sans', system-ui, sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+        /* Prevent pinch-zoom (touch-action) and double-tap zoom together with
+           the viewport meta. iOS Safari ignores user-scalable=no in the browser
+           but honors it in standalone PWA mode; pan-x pan-y also blocks pinch
+           reliably across both. */
+        touch-action: pan-x pan-y;
+        overscroll-behavior-y: contain;
       }
+      /* Disable text selection on UI chrome (kept on content for copy/paste) */
+      button { -webkit-user-select: none; user-select: none; }
       #root { min-height: 100vh; }
     </style>
   </head>

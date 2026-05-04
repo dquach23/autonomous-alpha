@@ -16,12 +16,10 @@ const ICON_SVG   = fs.readFileSync(path.join(__dirname, "halo-icon.svg"));
 // One template parameterised by w/h so we cover multiple iPhone resolutions.
 function splashSvg(w, h) {
   const cx = w / 2;
-  // Place halo a touch above center so the wordmark sits in the visual focal area.
   const cy = h * 0.42;
-  const r  = Math.min(w, h) * 0.18;          // halo radius (~18% of short side)
-  const stroke = r * 0.22;
-  const dot = r * 0.16;
-  // Wordmark sizing
+  const r  = Math.min(w, h) * 0.18;
+  const stroke = r * 0.21;
+  const inner  = r * 0.85;
   const wordSize = Math.min(w, h) * 0.11;
   const subSize  = Math.min(w, h) * 0.024;
   const wordY    = cy + r * 1.95;
@@ -34,34 +32,38 @@ function splashSvg(w, h) {
         <stop offset="65%"  stop-color="#faf2e0"/>
         <stop offset="100%" stop-color="#ecdcb3"/>
       </radialGradient>
-      <radialGradient id="glow" cx="50%" cy="50%" r="50%">
-        <stop offset="30%" stop-color="#f5d9b3" stop-opacity="0"/>
-        <stop offset="68%" stop-color="#f0c585" stop-opacity="0.55"/>
-        <stop offset="100%" stop-color="#f0c585" stop-opacity="0"/>
+      <radialGradient id="outerGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="38%" stop-color="#f0c585" stop-opacity="0"/>
+        <stop offset="72%" stop-color="#e6b46a" stop-opacity="0.42"/>
+        <stop offset="100%" stop-color="#e6b46a" stop-opacity="0"/>
       </radialGradient>
-      <linearGradient id="ring" x1="20%" y1="8%" x2="80%" y2="92%">
+      <radialGradient id="innerLight" cx="50%" cy="48%" r="50%">
+        <stop offset="0%"   stop-color="#fffaee" stop-opacity="0.85"/>
+        <stop offset="55%"  stop-color="#fae6c2" stop-opacity="0.45"/>
+        <stop offset="100%" stop-color="#f5d9b3" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="ringBody" x1="50%" y1="0%" x2="50%" y2="100%">
         <stop offset="0%"   stop-color="#fae0bf"/>
-        <stop offset="30%"  stop-color="#dfb07e"/>
-        <stop offset="60%"  stop-color="#c2904f"/>
-        <stop offset="100%" stop-color="#8c5e2d"/>
+        <stop offset="22%"  stop-color="#dfb07e"/>
+        <stop offset="55%"  stop-color="#b88451"/>
+        <stop offset="100%" stop-color="#774a22"/>
       </linearGradient>
-      <linearGradient id="sheen" x1="50%" y1="0%" x2="50%" y2="100%">
-        <stop offset="0%"   stop-color="#fff" stop-opacity="0.6"/>
-        <stop offset="45%"  stop-color="#fff" stop-opacity="0.04"/>
+      <linearGradient id="sheenTop" x1="50%" y1="0%" x2="50%" y2="55%">
+        <stop offset="0%"   stop-color="#fff" stop-opacity="0.8"/>
+        <stop offset="60%"  stop-color="#fff" stop-opacity="0.12"/>
         <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
       </linearGradient>
-      <radialGradient id="dot" cx="40%" cy="35%" r="65%">
-        <stop offset="0%"  stop-color="#fae6c6"/>
-        <stop offset="50%" stop-color="#d4a574"/>
-        <stop offset="100%" stop-color="#a06a37"/>
-      </radialGradient>
+      <linearGradient id="shadeBot" x1="50%" y1="50%" x2="50%" y2="100%">
+        <stop offset="0%"   stop-color="#000" stop-opacity="0"/>
+        <stop offset="100%" stop-color="#3d2410" stop-opacity="0.32"/>
+      </linearGradient>
     </defs>
     <rect width="${w}" height="${h}" fill="url(#bg)"/>
-    <circle cx="${cx}" cy="${cy}" r="${r * 1.55}" fill="url(#glow)"/>
-    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="url(#ring)" stroke-width="${stroke}"/>
-    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="url(#sheen)" stroke-width="${stroke * 0.32}"/>
-    <circle cx="${cx}" cy="${cy}" r="${dot}" fill="url(#dot)"/>
-    <ellipse cx="${cx - dot * 0.3}" cy="${cy - dot * 0.32}" rx="${dot * 0.32}" ry="${dot * 0.22}" fill="#fff" fill-opacity="0.55"/>
+    <circle cx="${cx}" cy="${cy}" r="${r * 1.5}" fill="url(#outerGlow)"/>
+    <circle cx="${cx}" cy="${cy}" r="${inner}"   fill="url(#innerLight)"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="url(#ringBody)"  stroke-width="${stroke}"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="url(#sheenTop)"  stroke-width="${stroke * 0.4}"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="url(#shadeBot)"  stroke-width="${stroke}" opacity="0.55"/>
     <text x="${cx}" y="${wordY}" text-anchor="middle"
           font-family="Arial, Helvetica, sans-serif"
           font-weight="800" font-size="${wordSize}"
