@@ -3,22 +3,22 @@
   "entries": [
     {
       "date": "2026-05-04",
-      "generatedAt": "2026-05-04T01:53:18.639Z",
+      "generatedAt": "2026-05-04T23:08:16.533Z",
       "macroOutlook": "Cautiously Bullish",
       "defensiveScore": 4,
-      "summary": "The regime is Late-Cycle/Stagflationary Transition: the economy is expanding at +2% real GDP with ISM Manufacturing at 52.7, but inflation is re-accelerating on Iran energy shock and tariff pass-through, the equity risk premium has flipped negative (-58bps), and markets have fully priced out 2026 Fed cuts. This portfolio expresses that regime through five complementary exposures: GOOGL and AVGO anchor the AI infrastructure secular thesis across different value-chain points (application/cloud vs. custom silicon), GLD provides the mandatory stagflation and geopolitical tail-risk hedge (the only asset that benefits from both a Treasury market stress event AND an Iran escalation simultaneously), GS capitalizes on the curve re-steepening and elevated FICC volatility that define the late-cycle financial environment, and LLY diversifies the book into a recession-immune secular demand theme completely orthogonal to AI capex and energy dynamics. The dominant risk being underwritten is an AI CapEx Cycle Bust — if Microsoft, Google, or Meta signals material capex deceleration, both GOOGL and AVGO face headwinds simultaneously; GLD, GS, and LLY are specifically sized to offset that correlated drawdown.",
-      "diversificationNote": "The five picks span four distinct GICS sectors: Communication Services (GOOGL), Information Technology (AVGO), Financials (GS), Health Care (LLY), and a Commodities/Real Assets sleeve (GLD). The accepted factor concentration is two AI-infrastructure names — GOOGL and AVGO — which share secular AI capex exposure but occupy categorically different positions in the value chain (hyperscaler cloud platform vs. custom silicon/XPU designer); GS, LLY, and GLD are explicitly non-correlated to this factor, providing genuine diversification against the dominant portfolio risk.",
+      "summary": "The portfolio is positioned for a late-cycle, stagflation-adjacent regime where the Fed is pinned (28% June cut probability), the 10-year sits at 4.38%, and equities trade at 20.9x forward earnings with a negative equity risk premium — a backdrop hostile to multiple expansion and duration risk. The five picks express this view through three distinct alpha vectors: (1) AI infrastructure compounders with secular earnings momentum that can grow through macro headwinds (GOOGL, AVGO), (2) a volatility/capital-markets beneficiary that monetizes the elevated-rate-and-geopolitical environment directly (GS), (3) a defensive-growth secular compounder insulated from tariff and energy shocks (LLY), and (4) a hard-asset hedge providing negative correlation to the AI equity sleeve in a risk-off scenario (GLD). All five names carry over from prior positioning — GOOGL, AVGO, GS, LLY, and GLD — with thesis continuity confirmed by fresh Q1 2026 earnings beats across GOOGL (94% EPS upside), AVGO (106% AI revenue growth), and GS ($17.55 EPS vs. $16.47 estimate); no thesis breaks have occurred. The dominant risk being underwritten is an AI capex cycle stall or a sovereign debt shock that compresses the AI infrastructure multiple sharply — GLD and LLY serve as the structural hedges against that scenario.",
+      "diversificationNote": "The five picks span four distinct GICS sectors: Communication Services (GOOGL), Information Technology (AVGO), Financials (GS), Health Care (LLY), and Commodities/Real Assets (GLD) — well within the 2-per-sector hard constraint. The accepted factor concentration is that GOOGL and AVGO both have AI infrastructure exposure, but at complementary points in the value chain (cloud application layer vs. custom silicon/networking), limiting single-factor correlation risk.",
       "picks": [
         {
           "rank": 1,
           "ticker": "GOOGL",
-          "name": "Alphabet Inc. Class A",
+          "name": "Alphabet Inc.",
           "sector": "Communication Services",
           "category": "growth",
-          "score": 93,
+          "score": 95,
           "conviction": "high",
-          "suggestedWeight": 27,
-          "catalyst": "April CPI print (due May 12) plus GOOGL's Google Cloud Next conference pipeline announcements and any Azure/AWS share-shift data in Q2 cloud earnings"
+          "suggestedWeight": 28,
+          "catalyst": "April CPI print on May 12 — a soft reading reopens rate-cut optionality and provides a multiple re-rating tailwind for GOOGL; separately, Google Cloud Next follow-on contract announcements expected Q2 2026"
         },
         {
           "rank": 2,
@@ -26,43 +26,43 @@
           "name": "Broadcom Inc.",
           "sector": "Information Technology",
           "category": "growth",
-          "score": 91,
+          "score": 92,
           "conviction": "high",
-          "suggestedWeight": 23,
-          "catalyst": "Broadcom Q2 FY2026 earnings report (expected early June 2026) with XPU revenue run-rate update and FY2027 AI chip revenue guidance"
+          "suggestedWeight": 25,
+          "catalyst": "Next earnings report (fiscal Q2 2026, expected early June 2026) where AI semiconductor revenue guidance of 140% YoY growth will either be confirmed or exceeded"
         },
         {
           "rank": 3,
-          "ticker": "GLD",
-          "name": "SPDR Gold Shares ETF",
-          "sector": "Commodities / Real Assets",
-          "category": "defensive",
-          "score": 88,
+          "ticker": "GS",
+          "name": "The Goldman Sachs Group Inc.",
+          "sector": "Financials",
+          "category": "growth",
+          "score": 84,
           "conviction": "high",
           "suggestedWeight": 20,
-          "catalyst": "Iran/Strait of Hormuz escalation (military briefing to Trump confirmed); Kevin Warsh Fed Chair confirmation (May 15) signaling hawkish pivot that pressures DXY; April CPI upside print (May 12)"
+          "catalyst": "May 8 April Payrolls print — a resilient labor market keeps M&A and debt issuance volumes elevated, directly supporting Goldman's fee pipeline; separately, any Iran war de-escalation would spike capital markets activity"
         },
         {
           "rank": 4,
-          "ticker": "GS",
-          "name": "Goldman Sachs Group Inc.",
-          "sector": "Financials",
-          "category": "growth",
-          "score": 85,
-          "conviction": "high",
-          "suggestedWeight": 17,
-          "catalyst": "Q2 2026 earnings (mid-July) with investment banking and FICC trading revenue update; Kevin Warsh confirmation (May 15) signaling hawkish institutional tone that directly benefits fixed-income trading volumes"
-        },
-        {
-          "rank": 5,
           "ticker": "LLY",
           "name": "Eli Lilly and Company",
           "sector": "Health Care",
           "category": "growth",
-          "score": 84,
+          "score": 88,
           "conviction": "high",
-          "suggestedWeight": 13,
-          "catalyst": "Phase 3 readout on orforglipron (oral GLP-1 pill) expected H2 2026 — a positive result opens a $50B+ TAM expansion beyond injectable formats and would be the single largest re-rating event for the stock"
+          "suggestedWeight": 17,
+          "catalyst": "GLP-1 obesity/NASH Phase 3 trial readouts expected in H2 2026; also FDA approval decisions for orforglipron (oral GLP-1) which would massively expand the addressable market beyond injectable delivery"
+        },
+        {
+          "rank": 5,
+          "ticker": "GLD",
+          "name": "SPDR Gold Shares ETF",
+          "sector": "Commodities / Real Assets",
+          "category": "defensive",
+          "score": 82,
+          "conviction": "high",
+          "suggestedWeight": 10,
+          "catalyst": "May 12 April CPI print — a hot reading (re-accelerating core services) would cement 'no cuts in 2026' and push gold higher as real rates stay suppressed; separately, any Iran war escalation or Strait of Hormuz supply shock"
         }
       ]
     }
