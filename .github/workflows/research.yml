@@ -1,10 +1,22 @@
-name: Daily Market Research
+name: Halo Daily Market Research
 
 on:
   schedule:
-    # After-market close: 5:00 PM ET weekdays = 21:00 UTC (single daily run)
-    - cron: '0 21 * * 1-5'
+    # 22:00 UTC — always after the 4 PM ET close, year-round.
+    # During EDT (Mar–Nov) that's 6 PM ET; during EST (Nov–Mar) that's 5 PM ET.
+    # GitHub Actions cron is UTC-only with no DST awareness, so we pick the later
+    # of the two to guarantee post-close every day.
+    - cron: '0 22 * * 1-5'
   workflow_dispatch:
+    inputs:
+      force_weekly:
+        description: 'Force weekly report generation regardless of day (use to backfill a missed Friday)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 jobs:
   research:
@@ -30,12 +42,27 @@ jobs:
       - name: Run market research
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          FORCE_WEEKLY: ${{ inputs.force_weekly }}
         run: node scripts/research.js
+
+      - name: Upload bad-payload diagnostics
+        # Always run — captures any reports/last-bad-response-*.txt produced
+        # when the picks JSON failed to parse, even when the script itself
+        # exited 0 (transient parse failures don't kill the run).
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-diagnostics-${{ github.run_id }}
+          path: |
+            reports/last-bad-response-*.txt
+            public/picks.bad.*.json
+          if-no-files-found: ignore
+          retention-days: 14
 
       - name: Commit and push results
         run: |
-          git config --global user.name 'Autonomous Alpha Bot'
-          git config --global user.email 'bot@autonomous-alpha.ai'
-          git add public/picks.json
-          git diff --staged --quiet || git commit -m "Update market research - $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git config --global user.name 'Halo Bot'
+          git config --global user.email 'bot@halo.local'
+          git add public/picks.json public/history.json reports/
+          git diff --staged --quiet || git commit -m "Halo cycle - $(date -u +'%Y-%m-%d %H:%M UTC')"
           git push

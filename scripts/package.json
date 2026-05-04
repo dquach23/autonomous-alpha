@@ -1,13 +1,17 @@
 {
-  "name": "autonomous-alpha-research",
+  "name": "halo-research",
   "version": "1.0.0",
-  "description": "Autonomous stock research script powered by Claude AI",
+  "description": "Halo's autonomous market research engine — Claude AI + live web search",
   "type": "module",
   "scripts": {
     "start": "node research.js",
-    "test": "node research.js --dry-run"
+    "test": "node research.js --dry-run",
+    "icons": "node icons/build-icons.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0"
+  },
+  "devDependencies": {
+    "sharp": "^0.33.5"
   }
 }

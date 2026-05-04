@@ -1,7 +1,7 @@
 {
-  "name": "autonomous-alpha",
+  "name": "halo",
   "version": "1.0.0",
-  "description": "Autonomous AI-powered stock intelligence dashboard",
+  "description": "Halo — AI-powered market intelligence with daily curated stock picks",
   "type": "module",
   "scripts": {
     "dev": "vite",

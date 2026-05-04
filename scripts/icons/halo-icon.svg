@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="68%">
+      <stop offset="0%"   stop-color="#fffaf2"/>
+      <stop offset="60%"  stop-color="#fcf2dd"/>
+      <stop offset="100%" stop-color="#f0dfb6"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="35%" stop-color="#f5d9b3" stop-opacity="0"/>
+      <stop offset="72%" stop-color="#f0c585" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#f0c585" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="20%" y1="8%" x2="80%" y2="92%">
+      <stop offset="0%"   stop-color="#fae0bf"/>
+      <stop offset="30%"  stop-color="#dfb07e"/>
+      <stop offset="60%"  stop-color="#c2904f"/>
+      <stop offset="100%" stop-color="#8c5e2d"/>
+    </linearGradient>
+    <linearGradient id="ringSheen" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%"   stop-color="#fff" stop-opacity="0.65"/>
+      <stop offset="45%"  stop-color="#fff" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="dot" cx="40%" cy="35%" r="65%">
+      <stop offset="0%"  stop-color="#fae6c6"/>
+      <stop offset="50%" stop-color="#d4a574"/>
+      <stop offset="100%" stop-color="#a06a37"/>
+    </radialGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <!-- Soft halo glow -->
+  <circle cx="512" cy="512" r="400" fill="url(#glow)"/>
+  <!-- Outer ring (gradient body) -->
+  <circle cx="512" cy="512" r="288" fill="none" stroke="url(#ring)" stroke-width="62"/>
+  <!-- Top sheen highlight on the ring -->
+  <circle cx="512" cy="512" r="288" fill="none" stroke="url(#ringSheen)" stroke-width="20"/>
+  <!-- Center dot -->
+  <circle cx="512" cy="512" r="46" fill="url(#dot)"/>
+  <!-- Tiny specular hit on the dot -->
+  <ellipse cx="498" cy="497" rx="14" ry="10" fill="#fff" fill-opacity="0.55"/>
+</svg>

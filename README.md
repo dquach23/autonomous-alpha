@@ -1,122 +1,133 @@
-# 📈 Autonomous Alpha
+# ✦ Halo
 
-An AI-powered stock intelligence system that **automatically researches the market every weekday after market close** and delivers a ranked Top 5 long-term stock picks — all without any manual input.
+**AI-powered market intelligence.** Halo automatically researches the market every weekday after the close and delivers a ranked Top 5 long-term picks — no manual input.
 
-Built with Claude AI (Anthropic), GitHub Actions, React, and deployable to Vercel for iPhone access as a PWA.
+Built with Claude AI (Anthropic), GitHub Actions, React, and deployable to Vercel as an iPhone-friendly PWA with a soft Apple-aesthetic UI.
 
 ---
 
 ## How It Works
 
 ```
-Every weekday at 21:00 UTC (5 PM ET, after market close)
+Every weekday at 22:00 UTC (post-close, year-round)
        ↓
 GitHub Actions triggers research.js
        ↓
-Claude AI runs 6 research phases with live web search:
-  1. 🌍 Macro Climate Analysis
-  2. ⚙️  Sector Rotation
-  3. 📈 Price & Earnings Momentum
-  4. 🧠 Smart Money Tracking
-  5. 🛡️  Risk Assessment
-  6. 🏆 Top 5 Picks Synthesis
+Claude AI runs 6 phases with live web search:
+  1. Macro Climate
+  2. Sector Rotation
+  3. Price & Earnings Momentum
+  4. Smart Money Tracking
+  5. Risk Assessment
+  6. Top 5 Picks Synthesis
        ↓
 Results saved to public/picks.json
        ↓
-Git commit pushed automatically
-       ↓
-Vercel redeploys → iPhone app updates
+Auto-commit pushed → Vercel redeploys → app updates
 ```
 
 The three "stable" phases (macro, sector rotation, smart money) are cached for
-28 hours and only get a quick delta-update on Tue–Fri, cutting search and token
-usage by ~60% on most days. A full refresh runs every Sunday (weekly report) and
-Monday (weekend gap).
+28 hours and only get a quick delta-update on Tue–Thu, cutting search and token
+usage by ~60% on most days. A full refresh runs every Monday (weekend gap) and
+Friday (weekly report — end of trading week).
+
+The schedule uses 22:00 UTC so the workflow always fires after the 4 PM ET
+close, year-round (avoiding DST drift on a UTC-only cron).
+
+### Memory & continuity
+
+Halo keeps a rolling research memory so picks accumulate context over time
+rather than restarting from zero each day:
+
+- [`public/history.json`](public/history.json) holds the last 60 days of picks
+  (ticker, rank, conviction, sector, catalyst, outlook, shield score).
+- The synthesis prompt receives a digest of the last 7 days. The model is
+  explicitly instructed to **maintain thesis continuity** — keep names that are
+  still working, only churn for a reason, and call out carry-overs in the
+  summary.
+- [`reports/daily/YYYY-MM-DD.md`](reports/daily/) archives every successful
+  cycle as a permanent markdown brief (full thesis, catalyst, entry note, exit
+  trigger, key risk, plus all 5 phase outputs).
+
+This is genuine accumulated knowledge — not just snapshots.
 
 ---
 
-## Setup (One Time, ~15 minutes)
+## Setup (~15 min, one time)
 
-### Step 1: Fork / Clone this repo to GitHub
+### 1. Push this repo to GitHub
+1. Go to [github.com](https://github.com) → **New repository** → name it `halo`
+2. Push these files
 
-1. Go to [github.com](https://github.com) → **New repository**
-2. Name it `autonomous-alpha`
-3. Upload all these files (or clone and push)
+### 2. Add your Anthropic API key
+1. [console.anthropic.com](https://console.anthropic.com) → API Keys → create
+2. GitHub repo → **Settings → Secrets and variables → Actions**
+3. **New repository secret** → name `ANTHROPIC_API_KEY` → paste
 
-### Step 2: Add your Anthropic API Key
+### 3. Deploy to Vercel
+1. [vercel.com](https://vercel.com) → sign in with GitHub
+2. **New Project** → import the `halo` repo → **Deploy**
+3. Live at `https://halo-xxxx.vercel.app`
 
-1. Go to [console.anthropic.com](https://console.anthropic.com) → API Keys → Create key
-2. In your GitHub repo → **Settings → Secrets and variables → Actions**
-3. Click **New repository secret**
-4. Name: `ANTHROPIC_API_KEY`
-5. Value: your API key (starts with `sk-ant-...`)
-6. Click **Add secret**
+### 4. Add to iPhone Home Screen (real-app feel)
+1. Open the Vercel URL in **Safari** (not Chrome — Safari is the only iOS browser
+   that fully respects PWA manifests).
+2. Tap the **Share** button (square with up-arrow at the bottom).
+3. Scroll → **Add to Home Screen**.
+4. Confirm the name **Halo** → **Add**.
 
-### Step 3: Deploy frontend to Vercel (free)
-
-1. Go to [vercel.com](https://vercel.com) → Sign up with GitHub
-2. Click **New Project** → Import your `autonomous-alpha` repo
-3. Vercel auto-detects Vite → click **Deploy**
-4. Your app is live at `https://autonomous-alpha-xxxx.vercel.app`
-
-### Step 4: Add to iPhone Home Screen
-
-1. Open your Vercel URL in **Safari on iPhone**
-2. Tap the **Share** button (box with arrow)
-3. Scroll down → tap **Add to Home Screen**
-4. Name it "Alpha" → tap **Add**
-
-Done! It now lives on your iPhone like a native app. 🎉
+When you launch from the home-screen icon (not the Safari bookmark), Halo runs
+**full-screen, no browser chrome**, with its custom splash screen during boot.
+That's a real PWA — the experience is much closer to a native app than a Safari
+bookmark.
 
 ---
 
-## Triggering a Manual Run
+## Manual Trigger
 
-Don't want to wait for the next market close?
+GitHub repo → **Actions** → **Halo Daily Market Research** → **Run workflow**.
 
-1. Go to your GitHub repo
-2. Click **Actions** tab
-3. Click **Daily Market Research**
-4. Click **Run workflow** → **Run workflow**
-
-Results appear in the app within ~3-5 minutes.
+The workflow exposes a **`force_weekly`** input. Set it to `true` to backfill a
+missed Friday weekly report on any day of the week. Results appear in the app
+within ~3–5 minutes after a successful run.
 
 ---
 
-## Customizing the Stock Universe
+## Customizing the Universe
 
-Edit `scripts/research.js` — find the `STOCK_UNIVERSE` array and add/remove tickers as you like.
+Edit [`public/universe.json`](public/universe.json) — the universe is shared between
+the research script and the frontend, so changes show up in both immediately.
 
 ## Changing the Schedule
 
-Edit `.github/workflows/research.yml`:
+Edit [`.github/workflows/research.yml`](.github/workflows/research.yml):
 ```yaml
-- cron: '0 21 * * 1-5'   # 21:00 UTC = 5 PM ET, weekdays only
+- cron: '0 22 * * 1-5'   # 22:00 UTC weekdays = post-close year-round
 ```
-Cron format: `minute hour day month weekday`
 
-The pull is once per day. Multiple runs per day waste API credit and create
-inconsistent state in `picks.json` if two cycles overlap.
+GitHub Actions cron is **always UTC** with no DST awareness. `0 22 * * 1-5`
+guarantees the run lands after the 4 PM ET close in both EDT and EST.
 
 ---
 
 ## Project Structure
 
 ```
-autonomous-alpha/
+halo/
 ├── .github/
 │   └── workflows/
-│       └── research.yml          # GitHub Actions schedule (daily)
+│       └── research.yml          # GitHub Actions schedule
 ├── scripts/
-│   ├── research.js               # AI research engine (runs in Actions)
+│   ├── research.js               # AI research engine
 │   └── package.json
 ├── src/
-│   ├── App.jsx                   # React frontend
+│   ├── App.jsx                   # React frontend (Halo UI)
 │   └── main.jsx
 ├── public/
 │   ├── picks.json                # Auto-updated daily results
-│   └── manifest.json             # PWA config for iPhone
-├── reports/                      # Sunday weekly markdown reports
+│   ├── universe.json             # Stock universe (shared with research.js)
+│   └── manifest.json             # PWA config
+├── reports/                      # Weekly markdown reports (Fridays)
 ├── index.html
 ├── vite.config.js
 ├── vercel.json
@@ -125,11 +136,11 @@ autonomous-alpha/
 
 ---
 
-## Cost Estimate
+## Cost
 
-- **GitHub Actions**: Free (well within free tier — runs once per weekday, ~5 min)
-- **Vercel**: Free (static site hosting)
-- **Anthropic API**: ~$0.10–0.30 per daily run (6 phases with web search; phase caching cuts cost on Tue–Fri)
+- **GitHub Actions**: free (well within free tier)
+- **Vercel**: free (static hosting)
+- **Anthropic API**: ~$0.10–0.30 per daily run; phase caching cuts cost on Tue–Thu
 
 Monthly cost: **< $5**
 
@@ -137,4 +148,6 @@ Monthly cost: **< $5**
 
 ## Disclaimer
 
-This system provides AI-generated research for **informational purposes only**. Nothing here constitutes financial advice or a buy/sell recommendation. Always conduct your own due diligence and consult a licensed financial advisor before investing. Investing involves risk of loss.
+Halo provides AI-generated research for **informational purposes only**. Nothing here
+constitutes financial advice. Always conduct your own due diligence and consult a
+licensed financial advisor before investing. Investing involves risk of loss.

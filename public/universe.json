@@ -1,0 +1,59 @@
+{
+  "groups": [
+    {
+      "label": "Mega-Cap Tech / AI / Semis",
+      "key": "tech",
+      "tickers": ["NVDA","MSFT","AAPL","AMZN","GOOGL","META","TSLA","AVGO","TSM","AMD","QCOM","MU","ARM","MRVL","ANET","ORCL","ADBE","INTU","NFLX","UBER"]
+    },
+    {
+      "label": "Cybersecurity / Cloud / SaaS",
+      "key": "saas",
+      "tickers": ["PANW","CRWD","ZS","PLTR","SNOW","CRM","NOW","NET"]
+    },
+    {
+      "label": "Healthcare / Biotech / MedTech",
+      "key": "health",
+      "tickers": ["LLY","NVO","UNH","JNJ","ABBV","MRK","PFE","AMGN","ISRG","BSX","TMO","VRTX","REGN","GILD","ELV"]
+    },
+    {
+      "label": "Financials / Fintech",
+      "key": "fin",
+      "tickers": ["BRK.B","JPM","BAC","GS","MS","V","MA","AXP","BLK","SPGI"]
+    },
+    {
+      "label": "Energy / Oil & Gas / Pipelines",
+      "key": "energy",
+      "tickers": ["XOM","CVX","OXY","SLB","EOG","COP","MPC","WMB"]
+    },
+    {
+      "label": "Industrials / Defense / Aerospace",
+      "key": "industrial",
+      "tickers": ["ETN","NEE","PWR","VST","CEG","RTX","LMT","NOC","CAT","GE"]
+    },
+    {
+      "label": "Consumer / Retail",
+      "key": "consumer",
+      "tickers": ["COST","WMT","HD","TJX","SBUX","NKE","MCD","LOW","TGT","BKNG"]
+    },
+    {
+      "label": "Materials / Diversified Industrial",
+      "key": "materials",
+      "tickers": ["EMR","HON","DE","LIN","APD","NEM","FCX","ALB","SHW"]
+    },
+    {
+      "label": "REITs / Infrastructure",
+      "key": "reits",
+      "tickers": ["AMT","PLD","EQIX","WELL","O"]
+    },
+    {
+      "label": "High-Growth / Emerging Leaders",
+      "key": "growth",
+      "tickers": ["ALAB","ONTO","FLUT","CELH","ENPH"]
+    },
+    {
+      "label": "Defensive / Bonds / Safe Haven",
+      "key": "defensive",
+      "tickers": ["KO","PG","PEP","CL","PM","VZ","T","D","SO","DUK","TLT","IEF","GLD","SCHD","VYM"]
+    }
+  ]
+}

@@ -1,4 +1,19 @@
+node_modules/
+dist/
+.vite/
 
+# Local IDE / agent scratch
+.claude/
+
+# Editor / encoding artifacts
+*.tmp
 public/A
 scripts/A
 src/A
+A
+
+# Diagnostic raw payloads from failed JSON parses
+scripts/debug/
+
+# Quarantined cache files that couldn't be parsed at boot
+public/quarantine/

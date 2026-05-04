@@ -1,277 +1,404 @@
 import { useState, useEffect } from "react";
 
-// ── Palette ───────────────────────────────────────────────────────────────────
+// ── Palette: warm cream light theme with halo gold + soft pastels ─────────────
 const C = {
-  bg:      "#070910",
-  surface: "#0d1018",
-  card:    "#111520",
-  border:  "#1a2035",
-  text:    "#e2e8f8",
-  muted:   "#4a5580",
-  accent:  "#00d4aa",
-  gold:    "#ffd700",
-  blue:    "#4da6ff",
-  purple:  "#c084fc",
-  red:     "#ff4d6d",
-  orange:  "#ff8c42",
-  green:   "#22c55e",
-  shield:  "#60a5fa",
+  bg:       "#faf8f3",
+  surface:  "#ffffff",
+  subtle:   "#f3efe6",
+  ink:      "#1c1f2e",
+  text:     "#2a2e42",
+  muted:    "#7a7f93",
+  faint:    "#a8acbd",
+  border:   "#ece6d8",
+  hairline: "#f1ece0",
+
+  halo:     "#d4a574",   // warm gold — primary accent
+  haloDeep: "#b8895a",
+  haloSoft: "#f5d9b3",
+
+  mint:     "#34d399",   // growth / bullish
+  sky:      "#7dd3fc",   // defensive / info
+  coral:    "#fb7185",   // risk / bearish
+  lavender: "#a78bfa",   // smart money
+  butter:   "#fcd34d",   // value / neutral
+  peach:    "#fb923c",   // caution
+  shield:   "#60a5fa",   // defensive accent (cooler blue)
 };
 
 const OUTLOOK_COLOR = {
-  "Bullish":           C.accent,
-  "Cautiously Bullish":C.blue,
-  "Neutral":           C.gold,
-  "Cautious":          C.orange,
-  "Bearish":           C.red,
-  "Pending":           C.muted,
+  "Bullish":            C.mint,
+  "Cautiously Bullish": C.sky,
+  "Neutral":            C.butter,
+  "Cautious":           C.peach,
+  "Bearish":            C.coral,
+  "Pending":            C.faint,
 };
 
 const CATEGORY_COLOR = {
-  growth:    C.accent,
+  growth:    C.mint,
   defensive: C.shield,
-  value:     C.gold,
-  income:    C.purple,
+  value:     C.butter,
+  income:    C.lavender,
 };
 
+const RANK_COLORS = ["#e8b86b", "#c0c0cc", "#d4a574", C.mint, C.sky];
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function formatDate(iso) {
+function relativeTime(iso) {
+  if (!iso) return "—";
+  const ms = Date.now() - new Date(iso).getTime();
+  if (Number.isNaN(ms) || ms < 0) return "just now";
+  const s = Math.floor(ms / 1000);
+  if (s < 60)         return "just now";
+  const m = Math.floor(s / 60);
+  if (m < 60)         return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24)         return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if (d < 7)          return `${d}d ago`;
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function staleness(iso) {
+  if (!iso) return { label: "no data", tone: "muted" };
+  const hours = (Date.now() - new Date(iso).getTime()) / 3_600_000;
+  if (hours < 30)  return { label: "fresh",  tone: "fresh"  };
+  if (hours < 80)  return { label: "recent", tone: "recent" };
+  return { label: "stale", tone: "stale" };
+}
+
+function formatLong(iso) {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString("en-US", {
     month: "long", day: "numeric", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
+    hour: "numeric", minute: "2-digit",
   });
 }
 
-function Tag({ color = C.muted, children }) {
+// ── Atoms ─────────────────────────────────────────────────────────────────────
+function Pill({ color = C.muted, children, soft = true, style = {} }) {
   return (
     <span style={{
-      background: `${color}18`, color, border: `1px solid ${color}30`,
-      borderRadius: 4, padding: "2px 8px", fontSize: 11, fontWeight: 700,
-      letterSpacing: "0.05em", whiteSpace: "nowrap",
+      display: "inline-flex", alignItems: "center", gap: 5,
+      background: soft ? `${color}1f` : color,
+      color: soft ? color : "#fff",
+      border: soft ? `1px solid ${color}33` : "none",
+      borderRadius: 999, padding: "3px 10px",
+      fontSize: 11, fontWeight: 600, letterSpacing: "0.01em",
+      whiteSpace: "nowrap",
+      ...style,
     }}>
       {children}
     </span>
   );
 }
 
-function Card({ children, accent, style = {} }) {
+function Card({ children, accent, style = {}, padded = true }) {
   return (
     <div style={{
-      background: C.card,
-      border: `1px solid ${accent ? accent + "33" : C.border}`,
-      borderRadius: 14,
-      padding: "16px 18px",
+      background: C.surface,
+      border: `1px solid ${C.border}`,
+      borderRadius: 20,
+      padding: padded ? "16px 18px" : 0,
       position: "relative",
       overflow: "hidden",
+      boxShadow: "0 1px 2px rgba(28,31,46,0.03), 0 4px 16px rgba(28,31,46,0.04)",
       ...style,
     }}>
       {accent && (
-        <div style={{ position: "absolute", top: 0, left: 0, width: 3, height: "100%", background: accent }} />
+        <div style={{
+          position: "absolute", top: 0, left: 0, right: 0, height: 3,
+          background: `linear-gradient(90deg, ${accent}, ${accent}66)`,
+        }} />
       )}
       {children}
     </div>
   );
 }
 
-function Section({ title, children }) {
+function SectionTitle({ children, accent }) {
   return (
-    <div style={{ marginBottom: 24 }}>
-      <div style={{
-        fontSize: 11, color: C.muted, fontWeight: 700,
-        letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12,
-      }}>
-        {title}
-      </div>
-      {children}
+    <div style={{
+      display: "flex", alignItems: "center", gap: 8,
+      fontSize: 11, color: C.muted, fontWeight: 700,
+      letterSpacing: "0.14em", textTransform: "uppercase",
+      marginBottom: 12,
+    }}>
+      {accent && (
+        <span style={{
+          width: 6, height: 6, borderRadius: "50%", background: accent,
+        }} />
+      )}
+      <span>{children}</span>
     </div>
   );
 }
 
-// ── Connection + Cycle Status Bar ─────────────────────────────────────────────
-function StatusBar({ data, connected }) {
+// ── Halo brand mark (SVG ring with soft glow) ─────────────────────────────────
+function HaloMark({ size = 28 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden>
+      <defs>
+        <radialGradient id="halo-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="55%" stopColor={C.haloSoft} stopOpacity="0" />
+          <stop offset="80%" stopColor={C.haloSoft} stopOpacity="0.55" />
+          <stop offset="100%" stopColor={C.haloSoft} stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id="halo-ring" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%"  stopColor={C.haloDeep} />
+          <stop offset="60%" stopColor={C.halo} />
+          <stop offset="100%" stopColor={C.haloSoft} />
+        </linearGradient>
+      </defs>
+      <circle cx="16" cy="16" r="14" fill="url(#halo-glow)" />
+      <circle cx="16" cy="16" r="10.5" fill="none" stroke="url(#halo-ring)" strokeWidth="2.4" />
+      <circle cx="16" cy="16" r="2.2" fill={C.halo} />
+    </svg>
+  );
+}
+
+// ── Status row: freshness + cycle phase ───────────────────────────────────────
+function StatusRow({ data, connected }) {
   if (!connected) {
     return (
-      <div style={{ display: "flex", gap: 8, alignItems: "center", padding: "6px 0 10px" }}>
-        <span style={{
-          display: "flex", alignItems: "center", gap: 5,
-          background: `${C.red}18`, border: `1px solid ${C.red}30`,
-          borderRadius: 20, padding: "4px 10px",
-          fontSize: 11, fontWeight: 700, color: C.red,
-        }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.red }} />
-          DISCONNECTED
-        </span>
+      <div style={{ padding: "8px 0 12px" }}>
+        <Pill color={C.coral}>
+          <span style={{
+            width: 6, height: 6, borderRadius: "50%", background: C.coral,
+          }} />
+          offline
+        </Pill>
       </div>
     );
   }
 
-  const today = new Date().toISOString().slice(0, 10);
-  const isToday     = data?.todayDate === today;
-  const cycles      = data?.cyclesCompletedToday || 0;
-  const allDone     = cycles >= 1; // schedule is now once-daily
-  const cycleLabel  = data?.dailyCycleLabel || "";
-  const statusColor = isToday ? (allDone ? C.accent : C.gold) : C.muted;
+  const generated = data?.generatedAt || data?.metadata?.generatedAt;
+  const fresh = staleness(generated);
+  const tone =
+    fresh.tone === "fresh"  ? C.mint :
+    fresh.tone === "recent" ? C.butter :
+                              C.faint;
 
   return (
-    <div style={{ display: "flex", gap: 7, alignItems: "center", padding: "6px 0 10px", flexWrap: "wrap" }}>
-      {/* Live / Cached badge */}
-      <span style={{
-        display: "flex", alignItems: "center", gap: 5,
-        background: `${statusColor}18`, border: `1px solid ${statusColor}30`,
-        borderRadius: 20, padding: "4px 10px",
-        fontSize: 11, fontWeight: 700, color: statusColor,
-      }}>
+    <div style={{ display: "flex", gap: 6, alignItems: "center", padding: "8px 0 12px", flexWrap: "wrap" }}>
+      <Pill color={tone}>
         <span style={{
-          width: 6, height: 6, borderRadius: "50%",
-          background: statusColor,
-          animation: isToday ? "pulse 2s infinite" : "none",
+          width: 6, height: 6, borderRadius: "50%", background: tone,
+          animation: fresh.tone === "fresh" ? "pulse 2.4s infinite" : "none",
         }} />
-        {isToday ? "LIVE" : "CACHED"}
-      </span>
+        updated {relativeTime(generated)}
+      </Pill>
 
-      {/* Cycle count badge */}
-      {data && (
-        <span style={{
-          display: "flex", alignItems: "center", gap: 5,
-          background: `${allDone ? C.accent : C.gold}18`,
-          border: `1px solid ${allDone ? C.accent : C.gold}30`,
-          borderRadius: 20, padding: "4px 10px",
-          fontSize: 11, fontWeight: 700,
-          color: allDone ? C.accent : C.gold,
-        }}>
-          {allDone ? "✓" : "🔄"} {cycles}/1 daily cycle
-          {cycleLabel ? ` · ${cycleLabel}` : ""}
-        </span>
+      {data?.dailyCycleLabel && (
+        <Pill color={C.halo}>
+          {data.dailyCycleLabel} · {data.dailyCycleTimeET}
+        </Pill>
       )}
 
-      {/* Defensive score badge */}
       {data?.defensiveScore != null && (
-        <span style={{
-          background: `${C.shield}18`, border: `1px solid ${C.shield}30`,
-          borderRadius: 20, padding: "4px 10px",
-          fontSize: 11, fontWeight: 700, color: C.shield,
-        }}>
-          🛡 Defense {data.defensiveScore}/10
-        </span>
+        <Pill color={C.shield}>
+          shield {data.defensiveScore}/10
+        </Pill>
       )}
     </div>
   );
 }
 
-// ── Stock Pick Card ───────────────────────────────────────────────────────────
-function PickCard({ pick, compact = false }) {
+// ── Pick card ─────────────────────────────────────────────────────────────────
+const CONVICTION_COLOR = {
+  high:        "#0f9d6c",
+  medium:      "#d4a574",
+  speculative: "#a78bfa",
+};
+
+function PickCard({ pick }) {
   const [expanded, setExpanded] = useState(false);
-  const rankColor = [C.gold, "#c0c0c0", "#cd7f32", C.accent, C.blue][pick.rank - 1] || C.accent;
   const isDefensive = pick.category === "defensive";
+  const accent = isDefensive ? C.shield : (RANK_COLORS[pick.rank - 1] || C.halo);
+  const catColor = CATEGORY_COLOR[pick.category] || C.muted;
+  const convictionColor = CONVICTION_COLOR[pick.conviction] || C.muted;
+  const hasDetails = pick.catalyst || pick.entryNote || pick.exitTrigger || pick.keyRisk;
 
   return (
-    <Card accent={isDefensive ? C.shield : rankColor} style={{ marginBottom: 10 }}>
-      <div style={{ paddingLeft: 8 }}>
-        {/* Header row */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+    <div style={{
+      background: C.surface,
+      border: `1px solid ${C.border}`,
+      borderRadius: 22,
+      padding: "18px 18px 16px",
+      marginBottom: 12,
+      boxShadow: "0 1px 2px rgba(28,31,46,0.03), 0 6px 20px rgba(28,31,46,0.05)",
+      position: "relative",
+      overflow: "hidden",
+    }}>
+      {/* Soft accent corner glow */}
+      <div style={{
+        position: "absolute", top: -40, right: -40, width: 120, height: 120,
+        background: `radial-gradient(circle, ${accent}26 0%, transparent 70%)`,
+        pointerEvents: "none",
+      }} />
+
+      {/* Header row */}
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 10 }}>
+        <div style={{
+          width: 38, height: 38, borderRadius: 14,
+          background: `linear-gradient(135deg, ${accent}33, ${accent}15)`,
+          border: `1px solid ${accent}55`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontWeight: 800, color: accent, fontSize: 15, flexShrink: 0,
+        }}>
+          {isDefensive ? "✦" : pick.rank}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
-            width: 26, height: 26, borderRadius: "50%",
-            background: `${isDefensive ? C.shield : rankColor}22`,
-            border: `1px solid ${isDefensive ? C.shield : rankColor}55`,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontWeight: 900, color: isDefensive ? C.shield : rankColor, fontSize: 12, flexShrink: 0,
+            fontSize: 24, fontWeight: 800, color: C.ink,
+            letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 2,
           }}>
-            {isDefensive ? "🛡" : pick.rank}
+            {pick.ticker}
           </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-              <span style={{ fontSize: 22, fontWeight: 900, color: C.text, letterSpacing: "-0.02em" }}>
-                {pick.ticker}
-              </span>
-              <span style={{ fontSize: 12, color: C.muted }}>{pick.name}</span>
-            </div>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-            <Tag color={isDefensive ? C.shield : rankColor}>Score {pick.score}/100</Tag>
-            {pick.smartMoneyBacking && <Tag color={C.purple}>Smart Money ✓</Tag>}
+          <div style={{
+            fontSize: 12.5, color: C.muted, lineHeight: 1.4,
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          }}>
+            {pick.name}
           </div>
         </div>
-
-        {/* Meta row */}
-        <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
-          {pick.sector    && <Tag color={C.blue}>{pick.sector}</Tag>}
-          {pick.horizon   && <Tag color={C.gold}>{pick.horizon}</Tag>}
-          {pick.category  && (
-            <Tag color={CATEGORY_COLOR[pick.category] || C.muted}>
-              {pick.category.toUpperCase()}
-            </Tag>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 5 }}>
+          <Pill color={accent} soft={false} style={{ fontWeight: 700 }}>
+            {pick.score}
+          </Pill>
+          {pick.suggestedWeight != null && (
+            <Pill color={C.halo}>{pick.suggestedWeight}%</Pill>
           )}
         </div>
-
-        {/* Rationale */}
-        {!compact && (
-          <p style={{ color: C.muted, fontSize: 13, lineHeight: 1.7, margin: "0 0 10px" }}>
-            {pick.rationale}
-          </p>
-        )}
-
-        {/* Risk (expandable) */}
-        {!compact && (
-          <>
-            <button
-              onClick={() => setExpanded(!expanded)}
-              style={{
-                background: "none", border: "none", color: C.muted,
-                fontSize: 11, cursor: "pointer", padding: 0,
-                display: "flex", alignItems: "center", gap: 4,
-              }}
-            >
-              {expanded ? "▲" : "▼"} {expanded ? "Hide" : "Show"} key risk
-            </button>
-            {expanded && (
-              <div style={{
-                marginTop: 8, background: `${C.red}10`,
-                border: `1px solid ${C.red}20`, borderRadius: 6, padding: "8px 10px",
-              }}>
-                <span style={{ fontSize: 11, color: C.red, fontWeight: 700 }}>⚠ KEY RISK: </span>
-                <span style={{ fontSize: 12, color: `${C.red}cc` }}>{pick.keyRisk}</span>
-              </div>
-            )}
-          </>
-        )}
       </div>
-    </Card>
+
+      {/* Meta chips */}
+      <div style={{ display: "flex", gap: 5, marginBottom: 12, flexWrap: "wrap" }}>
+        {pick.sector && <Pill color={C.muted}>{pick.sector}</Pill>}
+        {pick.horizon && <Pill color={C.halo}>{pick.horizon}</Pill>}
+        {pick.category && <Pill color={catColor}>{pick.category}</Pill>}
+        {pick.conviction && (
+          <Pill color={convictionColor} soft={false} style={{ fontWeight: 700 }}>
+            {pick.conviction}
+          </Pill>
+        )}
+        {pick.smartMoneyBacking && <Pill color={C.lavender}>✦ smart $</Pill>}
+      </div>
+
+      {/* Rationale */}
+      <p style={{
+        color: C.text, fontSize: 13.5, lineHeight: 1.65, margin: "0 0 10px",
+      }}>
+        {pick.rationale}
+      </p>
+
+      {/* Inline catalyst preview (always visible — most important field for timing) */}
+      {pick.catalyst && (
+        <div style={{
+          background: `${C.halo}0f`, border: `1px solid ${C.halo}33`,
+          borderRadius: 12, padding: "8px 11px", marginBottom: 10,
+        }}>
+          <div style={{ fontSize: 9.5, color: C.haloDeep, fontWeight: 700, letterSpacing: "0.12em", marginBottom: 3 }}>
+            ✦ CATALYST{pick.catalystWindow ? ` · ${pick.catalystWindow}` : ""}
+          </div>
+          <div style={{ fontSize: 12, color: C.ink, lineHeight: 1.5 }}>
+            {pick.catalyst}
+          </div>
+        </div>
+      )}
+
+      {/* Details disclosure — entry, exit, risk */}
+      {hasDetails && (
+        <>
+          <button
+            onClick={() => setExpanded(!expanded)}
+            style={{
+              background: C.subtle, border: "none", color: C.muted,
+              fontSize: 11, fontWeight: 600, cursor: "pointer",
+              padding: "6px 11px", borderRadius: 999,
+              display: "inline-flex", alignItems: "center", gap: 4,
+            }}
+          >
+            {expanded ? "hide" : "show"} thesis details
+          </button>
+          {expanded && (
+            <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
+              {pick.entryNote && (
+                <DetailBlock color={C.mint}     label="ENTRY"   text={pick.entryNote} />
+              )}
+              {pick.exitTrigger && (
+                <DetailBlock color={C.peach}    label="EXIT TRIGGER" text={pick.exitTrigger} />
+              )}
+              {pick.keyRisk && (
+                <DetailBlock color={C.coral}    label="KEY RISK"     text={pick.keyRisk} />
+              )}
+            </div>
+          )}
+        </>
+      )}
+    </div>
   );
 }
 
-// ── Phase Detail (Research tab) ───────────────────────────────────────────────
+function DetailBlock({ color, label, text }) {
+  return (
+    <div style={{
+      background: `${color}10`, border: `1px solid ${color}25`,
+      borderRadius: 12, padding: "9px 11px",
+    }}>
+      <div style={{ fontSize: 9.5, color, fontWeight: 700, letterSpacing: "0.12em", marginBottom: 3 }}>
+        {label}
+      </div>
+      <div style={{ fontSize: 12, color: C.ink, lineHeight: 1.55 }}>
+        {text}
+      </div>
+    </div>
+  );
+}
+
+// ── Phase detail (Research tab) ───────────────────────────────────────────────
 function PhaseDetail({ label, icon, color, content }) {
   const [open, setOpen] = useState(false);
   if (!content) return null;
   return (
-    <div style={{ marginBottom: 8 }}>
+    <div style={{ marginBottom: 10 }}>
       <button
         onClick={() => setOpen(!open)}
         style={{
-          width: "100%", background: C.card,
-          border: `1px solid ${open ? color + "44" : C.border}`,
-          borderRadius: 10, padding: "12px 14px",
-          display: "flex", alignItems: "center", gap: 10,
+          width: "100%", background: C.surface,
+          border: `1px solid ${open ? color + "55" : C.border}`,
+          borderRadius: 16, padding: "13px 15px",
+          display: "flex", alignItems: "center", gap: 11,
           cursor: "pointer", color: C.text, textAlign: "left",
+          boxShadow: open ? `0 4px 16px ${color}1a` : "0 1px 2px rgba(28,31,46,0.02)",
+          transition: "all 0.18s ease",
         }}
       >
-        <span style={{ fontSize: 16 }}>{icon}</span>
-        <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: open ? color : C.text }}>
+        <span style={{
+          width: 30, height: 30, borderRadius: 10,
+          background: `${color}1f`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 14, flexShrink: 0,
+        }}>
+          {icon}
+        </span>
+        <span style={{ flex: 1, fontSize: 13.5, fontWeight: 600, color: open ? color : C.ink }}>
           {label}
         </span>
-        <span style={{ color: C.muted, fontSize: 12 }}>{open ? "▲" : "▼"}</span>
+        <span style={{ color: C.faint, fontSize: 12 }}>{open ? "▴" : "▾"}</span>
       </button>
       {open && (
         <div style={{
-          background: C.surface, border: `1px solid ${C.border}`,
-          borderTop: "none", borderRadius: "0 0 10px 10px", padding: "14px 16px",
+          background: C.subtle, border: `1px solid ${C.border}`,
+          borderTop: "none", borderRadius: "0 0 16px 16px",
+          padding: "14px 16px",
+          marginTop: -8, paddingTop: 18,
         }}>
           <p style={{
-            color: C.muted, fontSize: 12.5, lineHeight: 1.8,
+            color: C.text, fontSize: 12.5, lineHeight: 1.75,
             whiteSpace: "pre-wrap", margin: 0,
           }}>
-            {content.length > 1200 ? content.slice(0, 1200) + "…" : content}
+            {content.length > 1400 ? content.slice(0, 1400) + "…" : content}
           </p>
         </div>
       )}
@@ -281,31 +408,27 @@ function PhaseDetail({ label, icon, color, content }) {
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 const TABS = [
-  { id: "picks",    label: "🏆 Picks"    },
-  { id: "weekly",   label: "📋 Weekly"   },
-  { id: "research", label: "🔬 Research" },
-  { id: "about",    label: "ℹ️ About"    },
+  { id: "picks",    label: "picks"    },
+  { id: "weekly",   label: "weekly"   },
+  { id: "research", label: "research" },
+  { id: "about",    label: "about"    },
 ];
 
 // ── Main App ──────────────────────────────────────────────────────────────────
 export default function App() {
-  const [data, setData]         = useState(null);
-  const [error, setError]       = useState(null);
-  const [tab, setTab]           = useState("picks");
-  const [loading, setLoading]   = useState(true);
+  const [data, setData]           = useState(null);
+  const [error, setError]         = useState(null);
+  const [tab, setTab]             = useState("picks");
+  const [loading, setLoading]     = useState(true);
   const [connected, setConnected] = useState(false);
+  const [universe, setUniverse]   = useState(null);
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
       try {
         const res = await fetch("/picks.json?t=" + Date.now());
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status} ${res.statusText} fetching /picks.json`);
-        }
-        // Read as text first so we can surface a useful parse error if the
-        // cached file is malformed (rather than the generic
-        // "Research Cycle Error" the data path would render).
+        if (!res.ok) throw new Error(`HTTP ${res.status} fetching /picks.json`);
         const raw = await res.text();
         let parsed;
         try {
@@ -319,11 +442,9 @@ export default function App() {
             detail += ` (byte ${pos} of ${raw.length})`;
             const lo = Math.max(0, pos - 60);
             const hi = Math.min(raw.length, pos + 60);
-            const ctx = raw.slice(lo, hi).replace(/\s+/g, " ");
-            detail += `\n…${ctx}…`;
+            detail += `\n…${raw.slice(lo, hi).replace(/\s+/g, " ")}…`;
           }
-          setError(`Cached picks unparseable — see error below\n${detail}`);
-          // We did connect to the file — it's the file itself that's bad.
+          setError(`Cached picks unparseable\n${detail}`);
           setConnected(true);
           setLoading(false);
           return;
@@ -339,183 +460,237 @@ export default function App() {
         setLoading(false);
       }
     }
+    async function loadUniverse() {
+      try {
+        const res = await fetch("/universe.json?t=" + Date.now());
+        if (!res.ok) return;
+        const u = await res.json();
+        if (!cancelled) setUniverse(u);
+      } catch { /* non-fatal — About tab will hide universe */ }
+    }
     load();
-    // No interval polling: data refreshes once daily on the server, so
-    // re-fetching aggressively wastes bandwidth. A page reload is enough.
+    loadUniverse();
     return () => { cancelled = true; };
   }, []);
 
-  const outlookColor = data ? (OUTLOOK_COLOR[data.macroOutlook] || C.muted) : C.muted;
+  const outlookColor = data ? (OUTLOOK_COLOR[data.macroOutlook] || C.faint) : C.faint;
   const weeklyData   = data?.weeklyReport;
+  const universeSize = universe?.groups?.reduce((acc, g) => acc + g.tickers.length, 0) ?? null;
 
   return (
     <div style={{
       background: C.bg, minHeight: "100vh", color: C.text,
-      fontFamily: "'DM Sans','Segoe UI',sans-serif",
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'DM Sans', system-ui, sans-serif",
       maxWidth: 480, margin: "0 auto",
       paddingBottom: 80,
     }}>
       <style>{`
         button { font-family: inherit; }
-        ::-webkit-scrollbar { width: 3px; }
-        ::-webkit-scrollbar-thumb { background: #1a2035; border-radius: 2px; }
-        @keyframes fadeIn  { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: ${C.border}; border-radius: 2px; }
+        @keyframes fadeIn  { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
         @keyframes spin    { to{transform:rotate(360deg)} }
-        @keyframes pulse   { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        @keyframes pulse   { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.85)} }
+        @keyframes haloFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-2px)} }
       `}</style>
 
       {/* ── Sticky Header ── */}
       <div style={{
-        background: C.surface, borderBottom: `1px solid ${C.border}`,
-        padding: "env(safe-area-inset-top, 0px) 20px 0",
+        background: `${C.bg}d9`,
+        backdropFilter: "saturate(180%) blur(20px)",
+        WebkitBackdropFilter: "saturate(180%) blur(20px)",
+        borderBottom: `1px solid ${C.hairline}`,
+        padding: "env(safe-area-inset-top, 0px) 22px 0",
         position: "sticky", top: 0, zIndex: 100,
       }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0 0" }}>
-          <div>
-            <div style={{
-              fontWeight: 900, fontSize: 19, letterSpacing: "-0.03em",
-              background: `linear-gradient(90deg,${C.accent},${C.blue})`,
-              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-            }}>
-              AUTONOMOUS ALPHA
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ animation: "haloFloat 4s ease-in-out infinite" }}>
+              <HaloMark size={30} />
             </div>
-            <div style={{ fontSize: 10, color: C.muted, letterSpacing: "0.1em", fontWeight: 600 }}>
-              AI STOCK INTELLIGENCE · DAILY RESEARCH
+            <div>
+              <div style={{
+                fontSize: 22, fontWeight: 800, color: C.ink,
+                letterSpacing: "-0.04em", lineHeight: 1,
+              }}>
+                halo
+              </div>
+              <div style={{
+                fontSize: 9.5, color: C.muted, letterSpacing: "0.18em",
+                fontWeight: 600, marginTop: 3, textTransform: "uppercase",
+              }}>
+                ai market intelligence
+              </div>
             </div>
           </div>
           {data?.macroOutlook && data.macroOutlook !== "Pending" && (
-            <Tag color={outlookColor}>{data.macroOutlook}</Tag>
+            <Pill color={outlookColor} soft={false} style={{ padding: "4px 12px" }}>
+              {data.macroOutlook}
+            </Pill>
           )}
         </div>
 
-        {/* Connection + Cycle Status */}
-        <StatusBar data={data} connected={connected} />
+        <StatusRow data={data} connected={connected} />
 
-        {/* Tab bar */}
-        <div style={{ display: "flex", marginTop: 2 }}>
-          {TABS.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{
-              flex: 1, background: "transparent", border: "none",
-              borderBottom: `2px solid ${tab === t.id ? C.accent : "transparent"}`,
-              padding: "10px 2px", cursor: "pointer",
-              color: tab === t.id ? C.accent : C.muted,
-              fontWeight: tab === t.id ? 700 : 500, fontSize: 12,
-              transition: "all 0.2s",
-            }}>
-              {t.label}
-            </button>
-          ))}
+        {/* Pill tab bar (segmented control style) */}
+        <div style={{
+          display: "flex", gap: 4, padding: 4, marginBottom: 10,
+          background: C.subtle,
+          borderRadius: 14,
+        }}>
+          {TABS.map(t => {
+            const active = tab === t.id;
+            return (
+              <button key={t.id} onClick={() => setTab(t.id)} style={{
+                flex: 1,
+                background: active ? C.surface : "transparent",
+                border: "none",
+                borderRadius: 11,
+                padding: "8px 4px",
+                cursor: "pointer",
+                color: active ? C.ink : C.muted,
+                fontWeight: active ? 700 : 500,
+                fontSize: 12.5,
+                boxShadow: active ? "0 1px 3px rgba(28,31,46,0.08)" : "none",
+                transition: "all 0.18s ease",
+                letterSpacing: "0.01em",
+              }}>
+                {t.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* ── Content ── */}
-      <div style={{ padding: "20px 16px", animation: "fadeIn 0.3s ease" }}>
+      <div style={{ padding: "18px 16px", animation: "fadeIn 0.3s ease" }}>
 
-        {/* Loading spinner */}
         {loading && (
           <div style={{ textAlign: "center", padding: "60px 0" }}>
             <div style={{
-              width: 32, height: 32, border: `3px solid ${C.accent}`,
+              width: 30, height: 30, border: `2.5px solid ${C.halo}`,
               borderTopColor: "transparent", borderRadius: "50%",
-              animation: "spin 0.8s linear infinite", margin: "0 auto 16px",
+              animation: "spin 0.8s linear infinite", margin: "0 auto 14px",
             }} />
-            <div style={{ color: C.muted, fontSize: 14 }}>Loading picks…</div>
+            <div style={{ color: C.muted, fontSize: 13 }}>fetching picks…</div>
           </div>
         )}
 
-        {/* Load error */}
         {error && (
-          <Card accent={C.red}>
-            <div style={{ color: C.red, fontWeight: 700, marginBottom: 6 }}>⚠ Load Error</div>
-            <div style={{ color: C.muted, fontSize: 12, lineHeight: 1.6, whiteSpace: "pre-wrap", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }}>{error}</div>
+          <Card accent={C.coral}>
+            <div style={{ color: C.coral, fontWeight: 700, marginBottom: 6, fontSize: 13 }}>
+              load error
+            </div>
+            <div style={{
+              color: C.muted, fontSize: 12, lineHeight: 1.6,
+              whiteSpace: "pre-wrap",
+              fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+            }}>
+              {error}
+            </div>
           </Card>
         )}
 
         {/* ════════════ PICKS TAB ════════════ */}
         {!loading && !error && tab === "picks" && (
           <>
-            {/* Cycle header */}
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 14, color: C.text, fontWeight: 700, marginBottom: 2 }}>
-                {data?.todayLabel || data?.metadata?.weekOf || "Daily Research"}
+            <div style={{ marginBottom: 22 }}>
+              <div style={{
+                fontSize: 17, color: C.ink, fontWeight: 700,
+                marginBottom: 4, letterSpacing: "-0.01em",
+              }}>
+                {data?.todayLabel || "today's picks"}
               </div>
-              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 4 }}>
-                {data?.dailyCycleLabel && (
-                  <Tag color={C.blue}>{data.dailyCycleLabel} ({data.dailyCycleTimeET})</Tag>
-                )}
-                {data?.dailyCycleNumber && (
-                  <Tag color={C.accent}>Cycle {data.dailyCycleNumber}/1</Tag>
-                )}
-              </div>
-              <div style={{ fontSize: 11, color: C.muted }}>
-                Updated: {formatDate(data?.generatedAt || data?.metadata?.generatedAt)}
+              <div style={{ fontSize: 12, color: C.muted }}>
+                last refreshed {formatLong(data?.generatedAt || data?.metadata?.generatedAt)}
               </div>
             </div>
 
-            {/* Research cycle error banner */}
             {data?.error && (
-              <Card accent={C.red} style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 11, color: C.red, fontWeight: 700, marginBottom: 4 }}>
-                  ⚠ Research Cycle Error
+              <Card accent={C.coral} style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 11, color: C.coral, fontWeight: 700, letterSpacing: "0.08em", marginBottom: 4 }}>
+                  RESEARCH CYCLE NOTE
                 </div>
-                <div style={{ fontSize: 12, color: `${C.red}cc` }}>{data.error}</div>
+                <div style={{ fontSize: 12.5, color: C.text }}>{data.error}</div>
               </Card>
             )}
 
-            {/* AI Synthesis */}
             {data?.summary && (
-              <Card style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 11, color: C.gold, fontWeight: 700, letterSpacing: "0.08em", marginBottom: 8 }}>
-                  AI SYNTHESIS
+              <Card style={{ marginBottom: 22, background: `linear-gradient(135deg, ${C.surface}, ${C.haloSoft}15)` }}>
+                <div style={{
+                  fontSize: 10.5, color: C.haloDeep, fontWeight: 700,
+                  letterSpacing: "0.16em", marginBottom: 8, textTransform: "uppercase",
+                }}>
+                  ✦ ai synthesis
                 </div>
-                <p style={{ color: C.text, fontSize: 13.5, lineHeight: 1.8 }}>{data.summary}</p>
+                <p style={{ color: C.ink, fontSize: 14, lineHeight: 1.7, margin: 0 }}>
+                  {data.summary}
+                </p>
+                {data.diversificationNote && (
+                  <div style={{
+                    marginTop: 12, paddingTop: 12,
+                    borderTop: `1px solid ${C.hairline}`,
+                    fontSize: 12, color: C.muted, lineHeight: 1.6,
+                  }}>
+                    <span style={{ color: C.haloDeep, fontWeight: 700 }}>diversification · </span>
+                    {data.diversificationNote}
+                  </div>
+                )}
               </Card>
             )}
 
-            {/* No picks yet */}
             {(!data?.picks || data.picks.length === 0) && (
-              <Card style={{ textAlign: "center", padding: "40px 20px" }}>
-                <div style={{ fontSize: 40, marginBottom: 12 }}>📡</div>
-                <div style={{ fontWeight: 700, color: C.text, marginBottom: 8 }}>Awaiting Research Cycle</div>
+              <Card style={{ textAlign: "center", padding: "44px 24px" }}>
+                <div style={{ marginBottom: 14 }}>
+                  <HaloMark size={48} />
+                </div>
+                <div style={{ fontWeight: 700, color: C.ink, marginBottom: 8, fontSize: 15 }}>
+                  awaiting first cycle
+                </div>
                 <div style={{ color: C.muted, fontSize: 13, lineHeight: 1.7 }}>
-                  Runs automatically once daily on weekdays:{"\n"}
-                  5 PM ET (after market close){"\n\n"}
-                  Or trigger manually from GitHub → Actions.
+                  Halo runs every weekday after the close.{"\n"}
+                  Trigger one manually from GitHub → Actions to see picks now.
                 </div>
               </Card>
             )}
 
-            {/* Pick cards — growth picks */}
+            {/* Growth/value picks */}
             {data?.picks?.filter(p => p.category !== "defensive").length > 0 && (
-              <Section title={`Top Picks · ${data.picks.filter(p => p.category !== "defensive").length} Growth/Value`}>
+              <>
+                <SectionTitle accent={C.halo}>
+                  top picks · {data.picks.filter(p => p.category !== "defensive").length}
+                </SectionTitle>
                 {data.picks
                   .filter(p => p.category !== "defensive")
                   .map(p => <PickCard key={p.ticker} pick={p} />)}
-              </Section>
+              </>
             )}
 
-            {/* Defensive picks section */}
+            {/* Defensive picks */}
             {data?.picks?.filter(p => p.category === "defensive").length > 0 && (
-              <Section title={`🛡 Defensive Picks`}>
-                <Card accent={C.shield} style={{ marginBottom: 12, padding: "10px 14px" }}>
-                  <p style={{ fontSize: 12, color: `${C.shield}cc`, margin: 0, lineHeight: 1.6 }}>
-                    Defensive Score {data.defensiveScore}/10 — AI has recommended capital preservation positions for this environment.
+              <div style={{ marginTop: 18 }}>
+                <SectionTitle accent={C.shield}>
+                  defensive picks
+                </SectionTitle>
+                <Card accent={C.shield} style={{ marginBottom: 12, padding: "12px 16px" }}>
+                  <p style={{ fontSize: 12, color: C.text, margin: 0, lineHeight: 1.6 }}>
+                    Shield score {data.defensiveScore}/10 — capital preservation positions for this environment.
                   </p>
                 </Card>
                 {data.picks
                   .filter(p => p.category === "defensive")
                   .map(p => <PickCard key={p.ticker} pick={p} />)}
-              </Section>
+              </div>
             )}
 
-            {/* Disclaimer */}
             <div style={{
-              background: C.surface, border: `1px solid ${C.border}`,
-              borderRadius: 10, padding: "12px 14px", marginTop: 8,
+              background: C.subtle,
+              border: `1px solid ${C.border}`,
+              borderRadius: 14, padding: "12px 14px", marginTop: 14,
             }}>
-              <div style={{ fontSize: 10, color: C.muted, lineHeight: 1.7 }}>
-                ⚠️ <strong style={{ color: C.muted }}>Not financial advice.</strong>{" "}
-                AI-generated research for informational purposes only. Always conduct your own due diligence. Investing involves risk of loss.
+              <div style={{ fontSize: 10.5, color: C.muted, lineHeight: 1.7 }}>
+                <strong style={{ color: C.text }}>Not financial advice.</strong>{" "}
+                AI-generated research for informational purposes only. Always do your own due diligence.
               </div>
             </div>
           </>
@@ -526,50 +701,64 @@ export default function App() {
           <>
             {weeklyData ? (
               <>
-                <div style={{ marginBottom: 20 }}>
-                  <div style={{ fontSize: 14, color: C.text, fontWeight: 700, marginBottom: 4 }}>
+                <div style={{ marginBottom: 22 }}>
+                  <div style={{ fontSize: 17, color: C.ink, fontWeight: 700, marginBottom: 4, letterSpacing: "-0.01em" }}>
                     {weeklyData.weekOf}
                   </div>
-                  <div style={{ fontSize: 11, color: C.muted }}>
-                    Generated: {formatDate(weeklyData.generatedAt)}
+                  <div style={{ fontSize: 12, color: C.muted }}>
+                    generated {relativeTime(weeklyData.generatedAt)}
                   </div>
                 </div>
 
                 {weeklyData.summary && (
-                  <Card style={{ marginBottom: 20 }}>
-                    <div style={{ fontSize: 11, color: C.gold, fontWeight: 700, letterSpacing: "0.08em", marginBottom: 8 }}>
-                      WEEKLY AI SYNTHESIS
+                  <Card style={{ marginBottom: 22, background: `linear-gradient(135deg, ${C.surface}, ${C.haloSoft}15)` }}>
+                    <div style={{
+                      fontSize: 10.5, color: C.haloDeep, fontWeight: 700,
+                      letterSpacing: "0.16em", marginBottom: 8, textTransform: "uppercase",
+                    }}>
+                      ✦ weekly synthesis
                     </div>
-                    <p style={{ color: C.text, fontSize: 13.5, lineHeight: 1.8 }}>{weeklyData.summary}</p>
+                    <p style={{ color: C.ink, fontSize: 14, lineHeight: 1.7, margin: 0 }}>
+                      {weeklyData.summary}
+                    </p>
+                    {weeklyData.diversificationNote && (
+                      <div style={{
+                        marginTop: 12, paddingTop: 12,
+                        borderTop: `1px solid ${C.hairline}`,
+                        fontSize: 12, color: C.muted, lineHeight: 1.6,
+                      }}>
+                        <span style={{ color: C.haloDeep, fontWeight: 700 }}>diversification · </span>
+                        {weeklyData.diversificationNote}
+                      </div>
+                    )}
                   </Card>
                 )}
 
-                <Section title={`Weekly Top ${weeklyData.picks?.length || 0} Picks`}>
-                  {weeklyData.picks?.map(p => <PickCard key={p.ticker + "-weekly"} pick={p} />)}
-                </Section>
+                <SectionTitle accent={C.halo}>
+                  weekly top {weeklyData.picks?.length || 0} picks
+                </SectionTitle>
+                {weeklyData.picks?.map(p => <PickCard key={p.ticker + "-w"} pick={p} />)}
 
-                {/* Weekly macro outlook */}
                 {weeklyData.macroOutlook && (
-                  <div style={{ marginTop: 8 }}>
-                    <div style={{ fontSize: 11, color: C.muted, marginBottom: 8 }}>WEEKLY MACRO OUTLOOK</div>
-                    <Tag color={OUTLOOK_COLOR[weeklyData.macroOutlook] || C.muted}>
+                  <div style={{ marginTop: 14, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <Pill color={OUTLOOK_COLOR[weeklyData.macroOutlook] || C.faint} soft={false}>
                       {weeklyData.macroOutlook}
-                    </Tag>
+                    </Pill>
                     {weeklyData.defensiveScore != null && (
-                      <span style={{ marginLeft: 8 }}>
-                        <Tag color={C.shield}>Defensive Score {weeklyData.defensiveScore}/10</Tag>
-                      </span>
+                      <Pill color={C.shield}>shield {weeklyData.defensiveScore}/10</Pill>
                     )}
                   </div>
                 )}
               </>
             ) : (
-              <Card style={{ textAlign: "center", padding: "40px 20px" }}>
-                <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
-                <div style={{ fontWeight: 700, color: C.text, marginBottom: 8 }}>No Weekly Report Yet</div>
+              <Card style={{ textAlign: "center", padding: "44px 24px" }}>
+                <div style={{ marginBottom: 14 }}><HaloMark size={48} /></div>
+                <div style={{ fontWeight: 700, color: C.ink, marginBottom: 8, fontSize: 15 }}>
+                  no weekly report yet
+                </div>
                 <div style={{ color: C.muted, fontSize: 13, lineHeight: 1.7 }}>
-                  Weekly reports are generated every Sunday and saved here.{"\n"}
-                  Daily picks appear in the Picks tab.
+                  Weekly reports are generated every Friday after market close.{"\n"}
+                  Daily picks live in the Picks tab.
                 </div>
               </Card>
             )}
@@ -579,16 +768,15 @@ export default function App() {
         {/* ════════════ RESEARCH TAB ════════════ */}
         {!loading && !error && tab === "research" && (
           <>
-            <div style={{ marginBottom: 16, color: C.muted, fontSize: 13 }}>
-              Full research data from the latest automated cycle:
+            <div style={{ marginBottom: 18, color: C.muted, fontSize: 13 }}>
+              Full research data from the latest cycle.
             </div>
-
             {[
-              { id: "macro",    label: "Macro Climate",             icon: "🌍", color: C.blue   },
-              { id: "sectors",  label: "Sector Rotation",           icon: "⚙️",  color: C.gold   },
-              { id: "momentum", label: "Price & Earnings Momentum", icon: "📈", color: C.accent },
-              { id: "smart",    label: "Smart Money Tracking",      icon: "🧠", color: C.purple },
-              { id: "risk",     label: "Risk Assessment",           icon: "🛡️",  color: C.red    },
+              { id: "macro",    label: "macro climate",             icon: "🌤", color: C.sky      },
+              { id: "sectors",  label: "sector rotation",           icon: "✦",  color: C.halo     },
+              { id: "momentum", label: "price & earnings momentum", icon: "↗",  color: C.mint     },
+              { id: "smart",    label: "smart money tracking",      icon: "◆",  color: C.lavender },
+              { id: "risk",     label: "risk assessment",           icon: "▲",  color: C.coral    },
             ].map(ph => (
               <PhaseDetail
                 key={ph.id}
@@ -601,8 +789,10 @@ export default function App() {
 
             {!data?.phaseData?.macro && (
               <div style={{ textAlign: "center", padding: "40px 0", color: C.muted }}>
-                <div style={{ fontSize: 32, marginBottom: 8 }}>🔬</div>
-                Research data will appear here after the first cycle runs.
+                <HaloMark size={40} />
+                <div style={{ marginTop: 10, fontSize: 13 }}>
+                  Research data appears here after the first cycle.
+                </div>
               </div>
             )}
           </>
@@ -611,92 +801,104 @@ export default function App() {
         {/* ════════════ ABOUT TAB ════════════ */}
         {tab === "about" && (
           <>
-            <Section title="How It Works">
-              <Card style={{ marginBottom: 10 }}>
-                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                  {[
-                    { icon: "📡", title: "Autonomous Daily Research", desc: "Once every weekday at 5 PM ET (after market close), GitHub Actions automatically runs a 6-phase AI research cycle using Claude AI with live web search." },
-                    { icon: "🔍", title: "6 Research Phases", desc: "Macro climate → Sector rotation → Price momentum → Smart money tracking → Risk assessment → Final picks synthesis." },
-                    { icon: "🛡", title: "Defensive Category", desc: "The AI evaluates whether the macro environment warrants defensive positioning — it can pick bond ETFs (TLT, IEF), gold (GLD), dividend ETFs (SCHD, VYM), utilities, or staples alongside growth stocks." },
-                    { icon: "🏆", title: "Daily + Weekly Picks", desc: "The daily cycle updates the Picks tab after market close. Every Sunday the AI generates a formal weekly report saved to the Weekly tab." },
-                    { icon: "📱", title: "Live Status", desc: "The header shows LIVE status once today's daily cycle has completed. Green = fresh data today." },
-                    { icon: "⚡", title: "Manual Trigger", desc: "Go to GitHub repo → Actions → Daily Market Research → Run workflow to trigger a cycle immediately." },
-                  ].map(item => (
-                    <div key={item.title} style={{
-                      display: "flex", gap: 12, paddingBottom: 14,
-                      borderBottom: `1px solid ${C.border}`,
-                    }}>
-                      <span style={{ fontSize: 20, flexShrink: 0 }}>{item.icon}</span>
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: 13, color: C.text, marginBottom: 3 }}>{item.title}</div>
-                        <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.7 }}>{item.desc}</div>
+            <SectionTitle accent={C.halo}>how it works</SectionTitle>
+            <Card style={{ marginBottom: 16 }}>
+              {[
+                { icon: "✦", title: "Autonomous research",   desc: "Every weekday after the 4 PM ET close, GitHub Actions runs a 6-phase Claude research cycle with live web search." },
+                { icon: "◑", title: "Six phases",             desc: "Macro climate → sector rotation → momentum → smart money → risk → final pick synthesis." },
+                { icon: "▢", title: "Defensive layer",        desc: "Halo evaluates whether the macro warrants capital preservation — picks may include bonds (TLT, IEF), gold (GLD), dividend ETFs, utilities, or staples." },
+                { icon: "◆", title: "Daily + weekly",         desc: "Daily picks update the Picks tab. Every Friday after the close, Halo writes a formal weekly report to the Weekly tab." },
+                { icon: "↗", title: "Trigger manually",       desc: "GitHub repo → Actions → Halo Daily Market Research → Run workflow." },
+              ].map((item, i, arr) => (
+                <div key={item.title} style={{
+                  display: "flex", gap: 12, padding: "12px 0",
+                  borderBottom: i < arr.length - 1 ? `1px solid ${C.hairline}` : "none",
+                }}>
+                  <span style={{
+                    width: 30, height: 30, borderRadius: 10,
+                    background: `${C.halo}1a`, color: C.haloDeep,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 14, flexShrink: 0, fontWeight: 700,
+                  }}>
+                    {item.icon}
+                  </span>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 13.5, color: C.ink, marginBottom: 3 }}>
+                      {item.title}
+                    </div>
+                    <div style={{ fontSize: 12.5, color: C.muted, lineHeight: 1.65 }}>
+                      {item.desc}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </Card>
+
+            {universe?.groups && (
+              <>
+                <SectionTitle accent={C.halo}>
+                  universe · {universeSize} tickers
+                </SectionTitle>
+                <Card style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.65, marginBottom: 14 }}>
+                    Halo curates picks from this universe across all major sectors.
+                  </div>
+                  {universe.groups.map(group => (
+                    <div key={group.key} style={{ marginBottom: 14 }}>
+                      <div style={{
+                        fontSize: 10, color: C.muted, fontWeight: 700,
+                        letterSpacing: "0.12em", marginBottom: 7, textTransform: "uppercase",
+                      }}>
+                        {group.label} · {group.tickers.length}
+                      </div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                        {group.tickers.map(t => (
+                          <span key={t} style={{
+                            background: C.subtle,
+                            color: C.text,
+                            border: `1px solid ${C.border}`,
+                            borderRadius: 8, padding: "3px 8px",
+                            fontSize: 11, fontWeight: 600,
+                            fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+                          }}>
+                            {t}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   ))}
-                </div>
-              </Card>
-            </Section>
+                </Card>
+              </>
+            )}
 
-            <Section title="Stock Universe (115 tickers)">
-              <Card>
-                <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.7, marginBottom: 10 }}>
-                  The AI researches and selects from this curated universe of 115 tickers across all major sectors — including a new Defensive category:
+            <SectionTitle accent={C.halo}>system</SectionTitle>
+            <Card>
+              {[
+                ["schedule",       "weekdays · 22:00 UTC (post-close, year-round)"],
+                ["weekly report",  "fridays · after market close"],
+                ["model",          "claude sonnet"],
+                ["web search",     "live · anthropic tools"],
+                ["min hold",       "1 year (ideally 3–5)"],
+                ["universe",       universeSize ? `${universeSize} tickers` : "loading…"],
+                ["phases",         "6 sequential"],
+                ["shield score",   "1–10 auto-adjust"],
+              ].map(([k, v], i, arr) => (
+                <div key={k} style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  padding: "10px 0",
+                  borderBottom: i < arr.length - 1 ? `1px solid ${C.hairline}` : "none",
+                }}>
+                  <span style={{ fontSize: 12, color: C.muted }}>{k}</span>
+                  <span style={{ fontSize: 12.5, color: C.ink, fontWeight: 600, textAlign: "right", maxWidth: "62%" }}>
+                    {v}
+                  </span>
                 </div>
-                {[
-                  { label: "Mega-Cap Tech / AI / Semis",           color: C.accent, tickers: ["NVDA","MSFT","AAPL","AMZN","GOOGL","META","TSLA","AVGO","TSM","AMD","QCOM","MU","ARM","MRVL","ANET","ORCL","ADBE","INTU","NFLX","UBER"] },
-                  { label: "Cybersecurity / Cloud / SaaS",         color: C.blue,   tickers: ["PANW","CRWD","ZS","PLTR","SNOW","CRM","NOW","NET"] },
-                  { label: "Healthcare / Biotech / MedTech",       color: C.purple, tickers: ["LLY","NVO","UNH","JNJ","ABBV","MRK","PFE","AMGN","ISRG","BSX","TMO","VRTX","REGN","GILD","ELV"] },
-                  { label: "Financials / Fintech",                 color: C.gold,   tickers: ["BRK.B","JPM","BAC","GS","MS","V","MA","AXP","BLK","SPGI"] },
-                  { label: "Energy / Oil & Gas / Pipelines",       color: C.orange, tickers: ["XOM","CVX","OXY","SLB","EOG","COP","MPC","WMB"] },
-                  { label: "Industrials / Defense / Aerospace",    color: C.blue,   tickers: ["ETN","NEE","PWR","VST","CEG","RTX","LMT","NOC","CAT","GE"] },
-                  { label: "Consumer / Retail",                    color: C.accent, tickers: ["COST","WMT","HD","TJX","SBUX","NKE","MCD","LOW","TGT","BKNG"] },
-                  { label: "Materials / Diversified Industrial",   color: C.muted,  tickers: ["EMR","HON","DE","LIN","APD","NEM","FCX","ALB","SHW"] },
-                  { label: "REITs / Infrastructure",               color: C.purple, tickers: ["AMT","PLD","EQIX","WELL","O"] },
-                  { label: "High-Growth / Emerging Leaders",       color: C.red,    tickers: ["ALAB","ONTO","FLUT","CELH","ENPH"] },
-                  { label: "🛡 Defensive / Bonds / Safe Haven",    color: C.shield, tickers: ["KO","PG","PEP","CL","PM","VZ","T","D","SO","DUK","TLT","IEF","GLD","SCHD","VYM"] },
-                ].map(group => (
-                  <div key={group.label} style={{ marginBottom: 12 }}>
-                    <div style={{
-                      fontSize: 10, color: group.color, fontWeight: 700,
-                      letterSpacing: "0.08em", marginBottom: 6, textTransform: "uppercase",
-                    }}>
-                      {group.label}
-                    </div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                      {group.tickers.map(t => <Tag key={t} color={group.color}>{t}</Tag>)}
-                    </div>
-                  </div>
-                ))}
-              </Card>
-            </Section>
-
-            <Section title="System Info">
-              <Card>
-                {[
-                  ["Research schedule",  "Once daily weekdays (5 PM ET, after market close)"],
-                  ["Weekly reports",     "Every Sunday — saved to Weekly tab"],
-                  ["AI model",           "Claude Sonnet (Anthropic)"],
-                  ["Web search",         "Live data via Anthropic tools"],
-                  ["Minimum hold",       "1 year (ideally 3–5 years)"],
-                  ["Universe size",      "115 tickers (incl. defensive)"],
-                  ["Research phases",    "6 sequential phases"],
-                  ["Defensive scoring",  "1–10 scale auto-adjusts picks"],
-                ].map(([k, v]) => (
-                  <div key={k} style={{
-                    display: "flex", justifyContent: "space-between",
-                    padding: "8px 0", borderBottom: `1px solid ${C.border}`,
-                  }}>
-                    <span style={{ fontSize: 12, color: C.muted }}>{k}</span>
-                    <span style={{ fontSize: 12, color: C.text, fontWeight: 600, textAlign: "right", maxWidth: "60%" }}>{v}</span>
-                  </div>
-                ))}
-              </Card>
-            </Section>
+              ))}
+            </Card>
           </>
         )}
       </div>
 
-      {/* Bottom safe area */}
       <div style={{ height: "env(safe-area-inset-bottom, 20px)" }} />
     </div>
   );
