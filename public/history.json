@@ -65,6 +65,71 @@
           "catalyst": "May 12 April CPI print — a hot reading (re-accelerating core services) would cement 'no cuts in 2026' and push gold higher as real rates stay suppressed; separately, any Iran war escalation or Strait of Hormuz supply shock"
         }
       ]
+    },
+    {
+      "date": "2026-05-05",
+      "generatedAt": "2026-05-05T23:05:12.254Z",
+      "macroOutlook": "Cautiously Bullish",
+      "defensiveScore": 4,
+      "summary": "The regime call is unchanged: late-cycle stagflation-adjacent, with the Fed pinned at 3.5–3.75%, re-accelerating inflation (core PCE 3.2%), and equities trading at a negative equity risk premium (3.82% earnings yield vs. 4.38% 10Y). The portfolio expresses this in four deliberate layers: (1) AVGO and GOOGL as the two highest-conviction AI infrastructure compounders where fundamentals are genuinely accelerating into and past current valuations — AVGO via custom silicon with $100B in 2027 AI revenue visibility, GOOGL via Cloud re-acceleration at 63% growth and an undemanding 26x forward P/E; (2) GS as the capital markets quality franchise that benefits directly from volatility, steepening curve, and M&A recovery — Druckenmiller's XLF macro rotation bet; (3) LLY as the recession-resistant secular growth name in healthcare with GLP-1 demand durability and pipeline optionality; (4) GLD as the mandatory defensive sleeve with a defensiveScore of 4, providing stagflation hedge, Iran war premium protection, and near-zero equity correlation. AVGO, GS, and LLY are direct carry-overs from the prior 5-pick book with theses intact — GOOGL replaces ANET (which drew down 9.2% post-earnings on gross margin concerns) and GLD is maintained as the defensive anchor replacing IEF given the superior stagflation hedge profile. The dominant risk underwritten is an AI capex cycle reversal where a hyperscaler cuts 2026 capex guidance, which would simultaneously impair AVGO and GOOGL — the portfolio's largest two weights — though their different points in the value chain (custom silicon vs. Cloud platform) provide partial offset.",
+      "diversificationNote": "The five picks span four distinct sectors: Information Technology (AVGO), Communication Services (GOOGL), Financials (GS), Health Care (LLY), and Commodities/Real Assets (GLD) — satisfying the hard 3-sector minimum with a four-sector spread. AVGO and GOOGL share AI infrastructure spending as a common tailwind, but represent structurally different revenue models (fabless semiconductor vs. cloud platform/advertising), different customer bases, and different sensitivity to any single hyperscaler decision — an accepted and consciously sized concentration at 53% combined weight given the strength of the AI capex cycle evidence.",
+      "picks": [
+        {
+          "rank": 1,
+          "ticker": "AVGO",
+          "name": "Broadcom Inc.",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 95,
+          "conviction": "high",
+          "suggestedWeight": 28,
+          "catalyst": "Fiscal Q2 2026 earnings report (early June 2026) expected to confirm $10.7B AI chip revenue — 140% YoY — and updated FY2027 roadmap toward $100B AI revenue threshold"
+        },
+        {
+          "rank": 2,
+          "ticker": "GOOGL",
+          "name": "Alphabet Inc.",
+          "sector": "Communication Services",
+          "category": "growth",
+          "score": 93,
+          "conviction": "high",
+          "suggestedWeight": 25,
+          "catalyst": "Q2 2026 earnings (late July) with Google Cloud expected to sustain 55–65% growth; potential DOJ search antitrust ruling clarity; Gemini AI monetization acceleration in Search"
+        },
+        {
+          "rank": 3,
+          "ticker": "GS",
+          "name": "Goldman Sachs Group Inc.",
+          "sector": "Financials",
+          "category": "growth",
+          "score": 87,
+          "conviction": "high",
+          "suggestedWeight": 20,
+          "catalyst": "Q2 2026 earnings (mid-July) expected to show sustained FICC and equity trading revenue plus M&A advisory acceleration; any geopolitical de-escalation that unlocks pent-up deal pipeline"
+        },
+        {
+          "rank": 4,
+          "ticker": "LLY",
+          "name": "Eli Lilly and Company",
+          "sector": "Health Care",
+          "category": "growth",
+          "score": 88,
+          "conviction": "high",
+          "suggestedWeight": 15,
+          "catalyst": "Phase 3 readout for orforglipron (oral GLP-1, non-peptide) expected in H2 2026 — a potential $20B+ incremental TAM expansion if successful; ongoing Mounjaro/Zepbound demand data through quarterly earnings"
+        },
+        {
+          "rank": 5,
+          "ticker": "GLD",
+          "name": "SPDR Gold Shares ETF",
+          "sector": "Commodities / Real Assets",
+          "category": "defensive",
+          "score": 82,
+          "conviction": "high",
+          "suggestedWeight": 12,
+          "catalyst": "April CPI print (May 12) — a hot print above consensus cements 'no cut in 2026' narrative and drives gold higher; any Iran/Hormuz escalation sustaining oil above $100/bbl is simultaneously inflationary and gold-positive"
+        }
+      ]
     }
   ]
 }
