@@ -762,7 +762,7 @@ async function runResearch() {
   let picks = null;
   try {
     const picksPhase = getPhases(collected, today, universe, historyDigest)[5];
-    const picksRaw   = await runPhase(picksPhase, today, 8000);
+    const picksRaw   = await runPhase(picksPhase, today, 16000);
     picks = extractJSON(picksRaw);
     // Validate we actually got picks
     if (!Array.isArray(picks.picks) || picks.picks.length === 0) {
