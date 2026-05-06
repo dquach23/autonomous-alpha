@@ -1,6 +1,6 @@
 # ✦ Halo
 
-**AI-powered market intelligence.** Halo automatically researches the market every weekday after the close and delivers a ranked Top 5 long-term picks — no manual input.
+**AI-powered market intelligence.** Halo automatically researches the market every weekday after the close and delivers a ranked Top 10 long-term picks plus a Top 5 defensive picks/ETFs sleeve — no manual input.
 
 Built with Claude AI (Anthropic), GitHub Actions, React, and deployable to Vercel as an iPhone-friendly PWA with a soft Apple-aesthetic UI.
 
@@ -19,7 +19,7 @@ Claude AI runs 6 phases with live web search:
   3. Price & Earnings Momentum
   4. Smart Money Tracking
   5. Risk Assessment
-  6. Top 5 Picks Synthesis
+  6. Top 10 Picks + 5 Defensive Synthesis
        ↓
 Results saved to public/picks.json
        ↓
@@ -47,7 +47,8 @@ rather than restarting from zero each day:
   summary.
 - [`reports/daily/YYYY-MM-DD.md`](reports/daily/) archives every successful
   cycle as a permanent markdown brief (full thesis, catalyst, entry note, exit
-  trigger, key risk, plus all 5 phase outputs).
+  trigger, key risk, plus all 5 phase outputs across the growth book and
+  defensive sleeve).
 
 This is genuine accumulated knowledge — not just snapshots.
 

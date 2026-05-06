@@ -60,7 +60,7 @@ const DARK = {
   shield:   "#60a5fa",
 };
 
-const RANK_GOLDS = ["#e8b86b", "#c0c0cc", "#d4a574", "#34d399", "#7dd3fc"];
+const RANK_GOLDS = ["#e8b86b", "#c0c0cc", "#d4a574", "#34d399", "#7dd3fc", "#a78bfa", "#f472b6", "#fb923c", "#22d3ee", "#facc15"];
 
 const ThemeContext = createContext({ palette: LIGHT, theme: "light", setTheme: () => {} });
 const usePalette = () => useContext(ThemeContext).palette;
@@ -631,7 +631,7 @@ function AboutSheet({ open, onClose, universe }) {
             {[
               { icon: "✦", title: "Autonomous research",   desc: "Every weekday after the 4 PM ET close, GitHub Actions runs a 6-phase Claude research cycle with live web search." },
               { icon: "◑", title: "Six phases",             desc: "Macro climate → sector rotation → momentum → smart money → risk → final pick synthesis." },
-              { icon: "▢", title: "Defensive layer",        desc: "Halo evaluates whether the macro warrants capital preservation — picks may include bonds (TLT, IEF), gold (GLD), dividend ETFs, utilities, or staples." },
+              { icon: "▢", title: "Defensive sleeve",       desc: "Alongside the top 10 long-term picks, Halo always delivers a top 5 defensive picks/ETFs sleeve — bonds (TLT, IEF), gold (GLD/IAU), dividend/quality ETFs (SCHD, VYM), utilities, or staples — sized by the shield score." },
               { icon: "◆", title: "Daily + weekly",         desc: "Daily picks update the Picks tab. Every Friday after the close, Halo writes a formal weekly report to the Weekly tab." },
               { icon: "◐", title: "Memory",                 desc: "Halo accumulates a 60-day rolling history. The synthesis prompt receives a 7-day digest so picks compound thesis continuity rather than churn." },
               { icon: "↗", title: "Trigger manually",       desc: "GitHub repo → Actions → Halo Daily Market Research → Run workflow. Set force_weekly=true to backfill a missed Friday." },
@@ -995,7 +995,9 @@ function HaloApp() {
 
             {data?.picks?.filter(p => p.category === "defensive").length > 0 && (
               <div style={{ marginTop: 18 }}>
-                <SectionTitle accent={C.shield}>defensive picks</SectionTitle>
+                <SectionTitle accent={C.shield}>
+                  defensive picks/ETFs · {data.picks.filter(p => p.category === "defensive").length}
+                </SectionTitle>
                 <Card accent={C.shield} style={{ marginBottom: 12, padding: "12px 16px" }}>
                   <p style={{ fontSize: 12, color: C.text, margin: 0, lineHeight: 1.6 }}>
                     Shield score {data.defensiveScore}/10 — capital preservation positions for this environment.
