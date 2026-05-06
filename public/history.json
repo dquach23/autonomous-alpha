@@ -133,10 +133,11 @@
     },
     {
       "date": "2026-05-06",
-      "generatedAt": "2026-05-06T23:18:47.479Z",
+      "generatedAt": "2026-05-06T23:30:47.892Z",
       "macroOutlook": "Cautiously Bullish",
       "defensiveScore": 4,
-      "summary": "Today's research cycle failed; showing previous picks.",
+      "summary": "The macro regime remains late-cycle stagflation-adjacent — Fed on hold at 3.5-3.75%, core PCE at 3.2%, real GDP at 2.0% SAAR, and the Warsh confirmation vote imminent — but today's most important development is an intraday regime signal: oil briefly broke below $100 on Iran ceasefire hopes, Energy is down -3.26% as of this morning (the worst sector), and Financials are rotating to +1.04% leadership. The growth book maintains the high-conviction GOOGL, AVGO, GS, LLY quartet from prior days — all theses intact with strong Q1 earnings beats and positive estimate revisions — while adding AMZN (the cleanest hyperscaler momentum compounder at a post-earnings reset), MSFT (supply-constrained Azure demand), XOM (best-in-class energy value at discounted entry post-ceasefire selloff), VST (AI power demand compounder reporting tomorrow), RTX (defense secular spend), and SPGI (Financials rotation quality compounder). The defensive sleeve spans gold (GLD — stagflation/geopolitical hedge), intermediate treasuries (IEF — equity drawdown hedge with 4.3% carry), dividend equity (SCHD — income ballast), Berkshire (BRK.B — record cash optionality), and NextEra (NEE — regulated utility + AI power growth). The dominant risk underwritten is an AI capex bubble deflation where enterprise AI ROI fails to materialize in H2 2026, simultaneously pressuring GOOGL Cloud, AVGO ASICs, MSFT Azure, and AMZN AWS guidance — a scenario partially hedged by the 22% defensive sleeve weighting and GLD's non-correlation to tech multiples.",
+      "diversificationNote": "The growth book spans six GICS sectors: Communication Services (GOOGL), Information Technology (AVGO, MSFT), Financials (GS, SPGI), Health Care (LLY), Consumer Discretionary (AMZN), Energy (XOM), Utilities (VST), and Industrials (RTX) — well within the 3-per-sector and 5-sector minimum constraints; AVGO and MSFT share AI infrastructure exposure but operate at complementary points in the value chain (custom ASICs vs. cloud platform). The defensive sleeve spans four distinct exposures: gold commodity (GLD), intermediate-duration US Treasuries (IEF), broad dividend equity (SCHD), and regulated utility with growth (NEE), plus the fortress conglomerate (BRK.B) — explicitly avoiding a double-up in any single defensive category.",
       "picks": [
         {
           "rank": 1,
@@ -144,10 +145,10 @@
           "name": "Alphabet Inc.",
           "sector": "Communication Services",
           "category": "growth",
-          "score": 96,
+          "score": 93,
           "conviction": "high",
-          "suggestedWeight": 28,
-          "catalyst": "Anthropic (Google Cloud customer) committing ~$200B in cloud spend per The Information (reported post-close May 5); next update point is Google I/O developer conference and Q2 2026 earnings in late July with Cloud acceleration watch."
+          "suggestedWeight": 11,
+          "catalyst": "Q2 2026 earnings (expected late July) with Google Cloud trajectory and $460B backlog conversion — any acceleration above 63% YoY growth rate would be a major upside catalyst"
         },
         {
           "rank": 2,
@@ -155,10 +156,10 @@
           "name": "Broadcom Inc.",
           "sector": "Information Technology",
           "category": "growth",
-          "score": 93,
+          "score": 91,
           "conviction": "high",
-          "suggestedWeight": 25,
-          "catalyst": "Broadcom's next earnings report (expected early June 2026) with guidance on AI revenue run-rate and custom ASIC backlog — consensus expects further acceleration given Meta's 1GW+ deployment ramp."
+          "suggestedWeight": 10,
+          "catalyst": "Q2 FY2026 earnings on June 3, 2026 — the key data point is whether AI revenue hits the $10.7B guide and whether Q3 guidance confirms a continued ASIC supercycle above 50% YoY growth"
         },
         {
           "rank": 3,
@@ -166,10 +167,10 @@
           "name": "Goldman Sachs Group Inc.",
           "sector": "Financials",
           "category": "growth",
-          "score": 88,
+          "score": 87,
           "conviction": "high",
-          "suggestedWeight": 20,
-          "catalyst": "April Payrolls (May 8) and April CPI (May 12) — both data points directly drive the steepening vs. flattening trajectory of the yield curve that determines GS's NIM outlook and the Fed's rate path, with a hot CPI locking in higher-for-longer and benefiting GS's trading book."
+          "suggestedWeight": 9,
+          "catalyst": "Continued yield curve steepening toward the +88bps long-run median, plus Q2 2026 earnings in mid-July showing capital markets (M&A advisory, trading) revenue acceleration driven by corporate deal-making revival"
         },
         {
           "rank": 4,
@@ -177,24 +178,133 @@
           "name": "Eli Lilly and Company",
           "sector": "Health Care",
           "category": "growth",
-          "score": 91,
+          "score": 86,
           "conviction": "high",
-          "suggestedWeight": 17,
-          "catalyst": "Upcoming GLP-1 volume data and potential FDA label expansion for Zepbound (cardiovascular outcomes trial readout window); also Q2 2026 earnings in late July with international Mounjaro supply ramp watch."
+          "suggestedWeight": 9,
+          "catalyst": "Q2 2026 earnings and updated Zepbound/Mounjaro supply ramp data — manufacturing capacity has been the binding constraint; any evidence of supply normalization restores the revenue trajectory and re-rates shares toward $1,200+"
         },
         {
           "rank": 5,
+          "ticker": "AMZN",
+          "name": "Amazon.com Inc.",
+          "sector": "Consumer Discretionary",
+          "category": "growth",
+          "score": 85,
+          "conviction": "high",
+          "suggestedWeight": 9,
+          "catalyst": "AWS Q2 2026 revenue trajectory — the key question is whether the 28% acceleration continues toward 30%+ in Q2, as supply constraints on AI compute ease with new data center capacity coming online"
+        },
+        {
+          "rank": 6,
+          "ticker": "MSFT",
+          "name": "Microsoft Corporation",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 83,
+          "conviction": "high",
+          "suggestedWeight": 8,
+          "catalyst": "Azure H2 2026 acceleration signal at the June analyst day or in Q4 FY2026 earnings (expected late July) — management's third consecutive 'supply-constrained' commentary validates a demand floor, and any supply normalization unlocks the upside"
+        },
+        {
+          "rank": 7,
+          "ticker": "XOM",
+          "name": "Exxon Mobil Corporation",
+          "sector": "Energy",
+          "category": "value",
+          "score": 80,
+          "conviction": "high",
+          "suggestedWeight": 7,
+          "catalyst": "Q2 2026 earnings in late July — with WTI near $94-100/bbl average for the quarter, XOM should report record-level FCF; any Middle East re-escalation is an asymmetric positive, while a ceasefire would reduce but not eliminate the thesis"
+        },
+        {
+          "rank": 8,
+          "ticker": "VST",
+          "name": "Vistra Corp.",
+          "sector": "Utilities",
+          "category": "growth",
+          "score": 78,
+          "conviction": "medium",
+          "suggestedWeight": 7,
+          "catalyst": "Q1 2026 earnings on May 7, 2026 — the first clean read on whether contracted nuclear PPA revenues are flowing through, and whether management raises FY guidance given accelerating AI data center power demand"
+        },
+        {
+          "rank": 9,
+          "ticker": "RTX",
+          "name": "RTX Corporation",
+          "sector": "Industrials",
+          "category": "value",
+          "score": 76,
+          "conviction": "medium",
+          "suggestedWeight": 6,
+          "catalyst": "Q2 2026 earnings in late July with order backlog update — Raytheon missile and air defense systems have seen elevated demand tied to the Iran conflict; any backlog acceleration above $200B signals multi-year earnings visibility"
+        },
+        {
+          "rank": 10,
+          "ticker": "SPGI",
+          "name": "S&P Global Inc.",
+          "sector": "Financials",
+          "category": "growth",
+          "score": 74,
+          "conviction": "medium",
+          "suggestedWeight": 5,
+          "catalyst": "Q2 2026 earnings in late July — debt issuance volumes and M&A advisory fee recovery should drive ratings revenue acceleration; any Fed signaling toward a September cut would turbocharge bond issuance and SPGI ratings revenue"
+        },
+        {
+          "rank": 1,
           "ticker": "GLD",
           "name": "SPDR Gold Shares ETF",
-          "sector": "Commodities / Real Assets",
+          "sector": "Materials / Commodity",
           "category": "defensive",
-          "score": 86,
+          "score": 88,
           "conviction": "high",
-          "suggestedWeight": 10,
-          "catalyst": "April CPI print on May 12 — a soft reading re-opens September rate-cut probability and is directly gold-bullish; also Iran deal progress (MOU signing) could paradoxically sustain gold on the 'lower rates' narrative replacing the 'war' narrative."
+          "suggestedWeight": 7,
+          "catalyst": "April CPI print on May 12 — a hot print (above 3.5% YoY) would re-accelerate the stagflation narrative and drive institutional inflows into gold as a real asset hedge; Iranian deal breakdown or ceasefire collapse is an asymmetric upside catalyst"
+        },
+        {
+          "rank": 2,
+          "ticker": "IEF",
+          "name": "iShares 7-10 Year Treasury ETF",
+          "sector": "Fixed Income",
+          "category": "defensive",
+          "score": 79,
+          "conviction": "medium",
+          "suggestedWeight": 5,
+          "catalyst": "April CPI print on May 12 — a soft print opens the September cut window and drives IEF price appreciation; Iran ceasefire progress would reduce energy-driven inflation expectations and steepen the curve favorably for intermediate duration"
+        },
+        {
+          "rank": 3,
+          "ticker": "SCHD",
+          "name": "Schwab U.S. Dividend Equity ETF",
+          "sector": "Multi-Sector / Dividend Income",
+          "category": "defensive",
+          "score": 77,
+          "conviction": "medium",
+          "suggestedWeight": 5,
+          "catalyst": "Any Fed easing signal — even a single 25bp cut language shift — drives income equity re-rating; Q2 2026 dividend increases from SCHD's underlying holdings (Chevron, Home Depot, Merck) provide a compounding income stream"
+        },
+        {
+          "rank": 4,
+          "ticker": "BRK.B",
+          "name": "Berkshire Hathaway Class B",
+          "sector": "Financials / Conglomerate",
+          "category": "defensive",
+          "score": 75,
+          "conviction": "medium",
+          "suggestedWeight": 5,
+          "catalyst": "Q1 2026 13F filing due May 15 — Greg Abel's first independent capital allocation decisions will be revealed, potentially showing a large acquisition or deployment of the $370B cash pile into distressed opportunities; any major acquisition announcement is a high-conviction positive catalyst"
+        },
+        {
+          "rank": 5,
+          "ticker": "NEE",
+          "name": "NextEra Energy Inc.",
+          "sector": "Utilities",
+          "category": "defensive",
+          "score": 72,
+          "conviction": "medium",
+          "suggestedWeight": 4,
+          "catalyst": "Q2 2026 earnings in late July — the key data point is whether NextEra Energy Resources signs additional AI data center power purchase agreements (PPAs) with hyperscalers, extending the contracted backlog beyond the current $100B+ development pipeline"
         }
-      ],
-      "error": "Picks array is missing or empty"
+      ]
     }
   ]
 }
