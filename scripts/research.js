@@ -203,7 +203,7 @@ Be specific. Name real risks, not generic warnings.`,
     },
     {
       id: "picks",
-      label: "Daily Top 5 Picks",
+      label: "Daily Top 10 Picks + 5 Defensive",
       prompt: `You are an elite long-only portfolio manager building a high-conviction, well-diversified concentrated book. Today is ${today}.
 
 You have access to today's research:
@@ -226,15 +226,20 @@ ${historyDigest ? `\nYOUR RECENT POSITIONING (last 7 trading days):\n${historyDi
 
 Universe: ${universe.join(", ")}
 
-YOUR JOB: produce the 5 highest risk-adjusted long ideas for a 1–5 year hold horizon, AS A PORTFOLIO. This is not a popularity contest — these 5 must function together.
+YOUR JOB: produce TWO complementary sleeves that together form a complete portfolio for a 1–5 year hold horizon:
+  • **Growth book** — the 10 highest risk-adjusted non-defensive long ideas (category: growth / value / income).
+  • **Defensive sleeve** — the 5 highest-conviction defensive picks/ETFs (category: defensive). Always include this sleeve regardless of macro outlook; size the rest of the book around defensiveScore.
+
+15 picks total. They must function together as one portfolio.
 
 PORTFOLIO CONSTRUCTION RULES (HARD CONSTRAINTS):
-1. **Diversification**: at most 2 picks from the same GICS sector. The 5 picks must collectively span at least 3 distinct sectors. No exceptions.
-2. **Defensive sleeve**: if defensiveScore is 5 or higher, at least 1 pick MUST be a defensive (TLT/IEF/GLD/SCHD/VYM/utilities/staples). At score 7+, include 2 defensive picks.
-3. **Correlation awareness**: do not pick 3 names that all sell into the same end market (e.g. NVDA + AVGO + AMD is one factor exposure, not three). Pick complementary exposures.
-4. **Conviction bar**: only "high" conviction names should get suggestedWeight ≥ 25%. Most picks should be 15–25%. Avoid concentrated single-name risk above 30%.
-5. **Asymmetry**: each pick's upside should plausibly be 2x or more vs its downside risk over the horizon. If you can't articulate that, it doesn't belong in a Top 5.
-6. **No yield traps, no falling knives, no crowded shorts** as longs.
+1. **Sleeve composition**: exactly 10 non-defensive picks (category ∈ {growth, value, income}) AND exactly 5 defensive picks (category = defensive). No more, no fewer.
+2. **Growth-book diversification**: across the 10 non-defensive picks, at most 3 from the same GICS sector, and they must collectively span at least 5 distinct sectors. No exceptions.
+3. **Defensive-sleeve diversification**: the 5 defensive picks must span at least 3 of these exposures — long-duration treasuries (TLT/IEF), gold (GLD/IAU), broad dividend/quality income ETFs (SCHD/VYM), utilities, consumer staples. Do not double up on the same exposure (e.g. don't pick both TLT and IEF).
+4. **Correlation awareness**: do not pick 3 names that all sell into the same end market (e.g. NVDA + AVGO + AMD is one factor exposure, not three). Pick complementary exposures across the growth book.
+5. **Conviction bar**: only "high" conviction names should get suggestedWeight ≥ 10%. Most picks should be 4–9%. Avoid concentrated single-name risk above 15%.
+6. **Asymmetry**: each pick's upside should plausibly be 2x or more vs its downside risk over the horizon. If you can't articulate that, it doesn't belong here.
+7. **No yield traps, no falling knives, no crowded shorts** as longs.
 
 For each pick, return ALL of the following fields. Be concrete and quantitative.
 
@@ -251,7 +256,7 @@ CRITICAL: Respond with ONLY a single valid JSON object. No markdown fences, no p
       "horizon": "1-3 years",
       "category": "growth",
       "conviction": "high",
-      "suggestedWeight": 25,
+      "suggestedWeight": 10,
       "rationale": "2-3 sentences. Cite specific catalysts (earnings beat, product cycle, regulatory event) and why NOW is a reasonable entry. Reference at least one piece of evidence from the macro / sector / momentum / smart money research above.",
       "catalyst": "The single most important upcoming catalyst (e.g. 'Q1 earnings April 24 with guidance reset', 'GLP-1 Phase 3 readout June')",
       "catalystWindow": "Specific timeframe (e.g. 'next 4 weeks', 'June–August', 'next 2 quarters')",
@@ -261,8 +266,8 @@ CRITICAL: Respond with ONLY a single valid JSON object. No markdown fences, no p
       "smartMoneyBacking": true
     }
   ],
-  "summary": "3-4 sentences. Open with the macro/regime call. State how the 5 picks express that view as a portfolio. Note carry-overs from prior days and any new additions. Close with the dominant risk you're underwriting.",
-  "diversificationNote": "1-2 sentences explicitly naming the sectors covered and any factor concentration you accepted (e.g. 'two AI-infrastructure names — NVDA, AVGO — share secular exposure but different points in the value chain').",
+  "summary": "3-4 sentences. Open with the macro/regime call. State how the 10 growth picks plus the 5 defensive picks express that view as a portfolio. Note carry-overs from prior days and any new additions. Close with the dominant risk you're underwriting.",
+  "diversificationNote": "1-2 sentences explicitly naming the sectors covered in the growth book and the exposures in the defensive sleeve, plus any factor concentration you accepted (e.g. 'two AI-infrastructure names — NVDA, AVGO — share secular exposure but different points in the value chain; defensive sleeve spans long duration, gold, dividend equity').",
   "macroOutlook": "Cautiously Bullish",
   "defensiveScore": 4
 }
@@ -270,10 +275,10 @@ CRITICAL: Respond with ONLY a single valid JSON object. No markdown fences, no p
 Rules:
 - category must be exactly one of: "growth", "defensive", "value", "income"
 - conviction must be exactly one of: "high", "medium", "speculative"
-- suggestedWeight is an integer 5–35 representing % of the equity allocation; the 5 weights should sum to roughly 100
+- suggestedWeight is an integer 3–15 representing % of the equity allocation; all 15 weights should sum to roughly 100
 - macroOutlook must be exactly one of: "Bullish", "Cautiously Bullish", "Neutral", "Cautious", "Bearish"
 - defensiveScore is 1-10 (1 = full risk-on, 10 = full defensive)
-- Include exactly 5 picks
+- Include exactly 15 picks: 10 with category != "defensive" (rank 1–10 by conviction) followed by 5 with category == "defensive" (rank 1–5 by conviction). Order the picks array growth-book first, defensive sleeve second.
 - All string fields are required and must be substantive (no "TBD", no empty strings)`,
     },
   ];
@@ -569,21 +574,28 @@ function generateDailyMarkdown(picks, collected, dateStr, todayLabel) {
   md += `**Macro Outlook:** ${picks.macroOutlook} | **Shield:** ${picks.defensiveScore ?? "—"}/10\n\n`;
   if (picks.summary)            md += `## Synthesis\n\n${picks.summary}\n\n`;
   if (picks.diversificationNote) md += `**Diversification:** ${picks.diversificationNote}\n\n`;
-  md += `---\n\n## Top 5 Picks\n\n`;
-  (picks.picks || []).forEach(p => {
+  const allPicks = picks.picks || [];
+  const growthPicks    = allPicks.filter(p => p.category !== "defensive");
+  const defensivePicks = allPicks.filter(p => p.category === "defensive");
+  const renderPick = (p) => {
     const badge = p.category === "defensive" ? " · 🛡 DEFENSIVE" : "";
-    md += `### ${p.rank}. ${p.ticker} — ${p.name}${badge}\n`;
-    md += `**Score** ${p.score}/100 · **Sector** ${p.sector} · **Horizon** ${p.horizon} · **Category** ${p.category ?? "growth"}`;
-    if (p.conviction)       md += ` · **Conviction** ${p.conviction}`;
-    if (p.suggestedWeight != null) md += ` · **Weight** ${p.suggestedWeight}%`;
-    md += `\n\n`;
-    md += `**Thesis.** ${p.rationale}\n\n`;
-    if (p.catalyst)        md += `**Catalyst.** ${p.catalyst}${p.catalystWindow ? ` _(window: ${p.catalystWindow})_` : ""}\n\n`;
-    if (p.entryNote)       md += `**Entry.** ${p.entryNote}\n\n`;
-    if (p.exitTrigger)     md += `**Exit trigger.** ${p.exitTrigger}\n\n`;
-    if (p.keyRisk)         md += `**Key risk.** ${p.keyRisk}\n\n`;
-    if (p.smartMoneyBacking) md += `_Smart-money backing._\n\n`;
-  });
+    let out = `### ${p.rank}. ${p.ticker} — ${p.name}${badge}\n`;
+    out += `**Score** ${p.score}/100 · **Sector** ${p.sector} · **Horizon** ${p.horizon} · **Category** ${p.category ?? "growth"}`;
+    if (p.conviction)              out += ` · **Conviction** ${p.conviction}`;
+    if (p.suggestedWeight != null) out += ` · **Weight** ${p.suggestedWeight}%`;
+    out += `\n\n`;
+    out += `**Thesis.** ${p.rationale}\n\n`;
+    if (p.catalyst)          out += `**Catalyst.** ${p.catalyst}${p.catalystWindow ? ` _(window: ${p.catalystWindow})_` : ""}\n\n`;
+    if (p.entryNote)         out += `**Entry.** ${p.entryNote}\n\n`;
+    if (p.exitTrigger)       out += `**Exit trigger.** ${p.exitTrigger}\n\n`;
+    if (p.keyRisk)           out += `**Key risk.** ${p.keyRisk}\n\n`;
+    if (p.smartMoneyBacking) out += `_Smart-money backing._\n\n`;
+    return out;
+  };
+  md += `---\n\n## Top 10 Picks · Growth Book\n\n`;
+  growthPicks.forEach(p => { md += renderPick(p); });
+  md += `---\n\n## Top 5 Defensive Picks/ETFs · Shield Sleeve\n\n`;
+  defensivePicks.forEach(p => { md += renderPick(p); });
   md += `---\n\n## Research Phases\n\n`;
   [
     { id: "macro",    label: "Macro Climate" },
@@ -612,27 +624,34 @@ function generateWeeklyMarkdown(picks, collected, weekLabel, history) {
   md += `**Macro Outlook:** ${picks.macroOutlook} · **Shield:** ${picks.defensiveScore ?? "—"}/10\n\n`;
   if (picks.summary)             md += `## Synthesis\n\n${picks.summary}\n\n`;
   if (picks.diversificationNote) md += `**Diversification:** ${picks.diversificationNote}\n\n`;
-  md += `---\n\n## Top 5 Picks (this week's portfolio)\n\n`;
-  (picks.picks || []).forEach(p => {
+  const allPicks = picks.picks || [];
+  const growthPicks    = allPicks.filter(p => p.category !== "defensive");
+  const defensivePicks = allPicks.filter(p => p.category === "defensive");
+  const renderPick = (p) => {
     const badge = p.category === "defensive" ? " · 🛡 DEFENSIVE" : "";
-    md += `### ${p.rank}. ${p.ticker} — ${p.name}${badge}\n`;
-    md += `**Score** ${p.score}/100 · **Sector** ${p.sector} · **Horizon** ${p.horizon} · **Category** ${p.category ?? "growth"}`;
-    if (p.conviction)       md += ` · **Conviction** ${p.conviction}`;
-    if (p.suggestedWeight != null) md += ` · **Weight** ${p.suggestedWeight}%`;
-    md += `\n\n`;
-    md += `**Thesis.** ${p.rationale}\n\n`;
-    if (p.catalyst)        md += `**Catalyst.** ${p.catalyst}${p.catalystWindow ? ` _(window: ${p.catalystWindow})_` : ""}\n\n`;
-    if (p.entryNote)       md += `**Entry.** ${p.entryNote}\n\n`;
-    if (p.exitTrigger)     md += `**Exit trigger.** ${p.exitTrigger}\n\n`;
-    if (p.keyRisk)         md += `**Key risk.** ${p.keyRisk}\n\n`;
-    if (p.smartMoneyBacking) md += `_Smart-money backing._\n\n`;
-  });
+    let out = `### ${p.rank}. ${p.ticker} — ${p.name}${badge}\n`;
+    out += `**Score** ${p.score}/100 · **Sector** ${p.sector} · **Horizon** ${p.horizon} · **Category** ${p.category ?? "growth"}`;
+    if (p.conviction)              out += ` · **Conviction** ${p.conviction}`;
+    if (p.suggestedWeight != null) out += ` · **Weight** ${p.suggestedWeight}%`;
+    out += `\n\n`;
+    out += `**Thesis.** ${p.rationale}\n\n`;
+    if (p.catalyst)          out += `**Catalyst.** ${p.catalyst}${p.catalystWindow ? ` _(window: ${p.catalystWindow})_` : ""}\n\n`;
+    if (p.entryNote)         out += `**Entry.** ${p.entryNote}\n\n`;
+    if (p.exitTrigger)       out += `**Exit trigger.** ${p.exitTrigger}\n\n`;
+    if (p.keyRisk)           out += `**Key risk.** ${p.keyRisk}\n\n`;
+    if (p.smartMoneyBacking) out += `_Smart-money backing._\n\n`;
+    return out;
+  };
+  md += `---\n\n## Top 10 Picks · Growth Book (this week's portfolio)\n\n`;
+  growthPicks.forEach(p => { md += renderPick(p); });
+  md += `---\n\n## Top 5 Defensive Picks/ETFs · Shield Sleeve\n\n`;
+  defensivePicks.forEach(p => { md += renderPick(p); });
 
   // Week-over-week thesis evolution (using history)
   if (history?.entries?.length > 1) {
     const recent = history.entries.slice(-5);
     md += `---\n\n## Week's Positioning Evolution\n\n`;
-    md += `| Date | Outlook | Shield | Top 5 |\n|---|---|---|---|\n`;
+    md += `| Date | Outlook | Shield | Tickers |\n|---|---|---|---|\n`;
     recent.forEach(e => {
       const tickers = (e.picks || []).map(p => p.ticker).join(", ");
       md += `| ${e.date} | ${e.macroOutlook ?? "—"} | ${e.defensiveScore ?? "—"}/10 | ${tickers} |\n`;
@@ -739,7 +758,7 @@ async function runResearch() {
   }
 
   // ── Run picks phase with larger token budget (no web search — pure synthesis) ──
-  console.log("\n  🏆 Generating Top 5 Picks (synthesizing all phases)...");
+  console.log("\n  🏆 Generating Top 10 Picks + 5 Defensive (synthesizing all phases)...");
   let picks = null;
   try {
     const picksPhase = getPhases(collected, today, universe, historyDigest)[5];
@@ -749,7 +768,10 @@ async function runResearch() {
     if (!Array.isArray(picks.picks) || picks.picks.length === 0) {
       throw new Error("Picks array is missing or empty");
     }
-    console.log(`\n  🎯 TOP 5: ${picks.picks.map(p => p.ticker).join(", ")}`);
+    const growthTickers    = picks.picks.filter(p => p.category !== "defensive").map(p => p.ticker);
+    const defensiveTickers = picks.picks.filter(p => p.category === "defensive").map(p => p.ticker);
+    console.log(`\n  🎯 GROWTH (${growthTickers.length}): ${growthTickers.join(", ")}`);
+    console.log(`  🛡  DEFENSIVE (${defensiveTickers.length}): ${defensiveTickers.join(", ")}`);
   } catch (err) {
     console.error("  ❌ Picks generation failed:", err.message);
     // Preserve previous picks rather than blanking the UI on a transient failure
