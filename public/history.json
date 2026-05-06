@@ -133,11 +133,10 @@
     },
     {
       "date": "2026-05-06",
-      "generatedAt": "2026-05-06T23:01:40.509Z",
+      "generatedAt": "2026-05-06T23:18:47.479Z",
       "macroOutlook": "Cautiously Bullish",
       "defensiveScore": 4,
-      "summary": "The macro regime remains Late-Cycle / Stagflation-Adjacent: core PCE at 3.2%, the Fed pinned on hold at 3.50–3.75% with a 95% probability of no June cut per CME, a Warsh Fed leadership transition underway, and the Iran war de-escalating marginally (Axios Iran MOU report today) but not resolved. This portfolio expresses that regime through three interlocking theses: AI infrastructure compounding (GOOGL, AVGO) at reasonable-to-elevated but fundamentally supported valuations, a steepening yield curve / capital markets recovery play (GS), a secular healthcare compounder with defensive beta (LLY at 0.48 beta), and a monetary-regime hedge that benefits from both war premium AND rate-cut re-opening dynamics (GLD). All five names carry over from the prior two sessions — thesis continuity is intact — with no forced substitutions; the key refinement today is reducing the GLD weight slightly (from conceptual 'high' to 10%) given the partial de-escalation signal while retaining it as the portfolio's mandatory defensive anchor and inflation hedge. The dominant risk being underwritten is an AI capex sentiment reversal or a sudden ceasefire that deflates both the energy-inflation complex AND the gold bid simultaneously — a scenario the GOOGL/LLY pair is best positioned to survive given their non-energy fundamental drivers.",
-      "diversificationNote": "The five picks span four distinct sectors: Communication Services (GOOGL), Information Technology (AVGO), Financials (GS), Health Care (LLY), and Commodities/Real Assets (GLD) — well within the 2-per-sector hard constraint with zero overlap. GOOGL and AVGO share AI infrastructure secular exposure but occupy entirely different points in the value chain (AI-native software platform + cloud vs. custom silicon ASIC manufacturer), providing factor diversification within the tech theme.",
+      "summary": "Today's research cycle failed; showing previous picks.",
       "picks": [
         {
           "rank": 1,
@@ -194,7 +193,8 @@
           "suggestedWeight": 10,
           "catalyst": "April CPI print on May 12 — a soft reading re-opens September rate-cut probability and is directly gold-bullish; also Iran deal progress (MOU signing) could paradoxically sustain gold on the 'lower rates' narrative replacing the 'war' narrative."
         }
-      ]
+      ],
+      "error": "Picks array is missing or empty"
     }
   ]
 }
