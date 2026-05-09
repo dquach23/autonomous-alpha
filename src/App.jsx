@@ -516,6 +516,11 @@ function PickCard({ pick }) {
           <Pill color={accent} soft={false} style={{ fontWeight: 700 }}>
             {pick.score}
           </Pill>
+          {pick.conviction && (
+            <Pill color={convictionColor} style={{ fontWeight: 700 }}>
+              {pick.conviction}
+            </Pill>
+          )}
           {pick.suggestedWeight != null && (
             <Pill color={C.halo}>{pick.suggestedWeight}%</Pill>
           )}
@@ -531,11 +536,6 @@ function PickCard({ pick }) {
             {pick.sector && <Pill color={C.muted}>{pick.sector}</Pill>}
             {pick.horizon && <Pill color={C.halo}>{pick.horizon}</Pill>}
             {pick.category && <Pill color={catColor}>{pick.category}</Pill>}
-            {pick.conviction && (
-              <Pill color={convictionColor} soft={false} style={{ fontWeight: 700 }}>
-                {pick.conviction}
-              </Pill>
-            )}
             {pick.smartMoneyBacking && <Pill color={C.lavender}>✦ smart $</Pill>}
           </div>
 
