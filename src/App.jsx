@@ -178,6 +178,79 @@ function SectionTitle({ children, accent }) {
   );
 }
 
+// ─── Collapsible primitives ─────────────────────────────────────────────────
+function CollapsibleSection({ title, accent, count, defaultOpen = false, children }) {
+  const C = usePalette();
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{
+          width: "100%", background: "transparent", border: "none",
+          padding: 0, cursor: "pointer", textAlign: "left",
+          display: "flex", alignItems: "center", gap: 8,
+          fontSize: 11, color: C.muted, fontWeight: 700,
+          letterSpacing: "0.14em", textTransform: "uppercase",
+          marginBottom: open ? 12 : 4,
+          touchAction: "manipulation", WebkitTapHighlightColor: "transparent",
+        }}
+      >
+        {accent && <span style={{ width: 6, height: 6, borderRadius: "50%", background: accent, flexShrink: 0 }} />}
+        <span>{title}{count != null ? ` · ${count}` : ""}</span>
+        <span style={{ marginLeft: "auto", color: C.faint, fontSize: 11, letterSpacing: 0 }}>
+          {open ? "▴" : "▾"}
+        </span>
+      </button>
+      {open && children}
+    </>
+  );
+}
+
+function ExpandableText({ children, lines = 3, threshold = 180, color }) {
+  const C = usePalette();
+  const [open, setOpen] = useState(false);
+  const text = typeof children === "string" ? children : "";
+  const needsToggle = text.length > threshold;
+  const textColor = color || C.ink;
+
+  if (!needsToggle) {
+    return (
+      <p style={{ color: textColor, fontSize: 14, lineHeight: 1.7, margin: 0 }}>
+        {children}
+      </p>
+    );
+  }
+
+  return (
+    <>
+      <p style={{
+        color: textColor, fontSize: 14, lineHeight: 1.7, margin: 0,
+        ...(open ? {} : {
+          display: "-webkit-box",
+          WebkitLineClamp: lines,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+        }),
+      }}>
+        {children}
+      </p>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{
+          background: "transparent", border: "none", padding: 0,
+          marginTop: 8, color: C.haloDeep, fontWeight: 700,
+          fontSize: 10.5, letterSpacing: "0.16em", textTransform: "uppercase",
+          cursor: "pointer", touchAction: "manipulation",
+          WebkitTapHighlightColor: "transparent",
+        }}
+      >
+        {open ? "show less" : "show more"}
+      </button>
+    </>
+  );
+}
+
 // ─── Halo brand mark (clean ring with soft inner luminance, no centerpoint) ──
 function HaloMark({ size = 28 }) {
   const C = usePalette();
@@ -377,7 +450,8 @@ const CONVICTION_COLOR = (C) => ({
 
 function PickCard({ pick }) {
   const C = usePalette();
-  const [expanded, setExpanded] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const isDefensive = pick.category === "defensive";
   const accent = isDefensive ? C.shield : (RANK_GOLDS[pick.rank - 1] || C.halo);
   const catColor = categoryColor(C, pick.category);
@@ -389,7 +463,7 @@ function PickCard({ pick }) {
       background: C.surface,
       border: `1px solid ${C.border}`,
       borderRadius: 22,
-      padding: "18px 18px 16px",
+      padding: 0,
       marginBottom: 12,
       boxShadow: C.name === "dark"
         ? "0 1px 2px rgba(0,0,0,0.25), 0 8px 24px rgba(0,0,0,0.35)"
@@ -403,7 +477,18 @@ function PickCard({ pick }) {
         pointerEvents: "none",
       }} />
 
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 10 }}>
+      <button
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        style={{
+          width: "100%", background: "transparent", border: "none",
+          padding: open ? "18px 18px 10px" : "18px 18px 16px",
+          textAlign: "left", color: "inherit", cursor: "pointer",
+          touchAction: "manipulation", WebkitTapHighlightColor: "transparent",
+          display: "flex", alignItems: "flex-start", gap: 12,
+          position: "relative", zIndex: 1,
+        }}
+      >
         <div style={{
           width: 38, height: 38, borderRadius: 14,
           background: `linear-gradient(135deg, ${accent}33, ${accent}15)`,
@@ -434,61 +519,68 @@ function PickCard({ pick }) {
           {pick.suggestedWeight != null && (
             <Pill color={C.halo}>{pick.suggestedWeight}%</Pill>
           )}
+          <span style={{ color: C.faint, fontSize: 11, marginTop: 2, lineHeight: 1 }}>
+            {open ? "▴" : "▾"}
+          </span>
         </div>
-      </div>
+      </button>
 
-      <div style={{ display: "flex", gap: 5, marginBottom: 12, flexWrap: "wrap" }}>
-        {pick.sector && <Pill color={C.muted}>{pick.sector}</Pill>}
-        {pick.horizon && <Pill color={C.halo}>{pick.horizon}</Pill>}
-        {pick.category && <Pill color={catColor}>{pick.category}</Pill>}
-        {pick.conviction && (
-          <Pill color={convictionColor} soft={false} style={{ fontWeight: 700 }}>
-            {pick.conviction}
-          </Pill>
-        )}
-        {pick.smartMoneyBacking && <Pill color={C.lavender}>✦ smart $</Pill>}
-      </div>
-
-      <p style={{ color: C.text, fontSize: 13.5, lineHeight: 1.65, margin: "0 0 10px" }}>
-        {pick.rationale}
-      </p>
-
-      {pick.catalyst && (
-        <div style={{
-          background: `${C.halo}0f`, border: `1px solid ${C.halo}33`,
-          borderRadius: 12, padding: "8px 11px", marginBottom: 10,
-        }}>
-          <div style={{ fontSize: 9.5, color: C.haloDeep, fontWeight: 700, letterSpacing: "0.12em", marginBottom: 3 }}>
-            ✦ CATALYST{pick.catalystWindow ? ` · ${pick.catalystWindow}` : ""}
+      {open && (
+        <div style={{ padding: "0 18px 16px", position: "relative", zIndex: 1 }}>
+          <div style={{ display: "flex", gap: 5, marginBottom: 12, flexWrap: "wrap" }}>
+            {pick.sector && <Pill color={C.muted}>{pick.sector}</Pill>}
+            {pick.horizon && <Pill color={C.halo}>{pick.horizon}</Pill>}
+            {pick.category && <Pill color={catColor}>{pick.category}</Pill>}
+            {pick.conviction && (
+              <Pill color={convictionColor} soft={false} style={{ fontWeight: 700 }}>
+                {pick.conviction}
+              </Pill>
+            )}
+            {pick.smartMoneyBacking && <Pill color={C.lavender}>✦ smart $</Pill>}
           </div>
-          <div style={{ fontSize: 12, color: C.ink, lineHeight: 1.5 }}>
-            {pick.catalyst}
-          </div>
-        </div>
-      )}
 
-      {hasDetails && (
-        <>
-          <button
-            onClick={() => setExpanded(!expanded)}
-            style={{
-              background: C.subtle, border: "none", color: C.muted,
-              fontSize: 11, fontWeight: 600, cursor: "pointer",
-              padding: "6px 11px", borderRadius: 999,
-              display: "inline-flex", alignItems: "center", gap: 4,
-              touchAction: "manipulation", WebkitTapHighlightColor: "transparent",
-            }}
-          >
-            {expanded ? "hide" : "show"} thesis details
-          </button>
-          {expanded && (
-            <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
-              {pick.entryNote   && <DetailBlock color={C.mint}  label="ENTRY"        text={pick.entryNote} />}
-              {pick.exitTrigger && <DetailBlock color={C.peach} label="EXIT TRIGGER" text={pick.exitTrigger} />}
-              {pick.keyRisk     && <DetailBlock color={C.coral} label="KEY RISK"     text={pick.keyRisk} />}
+          <p style={{ color: C.text, fontSize: 13.5, lineHeight: 1.65, margin: "0 0 10px" }}>
+            {pick.rationale}
+          </p>
+
+          {pick.catalyst && (
+            <div style={{
+              background: `${C.halo}0f`, border: `1px solid ${C.halo}33`,
+              borderRadius: 12, padding: "8px 11px", marginBottom: 10,
+            }}>
+              <div style={{ fontSize: 9.5, color: C.haloDeep, fontWeight: 700, letterSpacing: "0.12em", marginBottom: 3 }}>
+                ✦ CATALYST{pick.catalystWindow ? ` · ${pick.catalystWindow}` : ""}
+              </div>
+              <div style={{ fontSize: 12, color: C.ink, lineHeight: 1.5 }}>
+                {pick.catalyst}
+              </div>
             </div>
           )}
-        </>
+
+          {hasDetails && (
+            <>
+              <button
+                onClick={() => setDetailsOpen(!detailsOpen)}
+                style={{
+                  background: C.subtle, border: "none", color: C.muted,
+                  fontSize: 11, fontWeight: 600, cursor: "pointer",
+                  padding: "6px 11px", borderRadius: 999,
+                  display: "inline-flex", alignItems: "center", gap: 4,
+                  touchAction: "manipulation", WebkitTapHighlightColor: "transparent",
+                }}
+              >
+                {detailsOpen ? "hide" : "show"} thesis details
+              </button>
+              {detailsOpen && (
+                <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
+                  {pick.entryNote   && <DetailBlock color={C.mint}  label="ENTRY"        text={pick.entryNote} />}
+                  {pick.exitTrigger && <DetailBlock color={C.peach} label="EXIT TRIGGER" text={pick.exitTrigger} />}
+                  {pick.keyRisk     && <DetailBlock color={C.coral} label="KEY RISK"     text={pick.keyRisk} />}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       )}
     </div>
   );
@@ -558,6 +650,47 @@ function PhaseDetail({ label, icon, color, content }) {
           }}>
             {content.length > 1400 ? content.slice(0, 1400) + "…" : content}
           </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Universe sector group (collapsible) ─────────────────────────────────────
+function UniverseGroup({ group }) {
+  const C = usePalette();
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ marginBottom: 6 }}>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{
+          width: "100%", background: "transparent", border: "none",
+          padding: "6px 0", cursor: "pointer", textAlign: "left",
+          display: "flex", alignItems: "center", gap: 8,
+          fontSize: 10, color: C.muted, fontWeight: 700,
+          letterSpacing: "0.12em", textTransform: "uppercase",
+          touchAction: "manipulation", WebkitTapHighlightColor: "transparent",
+        }}
+      >
+        <span>{group.label} · {group.tickers.length}</span>
+        <span style={{ marginLeft: "auto", color: C.faint, fontSize: 10, letterSpacing: 0 }}>
+          {open ? "▴" : "▾"}
+        </span>
+      </button>
+      {open && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 4, marginBottom: 6 }}>
+          {group.tickers.map(t => (
+            <span key={t} style={{
+              background: C.subtle, color: C.text,
+              border: `1px solid ${C.border}`,
+              borderRadius: 8, padding: "3px 8px",
+              fontSize: 11, fontWeight: 600,
+              fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+            }}>
+              {t}
+            </span>
+          ))}
         </div>
       )}
     </div>
@@ -668,27 +801,7 @@ function AboutSheet({ open, onClose, universe }) {
                   Halo curates picks from this universe across all major sectors.
                 </div>
                 {universe.groups.map(group => (
-                  <div key={group.key} style={{ marginBottom: 14 }}>
-                    <div style={{
-                      fontSize: 10, color: C.muted, fontWeight: 700,
-                      letterSpacing: "0.12em", marginBottom: 7, textTransform: "uppercase",
-                    }}>
-                      {group.label} · {group.tickers.length}
-                    </div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-                      {group.tickers.map(t => (
-                        <span key={t} style={{
-                          background: C.subtle, color: C.text,
-                          border: `1px solid ${C.border}`,
-                          borderRadius: 8, padding: "3px 8px",
-                          fontSize: 11, fontWeight: 600,
-                          fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-                        }}>
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+                  <UniverseGroup key={group.key} group={group} />
                 ))}
               </Card>
             </>
@@ -953,9 +1066,7 @@ function HaloApp() {
                 }}>
                   ✦ ai synthesis
                 </div>
-                <p style={{ color: C.ink, fontSize: 14, lineHeight: 1.7, margin: 0 }}>
-                  {data.summary}
-                </p>
+                <ExpandableText>{data.summary}</ExpandableText>
                 {data.diversificationNote && (
                   <div style={{
                     marginTop: 12, paddingTop: 12,
@@ -995,17 +1106,20 @@ function HaloApp() {
 
             {data?.picks?.filter(p => p.category === "defensive").length > 0 && (
               <div style={{ marginTop: 18 }}>
-                <SectionTitle accent={C.shield}>
-                  defensive picks/ETFs · {data.picks.filter(p => p.category === "defensive").length}
-                </SectionTitle>
-                <Card accent={C.shield} style={{ marginBottom: 12, padding: "12px 16px" }}>
-                  <p style={{ fontSize: 12, color: C.text, margin: 0, lineHeight: 1.6 }}>
-                    Shield score {data.defensiveScore}/10 — capital preservation positions for this environment.
-                  </p>
-                </Card>
-                {data.picks
-                  .filter(p => p.category === "defensive")
-                  .map(p => <PickCard key={p.ticker} pick={p} />)}
+                <CollapsibleSection
+                  title="defensive picks/ETFs"
+                  accent={C.shield}
+                  count={data.picks.filter(p => p.category === "defensive").length}
+                >
+                  <Card accent={C.shield} style={{ marginBottom: 12, padding: "12px 16px" }}>
+                    <p style={{ fontSize: 12, color: C.text, margin: 0, lineHeight: 1.6 }}>
+                      Shield score {data.defensiveScore}/10 — capital preservation positions for this environment.
+                    </p>
+                  </Card>
+                  {data.picks
+                    .filter(p => p.category === "defensive")
+                    .map(p => <PickCard key={p.ticker} pick={p} />)}
+                </CollapsibleSection>
               </div>
             )}
 
@@ -1048,9 +1162,7 @@ function HaloApp() {
                     }}>
                       ✦ weekly synthesis
                     </div>
-                    <p style={{ color: C.ink, fontSize: 14, lineHeight: 1.7, margin: 0 }}>
-                      {weeklyData.summary}
-                    </p>
+                    <ExpandableText>{weeklyData.summary}</ExpandableText>
                     {weeklyData.diversificationNote && (
                       <div style={{
                         marginTop: 12, paddingTop: 12,
