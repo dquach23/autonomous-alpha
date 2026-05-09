@@ -9,7 +9,9 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Halo" />
-    <meta name="theme-color" content="#faf8f3" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#faf8f3" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0a0b10" media="(prefers-color-scheme: dark)" />
 
     <!-- Icons -->
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
@@ -36,16 +38,23 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
 
     <title>Halo · AI Market Intelligence</title>
     <style>
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      :root {
+        --halo-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', system-ui, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        --halo-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Monaco, 'Cascadia Mono', Consolas, monospace;
+      }
       html, body {
         background: #faf8f3; color: #2a2e42;
-        font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'DM Sans', system-ui, sans-serif;
+        font-family: var(--halo-sans);
+        font-feature-settings: "tnum" 1, "cv11" 1, "ss01" 1, "calt" 1;
+        font-variant-numeric: tabular-nums;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
         -webkit-text-size-adjust: 100%;
         text-size-adjust: 100%;
         /* Prevent pinch-zoom (touch-action) and double-tap zoom together with
@@ -55,8 +64,11 @@
         touch-action: pan-x pan-y;
         overscroll-behavior-y: contain;
       }
+      @media (prefers-color-scheme: dark) {
+        html, body { background: #0a0b10; color: #dcd9d0; }
+      }
       /* Disable text selection on UI chrome (kept on content for copy/paste) */
-      button { -webkit-user-select: none; user-select: none; }
+      button { -webkit-user-select: none; user-select: none; font-family: inherit; font-feature-settings: inherit; }
       #root { min-height: 100vh; }
     </style>
   </head>

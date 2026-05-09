@@ -745,7 +745,7 @@ function UniverseGroup({ group }) {
               border: `1px solid ${C.border}`,
               borderRadius: 8, padding: "3px 8px",
               fontSize: 11, fontWeight: 600,
-              fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+              fontFamily: "var(--halo-mono)",
             }}>
               {t}
             </span>
@@ -1027,7 +1027,7 @@ function HaloApp() {
   return (
     <div style={{
       background: C.bg, minHeight: "100vh", color: C.text,
-      fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'DM Sans', system-ui, sans-serif",
+      fontFamily: "var(--halo-sans)",
       maxWidth: 480, margin: "0 auto",
       paddingBottom: "calc(78px + env(safe-area-inset-bottom, 0px))",
       transition: "background 0.25s ease, color 0.25s ease",
@@ -1115,7 +1115,7 @@ function HaloApp() {
             <div style={{
               color: C.muted, fontSize: 12, lineHeight: 1.6,
               whiteSpace: "pre-wrap",
-              fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+              fontFamily: "var(--halo-mono)",
             }}>
               {error}
             </div>
@@ -1350,13 +1350,17 @@ export default function App() {
     try { window.localStorage?.setItem("halo-theme", t); } catch { /* ignore */ }
   };
 
-  // Keep <meta theme-color> in sync so iOS PWA status bar matches the theme.
+  // Keep <meta theme-color>, html, and body in sync so the iOS status bar
+  // and any safe-area gaps match the theme. We update both meta tags
+  // (light + dark variants) and dynamically force-set html/body so a manual
+  // toggle that disagrees with the system color scheme still paints correctly.
   useEffect(() => {
     const palette = theme === "dark" ? DARK : LIGHT;
-    const tag = document.querySelector('meta[name="theme-color"]');
-    if (tag) tag.setAttribute("content", palette.bg);
+    const tags = document.querySelectorAll('meta[name="theme-color"]');
+    tags.forEach(tag => tag.setAttribute("content", palette.bg));
     document.documentElement.style.colorScheme = theme;
-    document.body.style.background = palette.bg;
+    document.documentElement.style.backgroundColor = palette.bg;
+    document.body.style.backgroundColor = palette.bg;
   }, [theme]);
 
   const value = useMemo(() => ({
