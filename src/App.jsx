@@ -212,6 +212,71 @@ function CollapsibleSection({ title, accent, count, defaultOpen = false, childre
   );
 }
 
+function SynthesisCard({ label, summary, diversificationNote, defaultOpen = false }) {
+  const C = usePalette();
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div style={{
+      background: C.surface,
+      backgroundImage: C.name === "dark"
+        ? `linear-gradient(135deg, ${C.surface}, ${C.halo}10)`
+        : `linear-gradient(135deg, ${C.surface}, ${C.haloSoft}15)`,
+      border: `1px solid ${C.border}`,
+      borderRadius: 20,
+      marginBottom: 22,
+      overflow: "hidden",
+      boxShadow: C.name === "dark"
+        ? "0 1px 2px rgba(0,0,0,0.2), 0 6px 24px rgba(0,0,0,0.35)"
+        : "0 1px 2px rgba(28,31,46,0.03), 0 4px 16px rgba(28,31,46,0.04)",
+    }}>
+      <button
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        style={{
+          width: "100%", background: "transparent", border: "none",
+          padding: open ? "14px 18px 8px" : "14px 18px",
+          display: "flex", alignItems: "center", gap: 8,
+          cursor: "pointer", textAlign: "left", color: "inherit",
+          touchAction: "manipulation", WebkitTapHighlightColor: "transparent",
+        }}
+      >
+        <span style={{
+          fontSize: 10.5, color: C.haloDeep, fontWeight: 700,
+          letterSpacing: "0.16em", textTransform: "uppercase",
+        }}>
+          ✦ {label}
+        </span>
+        <span style={{
+          marginLeft: "auto", color: C.faint, fontSize: 12, lineHeight: 1,
+          display: "inline-block",
+          transform: open ? "rotate(180deg)" : "rotate(0deg)",
+          transition: "transform 0.28s cubic-bezier(0.32, 0.72, 0, 1)",
+        }}>
+          ▾
+        </span>
+      </button>
+      {open && (
+        <div style={{
+          padding: "0 18px 16px",
+          animation: "cardExpand 0.28s cubic-bezier(0.32, 0.72, 0, 1)",
+        }}>
+          <ExpandableText>{summary}</ExpandableText>
+          {diversificationNote && (
+            <div style={{
+              marginTop: 12, paddingTop: 12,
+              borderTop: `1px solid ${C.hairline}`,
+              fontSize: 12, color: C.muted, lineHeight: 1.6,
+            }}>
+              <span style={{ color: C.haloDeep, fontWeight: 700 }}>diversification · </span>
+              {diversificationNote}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ExpandableText({ children, lines = 3, threshold = 180, color }) {
   const C = usePalette();
   const [open, setOpen] = useState(false);
@@ -1216,30 +1281,11 @@ function HaloApp() {
                 </div>
 
                 {weeklyData.summary && (
-                  <Card style={{
-                    marginBottom: 22,
-                    background: C.name === "dark"
-                      ? `linear-gradient(135deg, ${C.surface}, ${C.halo}10)`
-                      : `linear-gradient(135deg, ${C.surface}, ${C.haloSoft}15)`,
-                  }}>
-                    <div style={{
-                      fontSize: 10.5, color: C.haloDeep, fontWeight: 700,
-                      letterSpacing: "0.16em", marginBottom: 8, textTransform: "uppercase",
-                    }}>
-                      ✦ weekly synthesis
-                    </div>
-                    <ExpandableText>{weeklyData.summary}</ExpandableText>
-                    {weeklyData.diversificationNote && (
-                      <div style={{
-                        marginTop: 12, paddingTop: 12,
-                        borderTop: `1px solid ${C.hairline}`,
-                        fontSize: 12, color: C.muted, lineHeight: 1.6,
-                      }}>
-                        <span style={{ color: C.haloDeep, fontWeight: 700 }}>diversification · </span>
-                        {weeklyData.diversificationNote}
-                      </div>
-                    )}
-                  </Card>
+                  <SynthesisCard
+                    label="weekly synthesis"
+                    summary={weeklyData.summary}
+                    diversificationNote={weeklyData.diversificationNote}
+                  />
                 )}
 
                 <SectionTitle accent={C.halo}>
