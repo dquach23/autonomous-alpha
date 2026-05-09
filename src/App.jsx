@@ -198,8 +198,13 @@ function CollapsibleSection({ title, accent, count, defaultOpen = false, childre
       >
         {accent && <span style={{ width: 6, height: 6, borderRadius: "50%", background: accent, flexShrink: 0 }} />}
         <span>{title}{count != null ? ` · ${count}` : ""}</span>
-        <span style={{ marginLeft: "auto", color: C.faint, fontSize: 11, letterSpacing: 0 }}>
-          {open ? "▴" : "▾"}
+        <span style={{
+          marginLeft: "auto", color: C.faint, fontSize: 11, letterSpacing: 0,
+          display: "inline-block", lineHeight: 1,
+          transform: open ? "rotate(180deg)" : "rotate(0deg)",
+          transition: "transform 0.28s cubic-bezier(0.32, 0.72, 0, 1)",
+        }}>
+          ▾
         </span>
       </button>
       {open && children}
@@ -319,6 +324,39 @@ function CloseIcon({ size = 18, color }) {
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" aria-hidden>
       <line x1="6" y1="6"  x2="18" y2="18" />
       <line x1="18" y1="6" x2="6"  y2="18" />
+    </svg>
+  );
+}
+
+// ─── Bottom-nav glyphs ──────────────────────────────────────────────────────
+function PicksIcon({ size = 20, color, active = false }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill={active ? `${color}22` : "none"} stroke={color}
+         strokeWidth={active ? 2 : 1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M12 2 L14 9 L21 12 L14 15 L12 22 L10 15 L3 12 L10 9 Z" />
+    </svg>
+  );
+}
+
+function WeeklyIcon({ size = 20, color, active = false }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color}
+         strokeWidth={active ? 2 : 1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="3" y="5" width="18" height="16" rx="2.5" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+      <line x1="8" y1="3" x2="8" y2="7" />
+      <line x1="16" y1="3" x2="16" y2="7" />
+      {active && <circle cx="12" cy="15.5" r="1.6" fill={color} stroke="none" />}
+    </svg>
+  );
+}
+
+function ResearchIcon({ size = 20, color, active = false }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color}
+         strokeWidth={active ? 2 : 1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <circle cx="11" cy="11" r="7" fill={active ? `${color}1a` : "none"} />
+      <line x1="16.2" y1="16.2" x2="21" y2="21" />
     </svg>
   );
 }
@@ -448,7 +486,7 @@ const CONVICTION_COLOR = (C) => ({
   speculative: C.lavender,
 });
 
-function PickCard({ pick }) {
+function PickCard({ pick, index = 0 }) {
   const C = usePalette();
   const [open, setOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -464,12 +502,13 @@ function PickCard({ pick }) {
       border: `1px solid ${C.border}`,
       borderRadius: 22,
       padding: 0,
-      marginBottom: 12,
+      marginBottom: 10,
       boxShadow: C.name === "dark"
         ? "0 1px 2px rgba(0,0,0,0.25), 0 8px 24px rgba(0,0,0,0.35)"
         : "0 1px 2px rgba(28,31,46,0.03), 0 6px 20px rgba(28,31,46,0.05)",
       position: "relative",
       overflow: "hidden",
+      animation: `cardIn 0.42s cubic-bezier(0.32, 0.72, 0, 1) ${Math.min(index, 12) * 45}ms both`,
     }}>
       <div style={{
         position: "absolute", top: -40, right: -40, width: 120, height: 120,
@@ -482,37 +521,38 @@ function PickCard({ pick }) {
         aria-expanded={open}
         style={{
           width: "100%", background: "transparent", border: "none",
-          padding: open ? "18px 18px 10px" : "18px 18px 16px",
+          padding: open ? "16px 16px 10px" : "14px 16px",
           textAlign: "left", color: "inherit", cursor: "pointer",
           touchAction: "manipulation", WebkitTapHighlightColor: "transparent",
-          display: "flex", alignItems: "flex-start", gap: 12,
+          display: "flex", alignItems: "center", gap: 11,
           position: "relative", zIndex: 1,
         }}
       >
         <div style={{
-          width: 38, height: 38, borderRadius: 14,
+          width: 36, height: 36, borderRadius: 12,
           background: `linear-gradient(135deg, ${accent}33, ${accent}15)`,
           border: `1px solid ${accent}55`,
           display: "flex", alignItems: "center", justifyContent: "center",
-          fontWeight: 800, color: accent, fontSize: 15, flexShrink: 0,
+          fontWeight: 800, color: accent, fontSize: 14, flexShrink: 0,
         }}>
           {isDefensive ? "✦" : pick.rank}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
-            fontSize: 24, fontWeight: 800, color: C.ink,
-            letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 2,
+            fontSize: 19, fontWeight: 800, color: C.ink,
+            letterSpacing: "-0.02em", lineHeight: 1.15,
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
           }}>
             {pick.ticker}
           </div>
           <div style={{
-            fontSize: 12.5, color: C.muted, lineHeight: 1.4,
+            fontSize: 11.5, color: C.muted, lineHeight: 1.35, marginTop: 1,
             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
           }}>
             {pick.name}
           </div>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 5 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
           <Pill color={accent} soft={false} style={{ fontWeight: 700 }}>
             {pick.score}
           </Pill>
@@ -524,14 +564,22 @@ function PickCard({ pick }) {
           {pick.suggestedWeight != null && (
             <Pill color={C.halo}>{pick.suggestedWeight}%</Pill>
           )}
-          <span style={{ color: C.faint, fontSize: 11, marginTop: 2, lineHeight: 1 }}>
-            {open ? "▴" : "▾"}
+          <span style={{
+            color: C.faint, fontSize: 12, marginLeft: 2,
+            transform: open ? "rotate(180deg)" : "rotate(0deg)",
+            transition: "transform 0.28s cubic-bezier(0.32, 0.72, 0, 1)",
+            display: "inline-block", lineHeight: 1,
+          }}>
+            ▾
           </span>
         </div>
       </button>
 
       {open && (
-        <div style={{ padding: "0 18px 16px", position: "relative", zIndex: 1 }}>
+        <div style={{
+          padding: "0 16px 14px", position: "relative", zIndex: 1,
+          animation: "cardExpand 0.28s cubic-bezier(0.32, 0.72, 0, 1)",
+        }}>
           <div style={{ display: "flex", gap: 5, marginBottom: 12, flexWrap: "wrap" }}>
             {pick.sector && <Pill color={C.muted}>{pick.sector}</Pill>}
             {pick.horizon && <Pill color={C.halo}>{pick.horizon}</Pill>}
@@ -636,7 +684,13 @@ function PhaseDetail({ label, icon, color, content }) {
         <span style={{ flex: 1, fontSize: 13.5, fontWeight: 600, color: open ? color : C.ink }}>
           {label}
         </span>
-        <span style={{ color: C.faint, fontSize: 12 }}>{open ? "▴" : "▾"}</span>
+        <span style={{
+          color: C.faint, fontSize: 12, lineHeight: 1, display: "inline-block",
+          transform: open ? "rotate(180deg)" : "rotate(0deg)",
+          transition: "transform 0.28s cubic-bezier(0.32, 0.72, 0, 1)",
+        }}>
+          ▾
+        </span>
       </button>
       {open && (
         <div style={{
@@ -674,8 +728,13 @@ function UniverseGroup({ group }) {
         }}
       >
         <span>{group.label} · {group.tickers.length}</span>
-        <span style={{ marginLeft: "auto", color: C.faint, fontSize: 10, letterSpacing: 0 }}>
-          {open ? "▴" : "▾"}
+        <span style={{
+          marginLeft: "auto", color: C.faint, fontSize: 10, letterSpacing: 0,
+          display: "inline-block", lineHeight: 1,
+          transform: open ? "rotate(180deg)" : "rotate(0deg)",
+          transition: "transform 0.28s cubic-bezier(0.32, 0.72, 0, 1)",
+        }}>
+          ▾
         </span>
       </button>
       {open && (
@@ -839,10 +898,66 @@ function AboutSheet({ open, onClose, universe }) {
 }
 
 const TABS = [
-  { id: "picks",    label: "picks"    },
-  { id: "weekly",   label: "weekly"   },
-  { id: "research", label: "research" },
+  { id: "picks",    label: "picks",    Icon: PicksIcon    },
+  { id: "weekly",   label: "weekly",   Icon: WeeklyIcon   },
+  { id: "research", label: "research", Icon: ResearchIcon },
 ];
+
+// ─── Bottom nav (frosted, thumb-friendly) ───────────────────────────────────
+function BottomNav({ tab, setTab }) {
+  const C = usePalette();
+  return (
+    <nav style={{
+      position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100,
+      maxWidth: 480, margin: "0 auto",
+      background: C.headerBg,
+      backdropFilter: "saturate(180%) blur(20px)",
+      WebkitBackdropFilter: "saturate(180%) blur(20px)",
+      borderTop: `1px solid ${C.hairline}`,
+      paddingBottom: "env(safe-area-inset-bottom, 0px)",
+    }}>
+      <div style={{ display: "flex", padding: "8px 6px 6px" }}>
+        {TABS.map(t => {
+          const active = tab === t.id;
+          const Icon = t.Icon;
+          const tint = active ? C.halo : C.muted;
+          return (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              aria-label={t.label}
+              aria-pressed={active}
+              style={{
+                flex: 1, background: "transparent", border: "none",
+                padding: "6px 4px 4px", cursor: "pointer",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+                color: tint,
+                touchAction: "manipulation", WebkitTapHighlightColor: "transparent",
+              }}
+            >
+              <span style={{
+                display: "inline-flex", alignItems: "center", justifyContent: "center",
+                width: 46, height: 28, borderRadius: 12,
+                background: active ? `${C.halo}1c` : "transparent",
+                transform: active ? "scale(1.04)" : "scale(1)",
+                transition: "background 0.24s cubic-bezier(0.32, 0.72, 0, 1), transform 0.24s cubic-bezier(0.32, 0.72, 0, 1)",
+              }}>
+                <Icon size={19} color={tint} active={active} />
+              </span>
+              <span style={{
+                fontSize: 10, fontWeight: active ? 700 : 500,
+                letterSpacing: "0.04em",
+                transition: "color 0.18s ease, font-weight 0.18s ease",
+              }}>
+                {t.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
 
 // ─── App shell ───────────────────────────────────────────────────────────────
 function HaloApp() {
@@ -914,11 +1029,12 @@ function HaloApp() {
       background: C.bg, minHeight: "100vh", color: C.text,
       fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'DM Sans', system-ui, sans-serif",
       maxWidth: 480, margin: "0 auto",
-      paddingBottom: 80,
+      paddingBottom: "calc(78px + env(safe-area-inset-bottom, 0px))",
       transition: "background 0.25s ease, color 0.25s ease",
     }}>
       <style>{`
-        button { font-family: inherit; }
+        button { font-family: inherit; transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease; }
+        button:active { transform: scale(0.97); }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: ${C.border}; border-radius: 2px; }
         @keyframes fadeIn       { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
@@ -927,6 +1043,12 @@ function HaloApp() {
         @keyframes haloFloat    { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-2px)} }
         @keyframes slideUp      { from{transform:translateY(100%)} to{transform:translateY(0)} }
         @keyframes fadeBackdrop { from{opacity:0} to{opacity:1} }
+        @keyframes cardExpand   { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes cardIn       { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes tabIn        { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+        }
       `}</style>
 
       {/* ── Sticky header ── */}
@@ -969,39 +1091,10 @@ function HaloApp() {
 
         {/* Hero strip: outlook + shield + freshness */}
         <HeroStrip data={data} connected={connected} />
-
-        {/* Segmented tab control */}
-        <div style={{
-          display: "flex", gap: 4, padding: 4, marginBottom: 10,
-          background: C.subtle, borderRadius: 14,
-        }}>
-          {TABS.map(t => {
-            const active = tab === t.id;
-            return (
-              <button key={t.id} onClick={() => setTab(t.id)} style={{
-                flex: 1,
-                background: active ? C.surface : "transparent",
-                border: "none", borderRadius: 11,
-                padding: "9px 4px", cursor: "pointer",
-                color: active ? C.ink : C.muted,
-                fontWeight: active ? 700 : 500,
-                fontSize: 13, letterSpacing: "0.01em",
-                boxShadow: active
-                  ? (C.name === "dark" ? "0 1px 3px rgba(0,0,0,0.4)" : "0 1px 3px rgba(28,31,46,0.08)")
-                  : "none",
-                transition: "all 0.18s ease",
-                touchAction: "manipulation",
-                WebkitTapHighlightColor: "transparent",
-              }}>
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
       </div>
 
       {/* ── Content ── */}
-      <div style={{ padding: "18px 16px", animation: "fadeIn 0.3s ease" }}>
+      <div style={{ padding: "18px 16px" }}>
 
         {loading && (
           <div style={{ textAlign: "center", padding: "60px 0" }}>
@@ -1031,7 +1124,7 @@ function HaloApp() {
 
         {/* ════════ PICKS ════════ */}
         {!loading && !error && tab === "picks" && (
-          <>
+          <div style={{ animation: "tabIn 0.3s cubic-bezier(0.32, 0.72, 0, 1)" }}>
             <div style={{ marginBottom: 22 }}>
               <div style={{
                 fontSize: 17, color: C.ink, fontWeight: 700,
@@ -1050,33 +1143,6 @@ function HaloApp() {
                   RESEARCH CYCLE NOTE
                 </div>
                 <div style={{ fontSize: 12.5, color: C.text }}>{data.error}</div>
-              </Card>
-            )}
-
-            {data?.summary && (
-              <Card style={{
-                marginBottom: 22,
-                background: C.name === "dark"
-                  ? `linear-gradient(135deg, ${C.surface}, ${C.halo}10)`
-                  : `linear-gradient(135deg, ${C.surface}, ${C.haloSoft}15)`,
-              }}>
-                <div style={{
-                  fontSize: 10.5, color: C.haloDeep, fontWeight: 700,
-                  letterSpacing: "0.16em", marginBottom: 8, textTransform: "uppercase",
-                }}>
-                  ✦ ai synthesis
-                </div>
-                <ExpandableText>{data.summary}</ExpandableText>
-                {data.diversificationNote && (
-                  <div style={{
-                    marginTop: 12, paddingTop: 12,
-                    borderTop: `1px solid ${C.hairline}`,
-                    fontSize: 12, color: C.muted, lineHeight: 1.6,
-                  }}>
-                    <span style={{ color: C.haloDeep, fontWeight: 700 }}>diversification · </span>
-                    {data.diversificationNote}
-                  </div>
-                )}
               </Card>
             )}
 
@@ -1100,7 +1166,7 @@ function HaloApp() {
                 </SectionTitle>
                 {data.picks
                   .filter(p => p.category !== "defensive")
-                  .map(p => <PickCard key={p.ticker} pick={p} />)}
+                  .map((p, i) => <PickCard key={p.ticker} pick={p} index={i} />)}
               </>
             )}
 
@@ -1118,7 +1184,7 @@ function HaloApp() {
                   </Card>
                   {data.picks
                     .filter(p => p.category === "defensive")
-                    .map(p => <PickCard key={p.ticker} pick={p} />)}
+                    .map((p, i) => <PickCard key={p.ticker} pick={p} index={i} />)}
                 </CollapsibleSection>
               </div>
             )}
@@ -1132,12 +1198,12 @@ function HaloApp() {
                 AI-generated research for informational purposes only. Always do your own due diligence.
               </div>
             </div>
-          </>
+          </div>
         )}
 
         {/* ════════ WEEKLY ════════ */}
         {!loading && !error && tab === "weekly" && (
-          <>
+          <div style={{ animation: "tabIn 0.3s cubic-bezier(0.32, 0.72, 0, 1)" }}>
             {weeklyData ? (
               <>
                 <div style={{ marginBottom: 22 }}>
@@ -1179,7 +1245,7 @@ function HaloApp() {
                 <SectionTitle accent={C.halo}>
                   weekly top {weeklyData.picks?.length || 0} picks
                 </SectionTitle>
-                {weeklyData.picks?.map(p => <PickCard key={p.ticker + "-w"} pick={p} />)}
+                {weeklyData.picks?.map((p, i) => <PickCard key={p.ticker + "-w"} pick={p} index={i} />)}
 
                 {weeklyData.macroOutlook && (
                   <div style={{ marginTop: 14, display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -1204,13 +1270,40 @@ function HaloApp() {
                 </div>
               </Card>
             )}
-          </>
+          </div>
         )}
 
         {/* ════════ RESEARCH ════════ */}
         {!loading && !error && tab === "research" && (
-          <>
-            <div style={{ marginBottom: 18, color: C.muted, fontSize: 13 }}>
+          <div style={{ animation: "tabIn 0.3s cubic-bezier(0.32, 0.72, 0, 1)" }}>
+            {data?.summary && (
+              <Card style={{
+                marginBottom: 18,
+                background: C.name === "dark"
+                  ? `linear-gradient(135deg, ${C.surface}, ${C.halo}10)`
+                  : `linear-gradient(135deg, ${C.surface}, ${C.haloSoft}15)`,
+              }}>
+                <div style={{
+                  fontSize: 10.5, color: C.haloDeep, fontWeight: 700,
+                  letterSpacing: "0.16em", marginBottom: 8, textTransform: "uppercase",
+                }}>
+                  ✦ ai synthesis
+                </div>
+                <ExpandableText>{data.summary}</ExpandableText>
+                {data.diversificationNote && (
+                  <div style={{
+                    marginTop: 12, paddingTop: 12,
+                    borderTop: `1px solid ${C.hairline}`,
+                    fontSize: 12, color: C.muted, lineHeight: 1.6,
+                  }}>
+                    <span style={{ color: C.haloDeep, fontWeight: 700 }}>diversification · </span>
+                    {data.diversificationNote}
+                  </div>
+                )}
+              </Card>
+            )}
+
+            <div style={{ marginBottom: 14, color: C.muted, fontSize: 13 }}>
               Full research data from the latest cycle.
             </div>
             {[
@@ -1233,12 +1326,11 @@ function HaloApp() {
                 </div>
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
 
-      <div style={{ height: "env(safe-area-inset-bottom, 20px)" }} />
-
+      <BottomNav tab={tab} setTab={setTab} />
       <AboutSheet open={aboutOpen} onClose={() => setAboutOpen(false)} universe={universe} />
     </div>
   );
