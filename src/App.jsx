@@ -641,46 +641,47 @@ function HeroCard({ data, growthCount, defCount }) {
       background: isDark
         ? `linear-gradient(135deg, ${C.surface2} 0%, #0f1116 100%)`
         : `linear-gradient(135deg, ${C.surface} 0%, ${C.surface2} 100%)`,
-      border: `1px solid ${C.border}`, borderRadius: 24,
-      padding: "20px 18px", marginBottom: 16,
+      border: `1px solid ${C.border}`, borderRadius: 18,
+      padding: "12px 14px", marginBottom: 14,
       boxShadow: isDark
-        ? `0 12px 40px rgba(0,0,0,0.5), inset 0 1px 0 ${C.primary}22`
-        : "0 6px 24px rgba(28,31,46,0.06)",
+        ? `0 6px 20px rgba(0,0,0,0.4), inset 0 1px 0 ${C.primary}22`
+        : "0 4px 14px rgba(28,31,46,0.05)",
     }}>
       {isDark && (
         <div style={{
-          position: "absolute", top: -40, right: -40, width: 180, height: 180,
+          position: "absolute", top: -30, right: -30, width: 120, height: 120,
           background: `radial-gradient(circle, ${oColor}30 0%, transparent 60%)`,
           pointerEvents: "none",
         }} />
       )}
-      <div style={{ display: "flex", alignItems: "center", gap: 18, position: "relative" }}>
-        <ShieldRing value={data?.defensiveScore ?? 0} size={104} label="Shield" />
+      <div style={{ display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
+        <ShieldRing value={data?.defensiveScore ?? 0} size={64} label="Shield" />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
-            fontFamily: "var(--halo-mono)", fontSize: 9.5, color: C.muted,
-            letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 6,
+            fontFamily: "var(--halo-mono)", fontSize: 9, color: C.muted,
+            letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 3,
           }}>
             Macro outlook
           </div>
           <div style={{
-            fontSize: 22, fontWeight: 800, color: C.ink,
-            letterSpacing: C.titleTrack, lineHeight: 1.1, marginBottom: 8,
+            fontSize: 16, fontWeight: 800, color: C.ink,
+            letterSpacing: C.titleTrack, lineHeight: 1.1, marginBottom: 6,
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
           }}>
             {outlook || "—"}
           </div>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
             <div style={{
               background: `${oColor}1f`, border: `1px solid ${oColor}55`,
-              color: oColor, fontFamily: "var(--halo-mono)", fontSize: 10,
-              fontWeight: 700, padding: "3px 9px", borderRadius: 999,
+              color: oColor, fontFamily: "var(--halo-mono)", fontSize: 9.5,
+              fontWeight: 700, padding: "2px 8px", borderRadius: 999,
             }}>
               {growthCount} growth
             </div>
             <div style={{
               background: `${C.shield}1f`, border: `1px solid ${C.shield}55`,
-              color: C.shield, fontFamily: "var(--halo-mono)", fontSize: 10,
-              fontWeight: 700, padding: "3px 9px", borderRadius: 999,
+              color: C.shield, fontFamily: "var(--halo-mono)", fontSize: 9.5,
+              fontWeight: 700, padding: "2px 8px", borderRadius: 999,
             }}>
               {defCount} defensive
             </div>
@@ -692,11 +693,11 @@ function HeroCard({ data, growthCount, defCount }) {
         <button onClick={() => setShowSummary(!showSummary)} style={{
           width: "100%", textAlign: "left", cursor: "pointer",
           background: "transparent", border: "none", color: "inherit",
-          marginTop: 16, paddingTop: 14,
+          marginTop: 10, paddingTop: 10,
           borderTop: `1px solid ${C.hairline}`,
           WebkitTapHighlightColor: "transparent",
         }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={{
               fontFamily: "var(--halo-mono)", fontSize: 9.5, color: C.primary,
               letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 700,
@@ -704,17 +705,16 @@ function HeroCard({ data, growthCount, defCount }) {
               ✦ AI Brief
             </div>
             <div style={{ color: C.muted, fontSize: 11, fontFamily: "var(--halo-mono)" }}>
-              {showSummary ? "collapse" : "expand"}
+              {showSummary ? "−" : "+"}
             </div>
           </div>
-          <div style={{
-            fontSize: 13.5, lineHeight: 1.6, color: C.ink,
-            display: showSummary ? "block" : "-webkit-box",
-            WebkitLineClamp: showSummary ? "unset" : 2, WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-          }}>
-            {data.summary}
-          </div>
+          {showSummary && (
+            <div style={{
+              marginTop: 8, fontSize: 13, lineHeight: 1.6, color: C.ink,
+            }}>
+              {data.summary}
+            </div>
+          )}
           {showSummary && data.diversificationNote && (
             <div style={{
               marginTop: 10, paddingTop: 10,
@@ -1092,7 +1092,9 @@ function HaloApp() {
   const [universe, setUniverse]   = useState(null);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [activePick, setActivePick] = useState(null);
-  const [openPhase, setOpenPhase] = useState("macro");
+  const [openPhase, setOpenPhase] = useState(null);
+  const [weeklyOpen, setWeeklyOpen] = useState(false);
+  const [synthesisOpen, setSynthesisOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -1330,58 +1332,76 @@ function HaloApp() {
                     background: isDark
                       ? `linear-gradient(135deg, ${C.surface2} 0%, #0f1116 100%)`
                       : `linear-gradient(135deg, ${C.surface} 0%, ${C.surface2} 100%)`,
-                    border: `1px solid ${C.border}`, borderRadius: 24,
-                    padding: "20px 18px", marginBottom: 16,
+                    border: `1px solid ${C.border}`, borderRadius: 18,
+                    marginBottom: 14, overflow: "hidden",
                     boxShadow: isDark
-                      ? `0 12px 40px rgba(0,0,0,0.5), inset 0 1px 0 ${C.primary}22`
-                      : "0 6px 24px rgba(28,31,46,0.06)",
+                      ? `0 6px 20px rgba(0,0,0,0.4), inset 0 1px 0 ${C.primary}22`
+                      : "0 4px 14px rgba(28,31,46,0.05)",
                   }}>
-                    <div style={{
-                      fontFamily: "var(--halo-mono)", fontSize: 9.5, color: C.primary,
-                      letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 700,
-                      marginBottom: 6,
+                    <button onClick={() => setWeeklyOpen(!weeklyOpen)} style={{
+                      width: "100%", textAlign: "left", cursor: "pointer", color: "inherit",
+                      background: "transparent", border: "none",
+                      padding: "12px 14px",
+                      display: "flex", alignItems: "center", gap: 10,
+                      WebkitTapHighlightColor: "transparent",
                     }}>
-                      ✦ week of
-                    </div>
-                    <div style={{
-                      fontSize: 22, fontWeight: 800, color: C.ink,
-                      letterSpacing: C.titleTrack, lineHeight: 1.15,
-                    }}>
-                      {weeklyData.weekOf}
-                    </div>
-                    <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>
-                      generated {relativeTime(weeklyData.generatedAt)}
-                    </div>
-
-                    {weeklyData.summary && (
-                      <div style={{
-                        marginTop: 14, paddingTop: 14,
-                        borderTop: `1px solid ${C.hairline}`,
-                        fontSize: 13.5, lineHeight: 1.6, color: C.ink,
-                      }}>
-                        {weeklyData.summary}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{
+                          fontFamily: "var(--halo-mono)", fontSize: 9, color: C.primary,
+                          letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 700,
+                          marginBottom: 3,
+                        }}>
+                          ✦ week of
+                        </div>
+                        <div style={{
+                          fontSize: 16, fontWeight: 800, color: C.ink,
+                          letterSpacing: C.titleTrack, lineHeight: 1.1,
+                          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                        }}>
+                          {weeklyData.weekOf}
+                        </div>
+                        <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
+                          generated {relativeTime(weeklyData.generatedAt)}
+                        </div>
                       </div>
-                    )}
-                    {weeklyData.diversificationNote && (
                       <div style={{
-                        marginTop: 10, paddingTop: 10,
-                        borderTop: `1px solid ${C.hairline}`,
-                        fontSize: 12, color: C.muted, lineHeight: 1.55,
-                      }}>
-                        <span style={{ color: C.primary, fontWeight: 700 }}>diversification · </span>
-                        {weeklyData.diversificationNote}
-                      </div>
-                    )}
+                        color: C.muted, fontFamily: "var(--halo-mono)", fontSize: 16,
+                        transform: weeklyOpen ? "rotate(45deg)" : "rotate(0)",
+                        transition: "transform 0.2s",
+                      }}>+</div>
+                    </button>
 
-                    {(weeklyData.macroOutlook || weeklyData.defensiveScore != null) && (
-                      <div style={{ marginTop: 14, display: "flex", gap: 6, flexWrap: "wrap" }}>
-                        {weeklyData.macroOutlook && (
-                          <Tag color={outlookColor(C, weeklyData.macroOutlook)} solid>
-                            {weeklyData.macroOutlook}
-                          </Tag>
+                    {weeklyOpen && (
+                      <div style={{ padding: "0 14px 14px" }}>
+                        {weeklyData.summary && (
+                          <div style={{
+                            paddingTop: 12, borderTop: `1px solid ${C.hairline}`,
+                            fontSize: 13, lineHeight: 1.6, color: C.ink,
+                          }}>
+                            {weeklyData.summary}
+                          </div>
                         )}
-                        {weeklyData.defensiveScore != null && (
-                          <Tag color={C.shield}>shield {weeklyData.defensiveScore}/10</Tag>
+                        {weeklyData.diversificationNote && (
+                          <div style={{
+                            marginTop: 10, paddingTop: 10,
+                            borderTop: `1px solid ${C.hairline}`,
+                            fontSize: 12, color: C.muted, lineHeight: 1.55,
+                          }}>
+                            <span style={{ color: C.primary, fontWeight: 700 }}>diversification · </span>
+                            {weeklyData.diversificationNote}
+                          </div>
+                        )}
+                        {(weeklyData.macroOutlook || weeklyData.defensiveScore != null) && (
+                          <div style={{ marginTop: 12, display: "flex", gap: 6, flexWrap: "wrap" }}>
+                            {weeklyData.macroOutlook && (
+                              <Tag color={outlookColor(C, weeklyData.macroOutlook)} solid>
+                                {weeklyData.macroOutlook}
+                              </Tag>
+                            )}
+                            {weeklyData.defensiveScore != null && (
+                              <Tag color={C.shield}>shield {weeklyData.defensiveScore}/10</Tag>
+                            )}
+                          </div>
                         )}
                       </div>
                     )}
@@ -1421,27 +1441,47 @@ function HaloApp() {
                   background: isDark
                     ? `linear-gradient(135deg, ${C.surface2} 0%, #0f1116 100%)`
                     : `linear-gradient(135deg, ${C.surface} 0%, ${C.surface2} 100%)`,
-                  border: `1px solid ${C.border}`, borderRadius: 18,
-                  padding: "16px 18px", marginBottom: 16,
+                  border: `1px solid ${C.border}`, borderRadius: 14,
+                  marginBottom: 14, overflow: "hidden",
                 }}>
-                  <div style={{
-                    fontFamily: "var(--halo-mono)", fontSize: 9.5, color: C.primary,
-                    letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 700,
-                    marginBottom: 8,
+                  <button onClick={() => setSynthesisOpen(!synthesisOpen)} style={{
+                    width: "100%", textAlign: "left", cursor: "pointer", color: "inherit",
+                    background: "transparent", border: "none",
+                    padding: "12px 14px",
+                    display: "flex", alignItems: "center", gap: 10,
+                    WebkitTapHighlightColor: "transparent",
                   }}>
-                    ✦ ai synthesis
-                  </div>
-                  <p style={{ color: C.ink, fontSize: 13.5, lineHeight: 1.65, margin: 0 }}>
-                    {data.summary}
-                  </p>
-                  {data.diversificationNote && (
                     <div style={{
-                      marginTop: 12, paddingTop: 12,
-                      borderTop: `1px solid ${C.hairline}`,
-                      fontSize: 12, color: C.muted, lineHeight: 1.6,
+                      flex: 1, fontFamily: "var(--halo-mono)", fontSize: 10.5,
+                      color: C.primary, letterSpacing: "0.18em",
+                      textTransform: "uppercase", fontWeight: 700,
                     }}>
-                      <span style={{ color: C.primary, fontWeight: 700 }}>diversification · </span>
-                      {data.diversificationNote}
+                      ✦ ai synthesis
+                    </div>
+                    <div style={{
+                      color: C.muted, fontFamily: "var(--halo-mono)", fontSize: 14,
+                      transform: synthesisOpen ? "rotate(45deg)" : "rotate(0)",
+                      transition: "transform 0.2s",
+                    }}>+</div>
+                  </button>
+                  {synthesisOpen && (
+                    <div style={{ padding: "0 14px 14px" }}>
+                      <p style={{
+                        color: C.ink, fontSize: 13, lineHeight: 1.65, margin: 0,
+                        paddingTop: 12, borderTop: `1px solid ${C.hairline}`,
+                      }}>
+                        {data.summary}
+                      </p>
+                      {data.diversificationNote && (
+                        <div style={{
+                          marginTop: 12, paddingTop: 12,
+                          borderTop: `1px solid ${C.hairline}`,
+                          fontSize: 12, color: C.muted, lineHeight: 1.6,
+                        }}>
+                          <span style={{ color: C.primary, fontWeight: 700 }}>diversification · </span>
+                          {data.diversificationNote}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
