@@ -1,15 +1,14 @@
-import { useState, useEffect, createContext, useContext, useMemo } from "react";
+import { useState, useEffect, createContext, useContext, useMemo, useRef } from "react";
 
 // ─── Palettes ────────────────────────────────────────────────────────────────
-// Light: warm cream + halo gold (Apple-aesthetic).
-// Dark:  Noir Apple — near-black with cool depth, halo gold pops, slightly
-//        brighter pastels for legibility on dark.
+// Light = "warm" from the design (refined cream + halo gold).
+// Dark  = "vivid"  from the design (bold dark fintech with neon-mint accents).
 const LIGHT = {
   name: "light",
   bg:       "#faf8f3",
   surface:  "#ffffff",
-  surface2: "#f8f4ea",
-  subtle:   "#f3efe6",
+  surface2: "#f6f1e6",
+  subtle:   "#f1ece0",
   ink:      "#1c1f2e",
   text:     "#2a2e42",
   muted:    "#7a7f93",
@@ -19,50 +18,54 @@ const LIGHT = {
   scrim:    "rgba(28,31,46,0.32)",
   headerBg: "rgba(250,248,243,0.85)",
 
-  halo:     "#d4a574",
-  haloDeep: "#b8895a",
-  haloSoft: "#f5d9b3",
+  primary:     "#d4a574",
+  primaryDeep: "#b8895a",
+  primarySoft: "#f5d9b3",
 
-  mint:     "#34d399",
-  sky:      "#7dd3fc",
-  coral:    "#fb7185",
-  lavender: "#a78bfa",
-  butter:   "#fcd34d",
-  peach:    "#fb923c",
-  shield:   "#60a5fa",
+  pos:    "#0f9d6c",
+  neg:    "#e85a6e",
+  warn:   "#e8a948",
+  info:   "#5a8fd6",
+  purple: "#9079d4",
+  shield: "#5a8fd6",
+
+  titleWeight: 800,
+  titleTrack:  "-0.025em",
+  cardRadius:  22,
 };
 
 const DARK = {
   name: "dark",
-  bg:       "#0a0b10",
-  surface:  "#15171f",
-  surface2: "#1c1f2a",
+  bg:       "#0c0d10",
+  surface:  "#16181f",
+  surface2: "#1d2029",
   subtle:   "#1a1d27",
-  ink:      "#f5f1e6",
-  text:     "#dcd9d0",
+  ink:      "#ffffff",
+  text:     "#e7e7ec",
   muted:    "#8a8e9d",
   faint:    "#5a5d6e",
   border:   "#262a36",
   hairline: "#1d2029",
-  scrim:    "rgba(0,0,0,0.65)",
-  headerBg: "rgba(10,11,16,0.78)",
+  scrim:    "rgba(0,0,0,0.55)",
+  headerBg: "rgba(12,13,16,0.85)",
 
-  halo:     "#e0b388",
-  haloDeep: "#c2904f",
-  haloSoft: "#f5d9b3",
+  primary:     "#7cf396",
+  primaryDeep: "#3ce06a",
+  primarySoft: "#7cf39633",
 
-  mint:     "#4ade80",
-  sky:      "#7dd3fc",
-  coral:    "#fb7185",
-  lavender: "#c4b5fd",
-  butter:   "#fcd34d",
-  peach:    "#fdba74",
-  shield:   "#60a5fa",
+  pos:    "#7cf396",
+  neg:    "#ff5f7e",
+  warn:   "#ffd166",
+  info:   "#69b6ff",
+  purple: "#c4a3ff",
+  shield: "#69b6ff",
+
+  titleWeight: 800,
+  titleTrack:  "-0.03em",
+  cardRadius:  18,
 };
 
-const RANK_GOLDS = ["#e8b86b", "#c0c0cc", "#d4a574", "#34d399", "#7dd3fc", "#a78bfa", "#f472b6", "#fb923c", "#22d3ee", "#facc15"];
-
-const ThemeContext = createContext({ palette: LIGHT, theme: "light", setTheme: () => {} });
+const ThemeContext = createContext({ palette: DARK, theme: "dark", setTheme: () => {} });
 const usePalette = () => useContext(ThemeContext).palette;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -81,14 +84,6 @@ function relativeTime(iso) {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-function staleness(iso) {
-  if (!iso) return { label: "no data", tone: "muted" };
-  const hours = (Date.now() - new Date(iso).getTime()) / 3_600_000;
-  if (hours < 30)  return { label: "fresh",  tone: "fresh"  };
-  if (hours < 80)  return { label: "recent", tone: "recent" };
-  return { label: "stale", tone: "stale" };
-}
-
 function formatLong(iso) {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString("en-US", {
@@ -99,258 +94,64 @@ function formatLong(iso) {
 
 function outlookColor(C, outlook) {
   return ({
-    "Bullish":            C.mint,
-    "Cautiously Bullish": C.sky,
-    "Neutral":            C.butter,
-    "Cautious":           C.peach,
-    "Bearish":            C.coral,
+    "Bullish":            C.pos,
+    "Cautiously Bullish": C.info,
+    "Neutral":            C.warn,
+    "Cautious":           C.warn,
+    "Bearish":            C.neg,
     "Pending":            C.faint,
   })[outlook] || C.faint;
 }
 
-function categoryColor(C, cat) {
-  return ({
-    growth:    C.mint,
-    defensive: C.shield,
-    value:     C.butter,
-    income:    C.lavender,
-  })[cat] || C.muted;
+// Deterministic sparkline series, biased by score.
+function hashStr(s) { let h = 0; for (let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i))|0; return Math.abs(h); }
+function makeSeries(ticker, score, n = 60) {
+  const seed = hashStr(ticker || "");
+  const out = [];
+  let v = 100;
+  const drift = ((score ?? 70) - 70) / 12000;
+  for (let i = 0; i < n; i++) {
+    const r = Math.sin(seed + i * 1.7) + Math.cos(seed * 0.3 + i * 0.7) * 0.6;
+    v = v * (1 + drift + r * 0.004);
+    out.push(v);
+  }
+  return out;
 }
 
-// ─── Atoms ───────────────────────────────────────────────────────────────────
-function Pill({ color, children, soft = true, style = {} }) {
+// ─── Halo brand mark ─────────────────────────────────────────────────────────
+function HaloMark({ size = 24 }) {
   const C = usePalette();
-  const c = color || C.muted;
-  return (
-    <span style={{
-      display: "inline-flex", alignItems: "center", gap: 5,
-      background: soft ? `${c}1f` : c,
-      color: soft ? c : (C.name === "dark" ? "#0a0b10" : "#fff"),
-      border: soft ? `1px solid ${c}33` : "none",
-      borderRadius: 999, padding: "3px 10px",
-      fontSize: 11, fontWeight: 600, letterSpacing: "0.01em",
-      whiteSpace: "nowrap",
-      ...style,
-    }}>
-      {children}
-    </span>
-  );
-}
-
-function Card({ children, accent, style = {}, padded = true }) {
-  const C = usePalette();
-  return (
-    <div style={{
-      background: C.surface,
-      border: `1px solid ${C.border}`,
-      borderRadius: 20,
-      padding: padded ? "16px 18px" : 0,
-      position: "relative",
-      overflow: "hidden",
-      boxShadow: C.name === "dark"
-        ? "0 1px 2px rgba(0,0,0,0.2), 0 6px 24px rgba(0,0,0,0.35)"
-        : "0 1px 2px rgba(28,31,46,0.03), 0 4px 16px rgba(28,31,46,0.04)",
-      ...style,
-    }}>
-      {accent && (
-        <div style={{
-          position: "absolute", top: 0, left: 0, right: 0, height: 3,
-          background: `linear-gradient(90deg, ${accent}, ${accent}66)`,
-        }} />
-      )}
-      {children}
-    </div>
-  );
-}
-
-function SectionTitle({ children, accent }) {
-  const C = usePalette();
-  return (
-    <div style={{
-      display: "flex", alignItems: "center", gap: 8,
-      fontSize: 11, color: C.muted, fontWeight: 700,
-      letterSpacing: "0.14em", textTransform: "uppercase",
-      marginBottom: 12,
-    }}>
-      {accent && <span style={{ width: 6, height: 6, borderRadius: "50%", background: accent }} />}
-      <span>{children}</span>
-    </div>
-  );
-}
-
-// ─── Collapsible primitives ─────────────────────────────────────────────────
-function CollapsibleSection({ title, accent, count, defaultOpen = false, children }) {
-  const C = usePalette();
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <>
-      <button
-        onClick={() => setOpen(!open)}
-        style={{
-          width: "100%", background: "transparent", border: "none",
-          padding: 0, cursor: "pointer", textAlign: "left",
-          display: "flex", alignItems: "center", gap: 8,
-          fontSize: 11, color: C.muted, fontWeight: 700,
-          letterSpacing: "0.14em", textTransform: "uppercase",
-          marginBottom: open ? 12 : 4,
-          touchAction: "manipulation", WebkitTapHighlightColor: "transparent",
-        }}
-      >
-        {accent && <span style={{ width: 6, height: 6, borderRadius: "50%", background: accent, flexShrink: 0 }} />}
-        <span>{title}{count != null ? ` · ${count}` : ""}</span>
-        <span style={{
-          marginLeft: "auto", color: C.faint, fontSize: 11, letterSpacing: 0,
-          display: "inline-block", lineHeight: 1,
-          transform: open ? "rotate(180deg)" : "rotate(0deg)",
-          transition: "transform 0.28s cubic-bezier(0.32, 0.72, 0, 1)",
-        }}>
-          ▾
-        </span>
-      </button>
-      {open && children}
-    </>
-  );
-}
-
-function SynthesisCard({ label, summary, diversificationNote, defaultOpen = false }) {
-  const C = usePalette();
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div style={{
-      background: C.surface,
-      backgroundImage: C.name === "dark"
-        ? `linear-gradient(135deg, ${C.surface}, ${C.halo}10)`
-        : `linear-gradient(135deg, ${C.surface}, ${C.haloSoft}15)`,
-      border: `1px solid ${C.border}`,
-      borderRadius: 20,
-      marginBottom: 22,
-      overflow: "hidden",
-      boxShadow: C.name === "dark"
-        ? "0 1px 2px rgba(0,0,0,0.2), 0 6px 24px rgba(0,0,0,0.35)"
-        : "0 1px 2px rgba(28,31,46,0.03), 0 4px 16px rgba(28,31,46,0.04)",
-    }}>
-      <button
-        onClick={() => setOpen(!open)}
-        aria-expanded={open}
-        style={{
-          width: "100%", background: "transparent", border: "none",
-          padding: open ? "14px 18px 8px" : "14px 18px",
-          display: "flex", alignItems: "center", gap: 8,
-          cursor: "pointer", textAlign: "left", color: "inherit",
-          touchAction: "manipulation", WebkitTapHighlightColor: "transparent",
-        }}
-      >
-        <span style={{
-          fontSize: 10.5, color: C.haloDeep, fontWeight: 700,
-          letterSpacing: "0.16em", textTransform: "uppercase",
-        }}>
-          ✦ {label}
-        </span>
-        <span style={{
-          marginLeft: "auto", color: C.faint, fontSize: 12, lineHeight: 1,
-          display: "inline-block",
-          transform: open ? "rotate(180deg)" : "rotate(0deg)",
-          transition: "transform 0.28s cubic-bezier(0.32, 0.72, 0, 1)",
-        }}>
-          ▾
-        </span>
-      </button>
-      {open && (
-        <div style={{
-          padding: "0 18px 16px",
-          animation: "cardExpand 0.28s cubic-bezier(0.32, 0.72, 0, 1)",
-        }}>
-          <ExpandableText>{summary}</ExpandableText>
-          {diversificationNote && (
-            <div style={{
-              marginTop: 12, paddingTop: 12,
-              borderTop: `1px solid ${C.hairline}`,
-              fontSize: 12, color: C.muted, lineHeight: 1.6,
-            }}>
-              <span style={{ color: C.haloDeep, fontWeight: 700 }}>diversification · </span>
-              {diversificationNote}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ExpandableText({ children, lines = 3, threshold = 180, color }) {
-  const C = usePalette();
-  const [open, setOpen] = useState(false);
-  const text = typeof children === "string" ? children : "";
-  const needsToggle = text.length > threshold;
-  const textColor = color || C.ink;
-
-  if (!needsToggle) {
+  if (C.name === "dark") {
     return (
-      <p style={{ color: textColor, fontSize: 14, lineHeight: 1.7, margin: 0 }}>
-        {children}
-      </p>
+      <div style={{
+        width: size, height: size, borderRadius: "50%",
+        background: `radial-gradient(circle at 35% 30%, ${C.primary}, ${C.primaryDeep})`,
+        boxShadow: `0 0 18px ${C.primary}66, inset 0 0 0 1px ${C.primary}`,
+      }} />
     );
   }
-
-  return (
-    <>
-      <p style={{
-        color: textColor, fontSize: 14, lineHeight: 1.7, margin: 0,
-        ...(open ? {} : {
-          display: "-webkit-box",
-          WebkitLineClamp: lines,
-          WebkitBoxOrient: "vertical",
-          overflow: "hidden",
-        }),
-      }}>
-        {children}
-      </p>
-      <button
-        onClick={() => setOpen(!open)}
-        style={{
-          background: "transparent", border: "none", padding: 0,
-          marginTop: 8, color: C.haloDeep, fontWeight: 700,
-          fontSize: 10.5, letterSpacing: "0.16em", textTransform: "uppercase",
-          cursor: "pointer", touchAction: "manipulation",
-          WebkitTapHighlightColor: "transparent",
-        }}
-      >
-        {open ? "show less" : "show more"}
-      </button>
-    </>
-  );
-}
-
-// ─── Halo brand mark (clean ring with soft inner luminance, no centerpoint) ──
-function HaloMark({ size = 28 }) {
-  const C = usePalette();
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden>
       <defs>
         <radialGradient id="halo-glow" cx="50%" cy="50%" r="50%">
-          <stop offset="50%" stopColor={C.haloSoft} stopOpacity="0" />
-          <stop offset="80%" stopColor={C.haloSoft} stopOpacity="0.5" />
-          <stop offset="100%" stopColor={C.haloSoft} stopOpacity="0" />
-        </radialGradient>
-        <radialGradient id="halo-inner" cx="50%" cy="48%" r="50%">
-          <stop offset="0%"   stopColor={C.haloSoft} stopOpacity="0.6" />
-          <stop offset="100%" stopColor={C.haloSoft} stopOpacity="0" />
+          <stop offset="50%" stopColor={C.primarySoft} stopOpacity="0" />
+          <stop offset="80%" stopColor={C.primarySoft} stopOpacity="0.5" />
+          <stop offset="100%" stopColor={C.primarySoft} stopOpacity="0" />
         </radialGradient>
         <linearGradient id="halo-ring" x1="50%" y1="0%" x2="50%" y2="100%">
-          <stop offset="0%"   stopColor={C.haloSoft} />
-          <stop offset="40%" stopColor={C.halo} />
-          <stop offset="100%" stopColor={C.haloDeep} />
+          <stop offset="0%"   stopColor={C.primarySoft} />
+          <stop offset="40%"  stopColor={C.primary} />
+          <stop offset="100%" stopColor={C.primaryDeep} />
         </linearGradient>
       </defs>
       <circle cx="16" cy="16" r="14" fill="url(#halo-glow)" />
-      <circle cx="16" cy="16" r="9" fill="url(#halo-inner)" />
       <circle cx="16" cy="16" r="10.5" fill="none" stroke="url(#halo-ring)" strokeWidth="2.4" />
     </svg>
   );
 }
 
-// ─── Icons (theme toggle + info) ─────────────────────────────────────────────
-function MoonIcon({ size = 18, color }) {
+// ─── Icons ───────────────────────────────────────────────────────────────────
+function MoonIcon({ size = 17, color }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill={color} />
@@ -374,7 +175,7 @@ function SunIcon({ size = 18, color }) {
   );
 }
 
-function InfoIcon({ size = 20, color }) {
+function InfoIcon({ size = 18, color }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <circle cx="12" cy="12" r="10" />
@@ -393,40 +194,6 @@ function CloseIcon({ size = 18, color }) {
   );
 }
 
-// ─── Bottom-nav glyphs ──────────────────────────────────────────────────────
-function PicksIcon({ size = 20, color, active = false }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill={active ? `${color}22` : "none"} stroke={color}
-         strokeWidth={active ? 2 : 1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M12 2 L14 9 L21 12 L14 15 L12 22 L10 15 L3 12 L10 9 Z" />
-    </svg>
-  );
-}
-
-function WeeklyIcon({ size = 20, color, active = false }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color}
-         strokeWidth={active ? 2 : 1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <rect x="3" y="5" width="18" height="16" rx="2.5" />
-      <line x1="3" y1="10" x2="21" y2="10" />
-      <line x1="8" y1="3" x2="8" y2="7" />
-      <line x1="16" y1="3" x2="16" y2="7" />
-      {active && <circle cx="12" cy="15.5" r="1.6" fill={color} stroke="none" />}
-    </svg>
-  );
-}
-
-function ResearchIcon({ size = 20, color, active = false }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color}
-         strokeWidth={active ? 2 : 1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <circle cx="11" cy="11" r="7" fill={active ? `${color}1a` : "none"} />
-      <line x1="16.2" y1="16.2" x2="21" y2="21" />
-    </svg>
-  );
-}
-
-// ─── Header control button (theme toggle + info button share styling) ───────
 function HeaderButton({ onClick, children, label }) {
   const C = usePalette();
   return (
@@ -434,13 +201,11 @@ function HeaderButton({ onClick, children, label }) {
       onClick={onClick}
       aria-label={label}
       style={{
-        width: 36, height: 36, borderRadius: 12,
+        width: 34, height: 34, borderRadius: 11,
         background: C.subtle, border: `1px solid ${C.border}`,
         display: "flex", alignItems: "center", justifyContent: "center",
         cursor: "pointer", color: C.muted,
-        transition: "all 0.18s ease",
-        WebkitTapHighlightColor: "transparent",
-        touchAction: "manipulation",
+        WebkitTapHighlightColor: "transparent", touchAction: "manipulation",
       }}
     >
       {children}
@@ -448,369 +213,730 @@ function HeaderButton({ onClick, children, label }) {
   );
 }
 
-// ─── Hero strip: outlook + freshness + shield, all in one tidy row ──────────
-function HeroStrip({ data, connected }) {
-  const C = usePalette();
-  if (!connected) {
-    return (
-      <div style={{ padding: "10px 0 14px" }}>
-        <Pill color={C.coral}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.coral }} />
-          offline
-        </Pill>
-      </div>
-    );
-  }
-
-  const generated = data?.generatedAt || data?.metadata?.generatedAt;
-  const fresh = staleness(generated);
-  const freshTone =
-    fresh.tone === "fresh"  ? C.mint :
-    fresh.tone === "recent" ? C.butter :
-                              C.faint;
-
-  const outlook  = data?.macroOutlook;
-  const outColor = outlookColor(C, outlook);
-  const outShown = outlook && outlook !== "Pending";
-
+// ─── Sparkline ──────────────────────────────────────────────────────────────
+function Sparkline({ data, color, width = 64, height = 24, fill = true, strokeWidth = 1.6 }) {
+  const id = useMemo(() => "sg-" + Math.random().toString(36).slice(2, 8), []);
+  if (!data || data.length === 0) return null;
+  const min = Math.min(...data), max = Math.max(...data);
+  const span = max - min || 1;
+  const stepX = width / (data.length - 1);
+  const points = data.map((v, i) => `${i * stepX},${height - ((v - min) / span) * (height - 4) - 2}`);
+  const path = "M" + points.join(" L");
+  const areaPath = path + ` L${width},${height} L0,${height} Z`;
   return (
-    <div style={{ padding: "10px 0 14px" }}>
-      <div style={{
-        display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
-        background: C.surface,
-        border: `1px solid ${C.border}`,
-        borderRadius: 14,
-        padding: "10px 14px",
-        boxShadow: C.name === "dark"
-          ? "0 1px 2px rgba(0,0,0,0.25)"
-          : "0 1px 2px rgba(28,31,46,0.04)",
-      }}>
-        {/* Outlook (most prominent) */}
-        {outShown ? (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
-            <span style={{
-              width: 10, height: 10, borderRadius: "50%",
-              background: outColor, flexShrink: 0,
-              boxShadow: `0 0 12px ${outColor}88`,
-            }} />
-            <span style={{
-              fontSize: 14, fontWeight: 700, color: C.ink,
-              letterSpacing: "-0.01em",
-              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-            }}>
-              {outlook}
-            </span>
-          </div>
-        ) : (
-          <div style={{ flex: 1, fontSize: 13, color: C.muted }}>awaiting outlook</div>
-        )}
-
-        {/* Shield score */}
-        {data?.defensiveScore != null && (
-          <span style={{
-            display: "inline-flex", alignItems: "center", gap: 4,
-            fontSize: 12, fontWeight: 600, color: C.shield,
-          }}>
-            <ShieldIcon size={13} color={C.shield} />
-            {data.defensiveScore}/10
-          </span>
-        )}
-      </div>
-
-      {/* Freshness — small, below the hero strip */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: 6,
-        marginTop: 7, paddingLeft: 4,
-        fontSize: 11, color: C.muted, fontWeight: 500,
-      }}>
-        <span style={{
-          width: 5, height: 5, borderRadius: "50%", background: freshTone,
-          animation: fresh.tone === "fresh" ? "pulse 2.4s infinite" : "none",
-        }} />
-        updated {relativeTime(generated)}
-        {data?.dailyCycleLabel && (
-          <span style={{ color: C.faint }}>· {data.dailyCycleLabel}</span>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function ShieldIcon({ size = 14, color }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M12 2 L4 5 V11 C4 16 7.5 20.4 12 22 C16.5 20.4 20 16 20 11 V5 L12 2Z" fill={`${color}22`} />
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: "block" }}>
+      {fill && (
+        <>
+          <defs>
+            <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity="0.32" />
+              <stop offset="100%" stopColor={color} stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <path d={areaPath} fill={`url(#${id})`} />
+        </>
+      )}
+      <path d={path} fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
-// ─── Pick card ──────────────────────────────────────────────────────────────
-const CONVICTION_COLOR = (C) => ({
-  high:        C.name === "dark" ? "#34d399" : "#0f9d6c",
-  medium:      C.halo,
-  speculative: C.lavender,
-});
-
-function PickCard({ pick, index = 0 }) {
+// ─── Animated shield ring (0–10) ────────────────────────────────────────────
+function ShieldRing({ value = 0, size = 104, label = "Shield" }) {
   const C = usePalette();
-  const [open, setOpen] = useState(false);
-  const [detailsOpen, setDetailsOpen] = useState(false);
-  const isDefensive = pick.category === "defensive";
-  const accent = isDefensive ? C.shield : (RANK_GOLDS[pick.rank - 1] || C.halo);
-  const catColor = categoryColor(C, pick.category);
-  const convictionColor = CONVICTION_COLOR(C)[pick.conviction] || C.muted;
-  const hasDetails = pick.entryNote || pick.exitTrigger || pick.keyRisk;
+  const [animated, setAnimated] = useState(0);
+  useEffect(() => {
+    const start = performance.now();
+    const dur = 900;
+    let raf;
+    const tick = (now) => {
+      const t = Math.min(1, (now - start) / dur);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setAnimated(value * eased);
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value]);
+
+  const r = size / 2 - 7;
+  const c = 2 * Math.PI * r;
+  const pct = Math.min(animated / 10, 1);
+  const offset = c * (1 - pct);
+  const color = animated >= 7 ? C.pos : animated >= 4 ? C.warn : C.neg;
 
   return (
-    <div style={{
-      background: C.surface,
-      border: `1px solid ${C.border}`,
-      borderRadius: 22,
-      padding: 0,
-      marginBottom: 10,
-      boxShadow: C.name === "dark"
-        ? "0 1px 2px rgba(0,0,0,0.25), 0 8px 24px rgba(0,0,0,0.35)"
-        : "0 1px 2px rgba(28,31,46,0.03), 0 6px 20px rgba(28,31,46,0.05)",
-      position: "relative",
-      overflow: "hidden",
-      animation: `cardIn 0.42s cubic-bezier(0.32, 0.72, 0, 1) ${Math.min(index, 12) * 45}ms both`,
-    }}>
+    <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: "rotate(-90deg)" }}>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={C.subtle} strokeWidth="6" />
+        <circle cx={size/2} cy={size/2} r={r} fill="none"
+          stroke={color} strokeWidth="6" strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={offset}
+          style={{ transition: "stroke 0.3s" }} />
+      </svg>
       <div style={{
-        position: "absolute", top: -40, right: -40, width: 120, height: 120,
-        background: `radial-gradient(circle, ${accent}26 0%, transparent 70%)`,
-        pointerEvents: "none",
-      }} />
-
-      <button
-        onClick={() => setOpen(!open)}
-        aria-expanded={open}
-        style={{
-          width: "100%", background: "transparent", border: "none",
-          padding: open ? "16px 16px 10px" : "14px 16px",
-          textAlign: "left", color: "inherit", cursor: "pointer",
-          touchAction: "manipulation", WebkitTapHighlightColor: "transparent",
-          display: "flex", alignItems: "center", gap: 11,
-          position: "relative", zIndex: 1,
-        }}
-      >
+        position: "absolute", inset: 0, display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+      }}>
         <div style={{
-          width: 36, height: 36, borderRadius: 12,
-          background: `linear-gradient(135deg, ${accent}33, ${accent}15)`,
-          border: `1px solid ${accent}55`,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontWeight: 800, color: accent, fontSize: 14, flexShrink: 0,
+          fontFamily: "var(--halo-sans)", fontWeight: 800,
+          fontSize: size * 0.32, color: C.ink, lineHeight: 1, letterSpacing: "-0.025em",
         }}>
-          {isDefensive ? "✦" : pick.rank}
+          {animated.toFixed(1)}
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{
-            fontSize: 19, fontWeight: 800, color: C.ink,
-            letterSpacing: "-0.02em", lineHeight: 1.15,
-            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-          }}>
-            {pick.ticker}
-          </div>
-          <div style={{
-            fontSize: 11.5, color: C.muted, lineHeight: 1.35, marginTop: 1,
-            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-          }}>
-            {pick.name}
-          </div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
-          <Pill color={accent} soft={false} style={{ fontWeight: 700 }}>
-            {pick.score}
-          </Pill>
-          {pick.conviction && (
-            <Pill color={convictionColor} style={{ fontWeight: 700 }}>
-              {pick.conviction}
-            </Pill>
-          )}
-          {pick.suggestedWeight != null && (
-            <Pill color={C.halo}>{pick.suggestedWeight}%</Pill>
-          )}
-          <span style={{
-            color: C.faint, fontSize: 12, marginLeft: 2,
-            transform: open ? "rotate(180deg)" : "rotate(0deg)",
-            transition: "transform 0.28s cubic-bezier(0.32, 0.72, 0, 1)",
-            display: "inline-block", lineHeight: 1,
-          }}>
-            ▾
-          </span>
-        </div>
-      </button>
-
-      {open && (
         <div style={{
-          padding: "0 16px 14px", position: "relative", zIndex: 1,
-          animation: "cardExpand 0.28s cubic-bezier(0.32, 0.72, 0, 1)",
+          fontFamily: "var(--halo-mono)", fontSize: 9, color: C.muted,
+          letterSpacing: "0.14em", textTransform: "uppercase", marginTop: 3,
         }}>
-          <div style={{ display: "flex", gap: 5, marginBottom: 12, flexWrap: "wrap" }}>
-            {pick.sector && <Pill color={C.muted}>{pick.sector}</Pill>}
-            {pick.horizon && <Pill color={C.halo}>{pick.horizon}</Pill>}
-            {pick.category && <Pill color={catColor}>{pick.category}</Pill>}
-            {pick.smartMoneyBacking && <Pill color={C.lavender}>✦ smart $</Pill>}
-          </div>
-
-          <p style={{ color: C.text, fontSize: 13.5, lineHeight: 1.65, margin: "0 0 10px" }}>
-            {pick.rationale}
-          </p>
-
-          {pick.catalyst && (
-            <div style={{
-              background: `${C.halo}0f`, border: `1px solid ${C.halo}33`,
-              borderRadius: 12, padding: "8px 11px", marginBottom: 10,
-            }}>
-              <div style={{ fontSize: 9.5, color: C.haloDeep, fontWeight: 700, letterSpacing: "0.12em", marginBottom: 3 }}>
-                ✦ CATALYST{pick.catalystWindow ? ` · ${pick.catalystWindow}` : ""}
-              </div>
-              <div style={{ fontSize: 12, color: C.ink, lineHeight: 1.5 }}>
-                {pick.catalyst}
-              </div>
-            </div>
-          )}
-
-          {hasDetails && (
-            <>
-              <button
-                onClick={() => setDetailsOpen(!detailsOpen)}
-                style={{
-                  background: C.subtle, border: "none", color: C.muted,
-                  fontSize: 11, fontWeight: 600, cursor: "pointer",
-                  padding: "6px 11px", borderRadius: 999,
-                  display: "inline-flex", alignItems: "center", gap: 4,
-                  touchAction: "manipulation", WebkitTapHighlightColor: "transparent",
-                }}
-              >
-                {detailsOpen ? "hide" : "show"} thesis details
-              </button>
-              {detailsOpen && (
-                <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
-                  {pick.entryNote   && <DetailBlock color={C.mint}  label="ENTRY"        text={pick.entryNote} />}
-                  {pick.exitTrigger && <DetailBlock color={C.peach} label="EXIT TRIGGER" text={pick.exitTrigger} />}
-                  {pick.keyRisk     && <DetailBlock color={C.coral} label="KEY RISK"     text={pick.keyRisk} />}
-                </div>
-              )}
-            </>
-          )}
+          {label}
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
-function DetailBlock({ color, label, text }) {
+// ─── Conviction dots ────────────────────────────────────────────────────────
+function ConvictionDots({ conviction }) {
+  const C = usePalette();
+  const n = conviction === "high" ? 3 : conviction === "medium" ? 2 : conviction === "speculative" ? 1 : 0;
+  const color = conviction === "high" ? C.pos : conviction === "medium" ? C.primary : C.purple;
+  if (!n) return null;
+  return (
+    <div style={{ display: "flex", gap: 3, alignItems: "center" }}>
+      {[0,1,2].map(i => (
+        <div key={i} style={{
+          width: 5, height: 5, borderRadius: "50%",
+          background: i < n ? color : C.subtle,
+          border: i < n ? "none" : `1px solid ${C.border}`,
+        }} />
+      ))}
+    </div>
+  );
+}
+
+// ─── Pick row (compact, scannable) ──────────────────────────────────────────
+function PickRow({ pick, onClick }) {
+  const C = usePalette();
+  const series = useMemo(() => makeSeries(pick.ticker, pick.score), [pick.ticker, pick.score]);
+  const trend = series[series.length - 1] - series[0];
+  const trendPct = (trend / series[0]) * 100;
+  const trendColor = trend >= 0 ? C.pos : C.neg;
+  const isDefensive = pick.category === "defensive";
+  const accent = isDefensive ? C.shield : C.primary;
+
+  return (
+    <button onClick={onClick} style={{
+      width: "100%", display: "grid",
+      gridTemplateColumns: "32px 1fr auto auto",
+      gap: 12, alignItems: "center",
+      padding: "12px 12px",
+      border: `1px solid ${C.border}`, background: C.surface,
+      borderRadius: 14, textAlign: "left",
+      cursor: "pointer", WebkitTapHighlightColor: "transparent",
+      color: "inherit",
+      boxShadow: C.name === "dark"
+        ? "0 1px 2px rgba(0,0,0,0.25)"
+        : "0 1px 2px rgba(28,31,46,0.03), 0 4px 12px rgba(28,31,46,0.04)",
+    }}>
+      <div style={{
+        width: 32, height: 32, borderRadius: 10,
+        background: `${accent}1f`, border: `1px solid ${accent}33`,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontFamily: "var(--halo-mono)", fontSize: 13, fontWeight: 700,
+        color: accent,
+      }}>
+        {isDefensive ? "✦" : pick.rank}
+      </div>
+      <div style={{ minWidth: 0 }}>
+        <div style={{
+          display: "flex", alignItems: "baseline", gap: 8,
+          fontSize: 17, fontWeight: 800, color: C.ink, letterSpacing: "-0.01em",
+        }}>
+          <span>{pick.ticker}</span>
+          <ConvictionDots conviction={pick.conviction} />
+        </div>
+        <div style={{
+          fontSize: 12, color: C.muted, marginTop: 2,
+          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+        }}>
+          {pick.name}{pick.sector ? <span style={{ color: C.faint }}> · {pick.sector}</span> : null}
+        </div>
+      </div>
+      <div style={{ width: 64 }}>
+        <Sparkline data={series} color={trendColor} width={64} height={24} />
+      </div>
+      <div style={{ textAlign: "right", minWidth: 48 }}>
+        <div style={{ fontFamily: "var(--halo-mono)", fontSize: 14, fontWeight: 700, color: C.ink }}>
+          {pick.score}
+        </div>
+        <div style={{
+          fontFamily: "var(--halo-mono)", fontSize: 10.5, fontWeight: 600,
+          color: trendColor, marginTop: 2,
+        }}>
+          {trend >= 0 ? "+" : ""}{trendPct.toFixed(1)}%
+        </div>
+      </div>
+    </button>
+  );
+}
+
+// ─── Big chart for detail view ──────────────────────────────────────────────
+function DetailChart({ ticker, score, height = 180 }) {
+  const C = usePalette();
+  const series = useMemo(() => makeSeries(ticker, score, 90), [ticker, score]);
+  const [hoverIdx, setHoverIdx] = useState(null);
+  const trend = series[series.length - 1] - series[0];
+  const trendColor = trend >= 0 ? C.pos : C.neg;
+  const min = Math.min(...series), max = Math.max(...series);
+  const span = max - min || 1;
+  const W = 360, H = height, P = 8;
+  const stepX = (W - P*2) / (series.length - 1);
+  const pts = series.map((v, i) => [P + i * stepX, P + (H - P*2) - ((v - min) / span) * (H - P*2)]);
+  const path = "M" + pts.map(p => p.join(",")).join(" L");
+  const areaPath = path + ` L${pts[pts.length-1][0]},${H-P} L${pts[0][0]},${H-P} Z`;
+
+  const onMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.touches?.[0]?.clientX ?? e.clientX) - rect.left) * (W / rect.width);
+    const idx = Math.round((x - P) / stepX);
+    if (idx >= 0 && idx < series.length) setHoverIdx(idx);
+  };
+  const onLeave = () => setHoverIdx(null);
+
+  const hoverPt = hoverIdx != null ? pts[hoverIdx] : null;
+  const hoverVal = hoverIdx != null ? series[hoverIdx] : series[series.length - 1];
+  const startVal = series[0];
+  const hoverTrend = ((hoverVal - startVal) / startVal) * 100;
+
+  return (
+    <div style={{ width: "100%" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+        <div>
+          <div style={{ fontFamily: "var(--halo-mono)", fontSize: 22, fontWeight: 800, color: C.ink }}>
+            ${hoverVal.toFixed(2)}
+          </div>
+          <div style={{ fontFamily: "var(--halo-mono)", fontSize: 12, color: trendColor, fontWeight: 600 }}>
+            {hoverTrend >= 0 ? "▲" : "▼"} {Math.abs(hoverTrend).toFixed(2)}% · 90d
+          </div>
+        </div>
+        <div style={{ fontFamily: "var(--halo-mono)", fontSize: 10, color: C.faint, letterSpacing: "0.14em", textTransform: "uppercase" }}>
+          modeled
+        </div>
+      </div>
+      <svg
+        viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height, display: "block", touchAction: "none" }}
+        onMouseMove={onMove} onMouseLeave={onLeave} onTouchMove={onMove} onTouchEnd={onLeave}>
+        <defs>
+          <linearGradient id={`area-${ticker}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={trendColor} stopOpacity="0.28" />
+            <stop offset="100%" stopColor={trendColor} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={areaPath} fill={`url(#area-${ticker})`} />
+        <path d={path} fill="none" stroke={trendColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        {hoverPt && (
+          <>
+            <line x1={hoverPt[0]} y1={P} x2={hoverPt[0]} y2={H-P} stroke={C.faint} strokeWidth="1" strokeDasharray="2,3" />
+            <circle cx={hoverPt[0]} cy={hoverPt[1]} r="5" fill={C.surface} stroke={trendColor} strokeWidth="2" />
+          </>
+        )}
+      </svg>
+    </div>
+  );
+}
+
+// ─── Tag, Stat, Block, SectionLabel ─────────────────────────────────────────
+function Tag({ children, color, solid = false }) {
+  const C = usePalette();
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 4,
+      background: solid ? color : `${color}22`,
+      color: solid ? (C.name === "dark" ? "#0c0d10" : C.surface) : color,
+      border: solid ? "none" : `1px solid ${color}44`,
+      borderRadius: 999, padding: "3px 10px",
+      fontSize: 11, fontWeight: 700, letterSpacing: "0.01em",
+    }}>{children}</span>
+  );
+}
+
+function Stat({ label, value, accent }) {
   const C = usePalette();
   return (
     <div style={{
-      background: `${color}10`, border: `1px solid ${color}25`,
-      borderRadius: 12, padding: "9px 11px",
+      background: C.surface, border: `1px solid ${C.border}`,
+      borderRadius: 14, padding: "10px 12px",
     }}>
-      <div style={{ fontSize: 9.5, color, fontWeight: 700, letterSpacing: "0.12em", marginBottom: 3 }}>
+      <div style={{ fontFamily: "var(--halo-mono)", fontSize: 9.5, color: C.muted, letterSpacing: "0.14em", textTransform: "uppercase" }}>
         {label}
       </div>
-      <div style={{ fontSize: 12, color: C.ink, lineHeight: 1.55 }}>
+      <div style={{
+        fontFamily: "var(--halo-mono)", fontSize: 18, fontWeight: 800,
+        color: accent || C.ink, marginTop: 2,
+      }}>{value}</div>
+    </div>
+  );
+}
+
+function SectionLabel({ children, accent }) {
+  const C = usePalette();
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 8,
+      fontFamily: "var(--halo-mono)", fontSize: 10.5, color: C.muted,
+      fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase",
+      marginBottom: 10,
+    }}>
+      {accent && <span style={{ width: 6, height: 6, borderRadius: "50%", background: accent }} />}
+      <span>{children}</span>
+    </div>
+  );
+}
+
+function Block({ color, label, text }) {
+  const C = usePalette();
+  return (
+    <div style={{
+      background: `${color}10`, border: `1px solid ${color}33`,
+      borderRadius: 12, padding: "10px 12px",
+    }}>
+      <div style={{
+        fontFamily: "var(--halo-mono)", fontSize: 9.5, color, fontWeight: 700,
+        letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 4,
+      }}>{label}</div>
+      <div style={{ fontSize: 13, color: C.ink, lineHeight: 1.55 }}>
         {text}
       </div>
     </div>
   );
 }
 
-// ─── Phase detail (Research tab) ─────────────────────────────────────────────
-function PhaseDetail({ label, icon, color, content }) {
+// ─── Detail sheet ───────────────────────────────────────────────────────────
+function DetailSheet({ pick, onClose }) {
   const C = usePalette();
-  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!pick) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [pick]);
+
+  if (!pick) return null;
+
+  const isDefensive = pick.category === "defensive";
+  const accent = isDefensive ? C.shield : C.primary;
+  const convictionColor = pick.conviction === "high" ? C.pos : pick.conviction === "medium" ? C.primary : C.purple;
+
+  return (
+    <div onClick={onClose} style={{
+      position: "fixed", inset: 0, zIndex: 1000,
+      background: C.scrim, backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+      animation: "fadeBackdrop 0.22s ease",
+      display: "flex", alignItems: "flex-end", justifyContent: "center",
+    }}>
+      <div onClick={(e) => e.stopPropagation()} style={{
+        width: "100%", maxWidth: 480, height: "92vh",
+        background: C.bg,
+        borderTopLeftRadius: 28, borderTopRightRadius: 28,
+        animation: "slideUp 0.32s cubic-bezier(0.32, 0.72, 0, 1)",
+        overflow: "auto", display: "flex", flexDirection: "column",
+        boxShadow: "0 -8px 32px rgba(0,0,0,0.35)",
+      }}>
+        <div style={{ display: "flex", justifyContent: "center", paddingTop: 10 }}>
+          <div style={{ width: 40, height: 4.5, borderRadius: 4, background: C.border }} />
+        </div>
+
+        <div style={{ padding: "14px 20px 8px", display: "flex", alignItems: "flex-start", gap: 14 }}>
+          <div style={{
+            width: 44, height: 44, borderRadius: 14,
+            background: `${accent}1f`, border: `1px solid ${accent}55`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontWeight: 800, color: accent, fontSize: 16, flexShrink: 0,
+          }}>
+            {isDefensive ? "✦" : pick.rank}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{
+              fontSize: 28, fontWeight: 800, color: C.ink,
+              letterSpacing: C.titleTrack, lineHeight: 1.05,
+            }}>
+              {pick.ticker}
+            </div>
+            <div style={{ fontSize: 13.5, color: C.muted, marginTop: 3 }}>
+              {pick.name}
+            </div>
+          </div>
+          <button onClick={onClose} aria-label="Close" style={{
+            width: 32, height: 32, borderRadius: 999, border: "none",
+            background: C.subtle, color: C.muted, cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            WebkitTapHighlightColor: "transparent",
+          }}>
+            <CloseIcon size={16} color={C.muted} />
+          </button>
+        </div>
+
+        <div style={{ padding: "0 20px 14px", display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {pick.sector  && <Tag color={C.muted}>{pick.sector}</Tag>}
+          {pick.horizon && <Tag color={C.primary}>{pick.horizon}</Tag>}
+          {pick.category && <Tag color={isDefensive ? C.shield : C.pos}>{pick.category}</Tag>}
+          {pick.conviction && <Tag color={convictionColor} solid>{pick.conviction}</Tag>}
+          {pick.smartMoneyBacking && <Tag color={C.purple}>✦ smart $</Tag>}
+        </div>
+
+        <div style={{
+          margin: "0 20px 14px", padding: 16,
+          background: C.surface, border: `1px solid ${C.border}`,
+          borderRadius: C.cardRadius,
+        }}>
+          <DetailChart ticker={pick.ticker} score={pick.score} />
+        </div>
+
+        <div style={{ padding: "0 20px 14px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+          <Stat label="Score"   value={pick.score ?? "—"} accent={accent} />
+          <Stat label="Weight"  value={pick.suggestedWeight != null ? `${pick.suggestedWeight}%` : "—"} />
+          <Stat label="Horizon" value={pick.horizon || "—"} />
+        </div>
+
+        {pick.rationale && (
+          <div style={{ padding: "0 20px 14px" }}>
+            <SectionLabel>Thesis</SectionLabel>
+            <p style={{ color: C.text, fontSize: 14.5, lineHeight: 1.65, margin: 0 }}>
+              {pick.rationale}
+            </p>
+          </div>
+        )}
+
+        {pick.catalyst && (
+          <div style={{ padding: "0 20px 14px" }}>
+            <Block color={C.primary}
+                   label={`Catalyst${pick.catalystWindow ? " · " + pick.catalystWindow : ""}`}
+                   text={pick.catalyst} />
+          </div>
+        )}
+
+        <div style={{ padding: "0 20px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+          {pick.entryNote   && <Block color={C.pos}  label="Entry"        text={pick.entryNote} />}
+          {pick.exitTrigger && <Block color={C.warn} label="Exit trigger" text={pick.exitTrigger} />}
+          {pick.keyRisk     && <Block color={C.neg}  label="Key risk"     text={pick.keyRisk} />}
+        </div>
+
+        <div style={{ height: 40 }} />
+      </div>
+    </div>
+  );
+}
+
+// ─── Hero card (Picks tab) ──────────────────────────────────────────────────
+function HeroCard({ data, growthCount, defCount }) {
+  const C = usePalette();
+  const [showSummary, setShowSummary] = useState(false);
+  const outlook = data?.macroOutlook;
+  const oColor = outlookColor(C, outlook);
+  const isDark = C.name === "dark";
+
+  return (
+    <div style={{
+      position: "relative", overflow: "hidden",
+      background: isDark
+        ? `linear-gradient(135deg, ${C.surface2} 0%, #0f1116 100%)`
+        : `linear-gradient(135deg, ${C.surface} 0%, ${C.surface2} 100%)`,
+      border: `1px solid ${C.border}`, borderRadius: 24,
+      padding: "20px 18px", marginBottom: 16,
+      boxShadow: isDark
+        ? `0 12px 40px rgba(0,0,0,0.5), inset 0 1px 0 ${C.primary}22`
+        : "0 6px 24px rgba(28,31,46,0.06)",
+    }}>
+      {isDark && (
+        <div style={{
+          position: "absolute", top: -40, right: -40, width: 180, height: 180,
+          background: `radial-gradient(circle, ${oColor}30 0%, transparent 60%)`,
+          pointerEvents: "none",
+        }} />
+      )}
+      <div style={{ display: "flex", alignItems: "center", gap: 18, position: "relative" }}>
+        <ShieldRing value={data?.defensiveScore ?? 0} size={104} label="Shield" />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontFamily: "var(--halo-mono)", fontSize: 9.5, color: C.muted,
+            letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 6,
+          }}>
+            Macro outlook
+          </div>
+          <div style={{
+            fontSize: 22, fontWeight: 800, color: C.ink,
+            letterSpacing: C.titleTrack, lineHeight: 1.1, marginBottom: 8,
+          }}>
+            {outlook || "—"}
+          </div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            <div style={{
+              background: `${oColor}1f`, border: `1px solid ${oColor}55`,
+              color: oColor, fontFamily: "var(--halo-mono)", fontSize: 10,
+              fontWeight: 700, padding: "3px 9px", borderRadius: 999,
+            }}>
+              {growthCount} growth
+            </div>
+            <div style={{
+              background: `${C.shield}1f`, border: `1px solid ${C.shield}55`,
+              color: C.shield, fontFamily: "var(--halo-mono)", fontSize: 10,
+              fontWeight: 700, padding: "3px 9px", borderRadius: 999,
+            }}>
+              {defCount} defensive
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {data?.summary && (
+        <button onClick={() => setShowSummary(!showSummary)} style={{
+          width: "100%", textAlign: "left", cursor: "pointer",
+          background: "transparent", border: "none", color: "inherit",
+          marginTop: 16, paddingTop: 14,
+          borderTop: `1px solid ${C.hairline}`,
+          WebkitTapHighlightColor: "transparent",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+            <div style={{
+              fontFamily: "var(--halo-mono)", fontSize: 9.5, color: C.primary,
+              letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 700,
+            }}>
+              ✦ AI Brief
+            </div>
+            <div style={{ color: C.muted, fontSize: 11, fontFamily: "var(--halo-mono)" }}>
+              {showSummary ? "collapse" : "expand"}
+            </div>
+          </div>
+          <div style={{
+            fontSize: 13.5, lineHeight: 1.6, color: C.ink,
+            display: showSummary ? "block" : "-webkit-box",
+            WebkitLineClamp: showSummary ? "unset" : 2, WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+          }}>
+            {data.summary}
+          </div>
+          {showSummary && data.diversificationNote && (
+            <div style={{
+              marginTop: 10, paddingTop: 10,
+              borderTop: `1px solid ${C.hairline}`,
+              fontSize: 12, color: C.muted, lineHeight: 1.55,
+            }}>
+              <span style={{ color: C.primary, fontWeight: 700 }}>diversification · </span>
+              {data.diversificationNote}
+            </div>
+          )}
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ─── Status header (replaces brand bar) ─────────────────────────────────────
+function StatusHeader({ tab, data, connected, onTheme, onAbout, theme }) {
+  const C = usePalette();
+  const isDark = theme === "dark";
+  const oColor = connected ? outlookColor(C, data?.macroOutlook) : C.neg;
+
+  const generated = data?.generatedAt || data?.metadata?.generatedAt;
+  const fresh = generated ? relativeTime(generated) : "—";
+  const dayLabel = data?.todayLabel?.replace(/'s picks?/i, "") || "today";
+
+  const title =
+    tab === "picks"    ? "Top picks" :
+    tab === "weekly"   ? "Weekly report" :
+    tab === "research" ? "Research" : "";
+
+  return (
+    <div style={{
+      background: C.headerBg,
+      backdropFilter: "saturate(180%) blur(20px)",
+      WebkitBackdropFilter: "saturate(180%) blur(20px)",
+      borderBottom: `1px solid ${C.hairline}`,
+      padding: "env(safe-area-inset-top, 0px) 18px 14px",
+      position: "sticky", top: 0, zIndex: 100,
+    }}>
+      <div style={{
+        display: "flex", alignItems: "flex-start", justifyContent: "space-between",
+        gap: 12, paddingTop: 14,
+      }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{
+            fontFamily: "var(--halo-mono)", fontSize: 10, color: C.muted,
+            letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 4,
+            display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
+          }}>
+            <HaloMark size={14} />
+            <span>{dayLabel} · updated {fresh}</span>
+          </div>
+          <div style={{
+            fontSize: 28, fontWeight: 800, color: C.ink,
+            letterSpacing: C.titleTrack, lineHeight: 1,
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          }}>
+            {title}
+          </div>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 6,
+            background: C.subtle, border: `1px solid ${C.border}`,
+            borderRadius: 999, padding: "5px 10px 5px 8px",
+          }}>
+            <div style={{
+              width: 7, height: 7, borderRadius: "50%", background: oColor,
+              boxShadow: isDark ? `0 0 10px ${oColor}` : "none",
+              animation: "pulse 2s infinite",
+            }} />
+            <div style={{
+              fontFamily: "var(--halo-mono)", fontSize: 10, color: C.text,
+              fontWeight: 700, letterSpacing: "0.04em",
+            }}>
+              {connected ? "live" : "off"}
+            </div>
+          </div>
+          <HeaderButton onClick={onTheme} label={isDark ? "Light mode" : "Dark mode"}>
+            {isDark ? <SunIcon size={17} color={C.primary} /> : <MoonIcon size={16} color={C.muted} />}
+          </HeaderButton>
+          <HeaderButton onClick={onAbout} label="About Halo">
+            <InfoIcon size={17} color={C.muted} />
+          </HeaderButton>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Floating glass bottom nav ──────────────────────────────────────────────
+const TABS = [
+  { id: "picks",    label: "Picks",    icon: "◉" },
+  { id: "weekly",   label: "Weekly",   icon: "◆" },
+  { id: "research", label: "Research", icon: "▦" },
+];
+
+function BottomNav({ tab, setTab }) {
+  const C = usePalette();
+  const isDark = C.name === "dark";
+  return (
+    <div style={{
+      position: "fixed", bottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
+      left: "50%", transform: "translateX(-50%)", zIndex: 200,
+      background: isDark ? "rgba(22,24,31,0.78)" : "rgba(255,255,255,0.85)",
+      backdropFilter: "saturate(180%) blur(24px)",
+      WebkitBackdropFilter: "saturate(180%) blur(24px)",
+      border: `1px solid ${isDark ? "#2a2e3a" : C.border}`,
+      borderRadius: 999, padding: 5, display: "flex", gap: 4,
+      boxShadow: isDark
+        ? "0 8px 32px rgba(0,0,0,0.5)"
+        : "0 8px 24px rgba(28,31,46,0.12)",
+    }}>
+      {TABS.map(t => {
+        const active = tab === t.id;
+        const activeColor = t.id === "weekly" ? C.shield : C.primary;
+        return (
+          <button key={t.id} onClick={() => setTab(t.id)} style={{
+            border: "none", cursor: "pointer",
+            background: active ? `${activeColor}22` : "transparent",
+            color: active ? activeColor : C.muted,
+            padding: "8px 14px", borderRadius: 999,
+            fontSize: 12, fontWeight: 700,
+            display: "flex", alignItems: "center", gap: 6,
+            WebkitTapHighlightColor: "transparent",
+            transition: "all 0.18s",
+          }}>
+            <span style={{ fontSize: 12 }}>{t.icon}</span>
+            {t.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Skeleton ───────────────────────────────────────────────────────────────
+function SkeletonList() {
+  const C = usePalette();
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 16 }}>
+      {[0,1,2,3,4].map(i => (
+        <div key={i} style={{
+          height: 64, borderRadius: 14, border: `1px solid ${C.border}`,
+          background: `linear-gradient(90deg, ${C.subtle} 0%, ${C.surface2} 50%, ${C.subtle} 100%)`,
+          backgroundSize: "400px 100%",
+          animation: "shimmer 1.4s infinite linear",
+        }} />
+      ))}
+    </div>
+  );
+}
+
+// ─── Phase detail (Research) ────────────────────────────────────────────────
+function PhaseDetail({ id, label, color, content, open, onToggle }) {
+  const C = usePalette();
   if (!content) return null;
   return (
-    <div style={{ marginBottom: 10 }}>
-      <button
-        onClick={() => setOpen(!open)}
-        style={{
-          width: "100%", background: C.surface,
-          border: `1px solid ${open ? color + "55" : C.border}`,
-          borderRadius: 16, padding: "13px 15px",
-          display: "flex", alignItems: "center", gap: 11,
-          cursor: "pointer", color: C.text, textAlign: "left",
-          boxShadow: open
-            ? `0 4px 16px ${color}1a`
-            : C.name === "dark" ? "0 1px 2px rgba(0,0,0,0.2)" : "0 1px 2px rgba(28,31,46,0.02)",
-          transition: "all 0.18s ease",
-          touchAction: "manipulation", WebkitTapHighlightColor: "transparent",
-        }}
-      >
-        <span style={{
-          width: 30, height: 30, borderRadius: 10,
-          background: `${color}1f`,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 14, flexShrink: 0,
-        }}>
-          {icon}
-        </span>
-        <span style={{ flex: 1, fontSize: 13.5, fontWeight: 600, color: open ? color : C.ink }}>
+    <div style={{ marginBottom: 8 }}>
+      <button onClick={onToggle} style={{
+        width: "100%", textAlign: "left", cursor: "pointer", color: "inherit",
+        background: C.surface, border: `1px solid ${open ? color + "55" : C.border}`,
+        borderRadius: 14, padding: "12px 14px",
+        display: "flex", alignItems: "center", gap: 10,
+        WebkitTapHighlightColor: "transparent",
+        boxShadow: open ? `0 4px 16px ${color}1a` : "none",
+      }}>
+        <div style={{
+          width: 8, height: 8, borderRadius: "50%", background: color,
+          boxShadow: C.name === "dark" ? `0 0 8px ${color}88` : "none",
+        }} />
+        <div style={{ flex: 1, fontSize: 14, fontWeight: 700, color: C.ink }}>
           {label}
-        </span>
-        <span style={{
-          color: C.faint, fontSize: 12, lineHeight: 1, display: "inline-block",
-          transform: open ? "rotate(180deg)" : "rotate(0deg)",
-          transition: "transform 0.28s cubic-bezier(0.32, 0.72, 0, 1)",
-        }}>
-          ▾
-        </span>
+        </div>
+        <div style={{
+          color: C.faint, fontFamily: "var(--halo-mono)", fontSize: 14,
+          transform: open ? "rotate(45deg)" : "rotate(0)", transition: "transform 0.2s",
+        }}>+</div>
       </button>
       {open && (
         <div style={{
-          background: C.subtle, border: `1px solid ${C.border}`,
-          borderTop: "none", borderRadius: "0 0 16px 16px",
-          padding: "14px 16px", marginTop: -8, paddingTop: 18,
+          padding: "12px 14px", background: C.subtle,
+          border: `1px solid ${C.border}`, borderTop: "none",
+          borderRadius: "0 0 14px 14px", marginTop: -1,
+          fontSize: 13, color: C.text, lineHeight: 1.7, whiteSpace: "pre-wrap",
         }}>
-          <p style={{
-            color: C.text, fontSize: 12.5, lineHeight: 1.75,
-            whiteSpace: "pre-wrap", margin: 0,
-          }}>
-            {content.length > 1400 ? content.slice(0, 1400) + "…" : content}
-          </p>
+          {content.length > 1400 ? content.slice(0, 1400) + "…" : content}
         </div>
       )}
     </div>
   );
 }
 
-// ─── Universe sector group (collapsible) ─────────────────────────────────────
+// ─── Universe sector group ──────────────────────────────────────────────────
 function UniverseGroup({ group }) {
   const C = usePalette();
   const [open, setOpen] = useState(false);
   return (
     <div style={{ marginBottom: 6 }}>
-      <button
-        onClick={() => setOpen(!open)}
-        style={{
-          width: "100%", background: "transparent", border: "none",
-          padding: "6px 0", cursor: "pointer", textAlign: "left",
-          display: "flex", alignItems: "center", gap: 8,
-          fontSize: 10, color: C.muted, fontWeight: 700,
-          letterSpacing: "0.12em", textTransform: "uppercase",
-          touchAction: "manipulation", WebkitTapHighlightColor: "transparent",
-        }}
-      >
+      <button onClick={() => setOpen(!open)} style={{
+        width: "100%", background: "transparent", border: "none",
+        padding: "6px 0", cursor: "pointer", textAlign: "left",
+        display: "flex", alignItems: "center", gap: 8,
+        fontFamily: "var(--halo-mono)", fontSize: 10, color: C.muted, fontWeight: 700,
+        letterSpacing: "0.12em", textTransform: "uppercase",
+        WebkitTapHighlightColor: "transparent",
+      }}>
         <span>{group.label} · {group.tickers.length}</span>
         <span style={{
-          marginLeft: "auto", color: C.faint, fontSize: 10, letterSpacing: 0,
-          display: "inline-block", lineHeight: 1,
-          transform: open ? "rotate(180deg)" : "rotate(0deg)",
-          transition: "transform 0.28s cubic-bezier(0.32, 0.72, 0, 1)",
-        }}>
-          ▾
-        </span>
+          marginLeft: "auto", color: C.faint, fontSize: 10,
+          transform: open ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.2s",
+        }}>▾</span>
       </button>
       {open && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 4, marginBottom: 6 }}>
           {group.tickers.map(t => (
             <span key={t} style={{
-              background: C.subtle, color: C.text,
-              border: `1px solid ${C.border}`,
+              background: C.subtle, color: C.text, border: `1px solid ${C.border}`,
               borderRadius: 8, padding: "3px 8px",
-              fontSize: 11, fontWeight: 600,
-              fontFamily: "var(--halo-mono)",
+              fontFamily: "var(--halo-mono)", fontSize: 11, fontWeight: 600,
             }}>
               {t}
             </span>
@@ -821,12 +947,11 @@ function UniverseGroup({ group }) {
   );
 }
 
-// ─── About modal sheet (slides up from bottom, iOS-style) ────────────────────
+// ─── About sheet ────────────────────────────────────────────────────────────
 function AboutSheet({ open, onClose, universe }) {
   const C = usePalette();
   const universeSize = universe?.groups?.reduce((acc, g) => acc + g.tickers.length, 0) ?? null;
 
-  // Lock body scroll while open
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -837,54 +962,41 @@ function AboutSheet({ open, onClose, universe }) {
   if (!open) return null;
 
   return (
-    <div
-      onClick={onClose}
-      style={{
-        position: "fixed", inset: 0, zIndex: 1000,
-        background: C.scrim,
-        backdropFilter: "blur(6px)",
-        WebkitBackdropFilter: "blur(6px)",
-        animation: "fadeBackdrop 0.22s ease",
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          position: "absolute", left: 0, right: 0, bottom: 0,
-          background: C.bg,
-          borderTopLeftRadius: 28, borderTopRightRadius: 28,
-          maxHeight: "92vh",
-          display: "flex", flexDirection: "column",
-          animation: "slideUp 0.32s cubic-bezier(0.32, 0.72, 0, 1)",
-          boxShadow: C.name === "dark"
-            ? "0 -8px 32px rgba(0,0,0,0.6)"
-            : "0 -8px 32px rgba(28,31,46,0.18)",
-        }}
-      >
-        {/* Drag handle */}
+    <div onClick={onClose} style={{
+      position: "fixed", inset: 0, zIndex: 1000,
+      background: C.scrim, backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)",
+      animation: "fadeBackdrop 0.22s ease",
+      display: "flex", alignItems: "flex-end", justifyContent: "center",
+    }}>
+      <div onClick={(e) => e.stopPropagation()} style={{
+        width: "100%", maxWidth: 480, maxHeight: "92vh",
+        background: C.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28,
+        animation: "slideUp 0.32s cubic-bezier(0.32, 0.72, 0, 1)",
+        display: "flex", flexDirection: "column",
+        boxShadow: "0 -8px 32px rgba(0,0,0,0.45)",
+      }}>
         <div style={{ display: "flex", justifyContent: "center", paddingTop: 10 }}>
           <div style={{ width: 40, height: 4.5, borderRadius: 4, background: C.border }} />
         </div>
 
-        {/* Sheet header */}
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "12px 18px 8px",
         }}>
-          <div style={{
-            fontSize: 16, fontWeight: 800, color: C.ink, letterSpacing: "-0.01em",
-          }}>
-            about halo
+          <div style={{ fontSize: 20, fontWeight: 800, color: C.ink, letterSpacing: C.titleTrack }}>
+            About Halo
           </div>
           <HeaderButton onClick={onClose} label="Close">
             <CloseIcon color={C.muted} />
           </HeaderButton>
         </div>
 
-        {/* Scrollable content */}
         <div style={{ overflow: "auto", padding: "8px 18px env(safe-area-inset-bottom, 24px)" }}>
-          <SectionTitle accent={C.halo}>how it works</SectionTitle>
-          <Card style={{ marginBottom: 18 }}>
+          <SectionLabel accent={C.primary}>How it works</SectionLabel>
+          <div style={{
+            background: C.surface, border: `1px solid ${C.border}`,
+            borderRadius: 18, padding: "4px 16px", marginBottom: 18,
+          }}>
             {[
               { icon: "✦", title: "Autonomous research",   desc: "Every weekday after the 4 PM ET close, GitHub Actions runs a 6-phase Claude research cycle with live web search." },
               { icon: "◑", title: "Six phases",             desc: "Macro climate → sector rotation → momentum → smart money → risk → final pick synthesis." },
@@ -899,7 +1011,7 @@ function AboutSheet({ open, onClose, universe }) {
               }}>
                 <span style={{
                   width: 30, height: 30, borderRadius: 10,
-                  background: `${C.halo}1a`, color: C.haloDeep,
+                  background: `${C.primary}1a`, color: C.primary,
                   display: "flex", alignItems: "center", justifyContent: "center",
                   fontSize: 14, flexShrink: 0, fontWeight: 700,
                 }}>
@@ -909,32 +1021,38 @@ function AboutSheet({ open, onClose, universe }) {
                   <div style={{ fontWeight: 700, fontSize: 13.5, color: C.ink, marginBottom: 3 }}>
                     {item.title}
                   </div>
-                  <div style={{ fontSize: 12.5, color: C.muted, lineHeight: 1.65 }}>
+                  <div style={{ fontSize: 12.5, color: C.muted, lineHeight: 1.6 }}>
                     {item.desc}
                   </div>
                 </div>
               </div>
             ))}
-          </Card>
+          </div>
 
           {universe?.groups && (
             <>
-              <SectionTitle accent={C.halo}>universe · {universeSize} tickers</SectionTitle>
-              <Card style={{ marginBottom: 18 }}>
-                <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.65, marginBottom: 14 }}>
+              <SectionLabel accent={C.primary}>Universe · {universeSize} tickers</SectionLabel>
+              <div style={{
+                background: C.surface, border: `1px solid ${C.border}`,
+                borderRadius: 18, padding: 16, marginBottom: 18,
+              }}>
+                <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.65, marginBottom: 10 }}>
                   Halo curates picks from this universe across all major sectors.
                 </div>
                 {universe.groups.map(group => (
                   <UniverseGroup key={group.key} group={group} />
                 ))}
-              </Card>
+              </div>
             </>
           )}
 
-          <SectionTitle accent={C.halo}>system</SectionTitle>
-          <Card style={{ marginBottom: 24 }}>
+          <SectionLabel accent={C.primary}>System</SectionLabel>
+          <div style={{
+            background: C.surface, border: `1px solid ${C.border}`,
+            borderRadius: 18, padding: "4px 16px", marginBottom: 24,
+          }}>
             {[
-              ["schedule",       "weekdays · 22:00 UTC (post-close, year-round)"],
+              ["schedule",       "weekdays · 22:00 UTC (post-close)"],
               ["weekly report",  "fridays · after market close"],
               ["model",          "claude sonnet"],
               ["web search",     "live · anthropic tools"],
@@ -949,78 +1067,16 @@ function AboutSheet({ open, onClose, universe }) {
                 padding: "10px 0",
                 borderBottom: i < arr.length - 1 ? `1px solid ${C.hairline}` : "none",
               }}>
-                <span style={{ fontSize: 12, color: C.muted }}>{k}</span>
+                <span style={{ fontFamily: "var(--halo-mono)", fontSize: 11, color: C.muted, letterSpacing: "0.04em" }}>{k}</span>
                 <span style={{ fontSize: 12.5, color: C.ink, fontWeight: 600, textAlign: "right", maxWidth: "62%" }}>
                   {v}
                 </span>
               </div>
             ))}
-          </Card>
+          </div>
         </div>
       </div>
     </div>
-  );
-}
-
-const TABS = [
-  { id: "picks",    label: "picks",    Icon: PicksIcon    },
-  { id: "weekly",   label: "weekly",   Icon: WeeklyIcon   },
-  { id: "research", label: "research", Icon: ResearchIcon },
-];
-
-// ─── Bottom nav (frosted, thumb-friendly) ───────────────────────────────────
-function BottomNav({ tab, setTab }) {
-  const C = usePalette();
-  return (
-    <nav style={{
-      position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100,
-      maxWidth: 480, margin: "0 auto",
-      background: C.headerBg,
-      backdropFilter: "saturate(180%) blur(20px)",
-      WebkitBackdropFilter: "saturate(180%) blur(20px)",
-      borderTop: `1px solid ${C.hairline}`,
-      paddingBottom: "env(safe-area-inset-bottom, 0px)",
-    }}>
-      <div style={{ display: "flex", padding: "8px 6px 6px" }}>
-        {TABS.map(t => {
-          const active = tab === t.id;
-          const Icon = t.Icon;
-          const tint = active ? C.halo : C.muted;
-          return (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              aria-label={t.label}
-              aria-pressed={active}
-              style={{
-                flex: 1, background: "transparent", border: "none",
-                padding: "6px 4px 4px", cursor: "pointer",
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
-                color: tint,
-                touchAction: "manipulation", WebkitTapHighlightColor: "transparent",
-              }}
-            >
-              <span style={{
-                display: "inline-flex", alignItems: "center", justifyContent: "center",
-                width: 46, height: 28, borderRadius: 12,
-                background: active ? `${C.halo}1c` : "transparent",
-                transform: active ? "scale(1.04)" : "scale(1)",
-                transition: "background 0.24s cubic-bezier(0.32, 0.72, 0, 1), transform 0.24s cubic-bezier(0.32, 0.72, 0, 1)",
-              }}>
-                <Icon size={19} color={tint} active={active} />
-              </span>
-              <span style={{
-                fontSize: 10, fontWeight: active ? 700 : 500,
-                letterSpacing: "0.04em",
-                transition: "color 0.18s ease, font-weight 0.18s ease",
-              }}>
-                {t.label}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </nav>
   );
 }
 
@@ -1035,6 +1091,8 @@ function HaloApp() {
   const [connected, setConnected] = useState(false);
   const [universe, setUniverse]   = useState(null);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [activePick, setActivePick] = useState(null);
+  const [openPhase, setOpenPhase] = useState("macro");
 
   useEffect(() => {
     let cancelled = false;
@@ -1044,9 +1102,8 @@ function HaloApp() {
         if (!res.ok) throw new Error(`HTTP ${res.status} fetching /picks.json`);
         const raw = await res.text();
         let parsed;
-        try {
-          parsed = JSON.parse(raw);
-        } catch (parseErr) {
+        try { parsed = JSON.parse(raw); }
+        catch (parseErr) {
           if (cancelled) return;
           const m = /position\s+(\d+)/i.exec(parseErr.message || "");
           const pos = m ? parseInt(m[1], 10) : null;
@@ -1063,14 +1120,10 @@ function HaloApp() {
           return;
         }
         if (cancelled) return;
-        setData(parsed);
-        setConnected(true);
-        setLoading(false);
+        setData(parsed); setConnected(true); setLoading(false);
       } catch (e) {
         if (cancelled) return;
-        setError(e.message);
-        setConnected(false);
-        setLoading(false);
+        setError(e.message); setConnected(false); setLoading(false);
       }
     }
     async function loadUniverse() {
@@ -1086,297 +1139,342 @@ function HaloApp() {
     return () => { cancelled = true; };
   }, []);
 
-  const weeklyData   = data?.weeklyReport;
+  const weeklyData = data?.weeklyReport;
   const isDark = theme === "dark";
+  const growthPicks = (data?.picks || []).filter(p => p.category !== "defensive");
+  const defPicks    = (data?.picks || []).filter(p => p.category === "defensive");
+
+  const phases = [
+    { id: "macro",    label: "Macro climate",             color: C.info   },
+    { id: "sectors",  label: "Sector rotation",           color: C.primary },
+    { id: "momentum", label: "Earnings momentum",         color: C.pos    },
+    { id: "smart",    label: "Smart money tracking",      color: C.purple },
+    { id: "risk",     label: "Risk assessment",           color: C.neg    },
+  ];
 
   return (
     <div style={{
       background: C.bg, minHeight: "100vh", color: C.text,
       fontFamily: "var(--halo-sans)",
       maxWidth: 480, margin: "0 auto",
-      paddingBottom: "calc(78px + env(safe-area-inset-bottom, 0px))",
+      paddingBottom: "calc(96px + env(safe-area-inset-bottom, 0px))",
       transition: "background 0.25s ease, color 0.25s ease",
     }}>
       <style>{`
         button { font-family: inherit; transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease; }
-        button:active { transform: scale(0.97); }
+        button:active { transform: scale(0.98); }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: ${C.border}; border-radius: 2px; }
-        @keyframes fadeIn       { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
         @keyframes spin         { to{transform:rotate(360deg)} }
-        @keyframes pulse        { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.85)} }
-        @keyframes haloFloat    { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-2px)} }
+        @keyframes pulse        { 0%,100%{opacity:1} 50%{opacity:0.4} }
         @keyframes slideUp      { from{transform:translateY(100%)} to{transform:translateY(0)} }
         @keyframes fadeBackdrop { from{opacity:0} to{opacity:1} }
-        @keyframes cardExpand   { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes cardIn       { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes shimmer      { 0%{background-position:-200px 0} 100%{background-position:200px 0} }
         @keyframes tabIn        { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
         @media (prefers-reduced-motion: reduce) {
           *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
         }
       `}</style>
 
-      {/* ── Sticky header ── */}
-      <div style={{
-        background: C.headerBg,
-        backdropFilter: "saturate(180%) blur(20px)",
-        WebkitBackdropFilter: "saturate(180%) blur(20px)",
-        borderBottom: `1px solid ${C.hairline}`,
-        padding: "env(safe-area-inset-top, 0px) 18px 0",
-        position: "sticky", top: 0, zIndex: 100,
-      }}>
-        {/* Brand row + controls */}
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "12px 0 0",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-            <div style={{ animation: "haloFloat 4s ease-in-out infinite" }}>
-              <HaloMark size={26} />
-            </div>
+      <StatusHeader
+        tab={tab} data={data} connected={connected} theme={theme}
+        onTheme={() => setTheme(isDark ? "light" : "dark")}
+        onAbout={() => setAboutOpen(true)}
+      />
+
+      <div style={{ position: "relative", padding: "18px 16px" }}>
+        {/* Ambient backdrop glow (dark only) */}
+        {isDark && (
+          <>
             <div style={{
-              fontSize: 19, fontWeight: 800, color: C.ink,
-              letterSpacing: "-0.04em", lineHeight: 1,
-            }}>
-              halo
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <HeaderButton
-              onClick={() => setTheme(isDark ? "light" : "dark")}
-              label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            >
-              {isDark ? <SunIcon size={18} color={C.halo} /> : <MoonIcon size={17} color={C.muted} />}
-            </HeaderButton>
-            <HeaderButton onClick={() => setAboutOpen(true)} label="About Halo">
-              <InfoIcon size={20} color={C.muted} />
-            </HeaderButton>
-          </div>
-        </div>
-
-        {/* Hero strip: outlook + shield + freshness */}
-        <HeroStrip data={data} connected={connected} />
-      </div>
-
-      {/* ── Content ── */}
-      <div style={{ padding: "18px 16px" }}>
-
-        {loading && (
-          <div style={{ textAlign: "center", padding: "60px 0" }}>
-            <div style={{
-              width: 30, height: 30, border: `2.5px solid ${C.halo}`,
-              borderTopColor: "transparent", borderRadius: "50%",
-              animation: "spin 0.8s linear infinite", margin: "0 auto 14px",
+              position: "absolute", top: -120, right: -80, width: 320, height: 320,
+              background: `radial-gradient(circle, ${C.primary}24 0%, transparent 65%)`,
+              pointerEvents: "none", zIndex: 0,
             }} />
-            <div style={{ color: C.muted, fontSize: 13 }}>fetching picks…</div>
-          </div>
-        )}
-
-        {error && (
-          <Card accent={C.coral}>
-            <div style={{ color: C.coral, fontWeight: 700, marginBottom: 6, fontSize: 13 }}>
-              load error
-            </div>
             <div style={{
-              color: C.muted, fontSize: 12, lineHeight: 1.6,
-              whiteSpace: "pre-wrap",
-              fontFamily: "var(--halo-mono)",
-            }}>
-              {error}
-            </div>
-          </Card>
+              position: "absolute", top: 200, left: -100, width: 260, height: 260,
+              background: `radial-gradient(circle, ${C.purple}18 0%, transparent 65%)`,
+              pointerEvents: "none", zIndex: 0,
+            }} />
+          </>
         )}
 
-        {/* ════════ PICKS ════════ */}
-        {!loading && !error && tab === "picks" && (
-          <div style={{ animation: "tabIn 0.3s cubic-bezier(0.32, 0.72, 0, 1)" }}>
-            <div style={{ marginBottom: 22 }}>
+        <div style={{ position: "relative", zIndex: 1 }}>
+          {loading && <SkeletonList />}
+
+          {error && (
+            <div style={{
+              background: C.surface, border: `1px solid ${C.neg}55`,
+              borderRadius: 14, padding: "14px 16px", marginBottom: 14,
+              boxShadow: `0 4px 20px ${C.neg}22`,
+            }}>
+              <div style={{ color: C.neg, fontWeight: 700, marginBottom: 6, fontSize: 13 }}>
+                load error
+              </div>
               <div style={{
-                fontSize: 17, color: C.ink, fontWeight: 700,
-                marginBottom: 4, letterSpacing: "-0.01em",
+                color: C.muted, fontSize: 12, lineHeight: 1.6,
+                whiteSpace: "pre-wrap", fontFamily: "var(--halo-mono)",
               }}>
-                {data?.todayLabel || "today's picks"}
-              </div>
-              <div style={{ fontSize: 12, color: C.muted }}>
-                last refreshed {formatLong(data?.generatedAt || data?.metadata?.generatedAt)}
+                {error}
               </div>
             </div>
+          )}
 
-            {data?.error && (
-              <Card accent={C.coral} style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 11, color: C.coral, fontWeight: 700, letterSpacing: "0.08em", marginBottom: 4 }}>
-                  RESEARCH CYCLE NOTE
+          {/* ════════ PICKS ════════ */}
+          {!loading && !error && tab === "picks" && (
+            <div style={{ animation: "tabIn 0.3s cubic-bezier(0.32, 0.72, 0, 1)" }}>
+              <HeroCard data={data} growthCount={growthPicks.length} defCount={defPicks.length} />
+
+              {data?.error && (
+                <div style={{
+                  background: `${C.neg}10`, border: `1px solid ${C.neg}33`,
+                  borderRadius: 12, padding: "10px 12px", marginBottom: 14,
+                }}>
+                  <div style={{ fontSize: 10, color: C.neg, fontWeight: 700, letterSpacing: "0.12em", marginBottom: 4 }}>
+                    RESEARCH CYCLE NOTE
+                  </div>
+                  <div style={{ fontSize: 12.5, color: C.text }}>{data.error}</div>
                 </div>
-                <div style={{ fontSize: 12.5, color: C.text }}>{data.error}</div>
-              </Card>
-            )}
+              )}
 
-            {(!data?.picks || data.picks.length === 0) && (
-              <Card style={{ textAlign: "center", padding: "44px 24px" }}>
-                <div style={{ marginBottom: 14 }}><HaloMark size={48} /></div>
-                <div style={{ fontWeight: 700, color: C.ink, marginBottom: 8, fontSize: 15 }}>
-                  awaiting first cycle
+              {(!data?.picks || data.picks.length === 0) ? (
+                <div style={{
+                  background: C.surface, border: `1px solid ${C.border}`,
+                  borderRadius: 18, padding: "44px 24px", textAlign: "center",
+                }}>
+                  <div style={{ marginBottom: 14, display: "flex", justifyContent: "center" }}><HaloMark size={48} /></div>
+                  <div style={{ fontWeight: 700, color: C.ink, marginBottom: 8, fontSize: 15 }}>
+                    awaiting first cycle
+                  </div>
+                  <div style={{ color: C.muted, fontSize: 13, lineHeight: 1.7, whiteSpace: "pre-line" }}>
+                    {"Halo runs every weekday after the close.\nTrigger one manually from GitHub → Actions to see picks now."}
+                  </div>
                 </div>
-                <div style={{ color: C.muted, fontSize: 13, lineHeight: 1.7 }}>
-                  Halo runs every weekday after the close.{"\n"}
-                  Trigger one manually from GitHub → Actions to see picks now.
-                </div>
-              </Card>
-            )}
+              ) : (
+                <>
+                  <div style={{
+                    display: "flex", justifyContent: "space-between", alignItems: "baseline",
+                    padding: "4px 4px 10px",
+                  }}>
+                    <div style={{
+                      fontFamily: "var(--halo-mono)", fontSize: 10.5, color: C.muted,
+                      letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 700,
+                    }}>
+                      ranked picks · {growthPicks.length}
+                    </div>
+                    <div style={{
+                      fontFamily: "var(--halo-mono)", fontSize: 10, color: C.faint,
+                      letterSpacing: "0.12em", textTransform: "uppercase",
+                    }}>
+                      tap for thesis →
+                    </div>
+                  </div>
 
-            {data?.picks?.filter(p => p.category !== "defensive").length > 0 && (
-              <>
-                <SectionTitle accent={C.halo}>
-                  top picks · {data.picks.filter(p => p.category !== "defensive").length}
-                </SectionTitle>
-                {data.picks
-                  .filter(p => p.category !== "defensive")
-                  .map((p, i) => <PickCard key={p.ticker} pick={p} index={i} />)}
-              </>
-            )}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {growthPicks.map(p => (
+                      <PickRow key={p.ticker} pick={p} onClick={() => setActivePick(p)} />
+                    ))}
+                  </div>
 
-            {data?.picks?.filter(p => p.category === "defensive").length > 0 && (
-              <div style={{ marginTop: 18 }}>
-                <CollapsibleSection
-                  title="defensive picks/ETFs"
-                  accent={C.shield}
-                  count={data.picks.filter(p => p.category === "defensive").length}
-                >
-                  <Card accent={C.shield} style={{ marginBottom: 12, padding: "12px 16px" }}>
-                    <p style={{ fontSize: 12, color: C.text, margin: 0, lineHeight: 1.6 }}>
-                      Shield score {data.defensiveScore}/10 — capital preservation positions for this environment.
-                    </p>
-                  </Card>
-                  {data.picks
-                    .filter(p => p.category === "defensive")
-                    .map((p, i) => <PickCard key={p.ticker} pick={p} index={i} />)}
-                </CollapsibleSection>
-              </div>
-            )}
+                  {defPicks.length > 0 && (
+                    <div style={{ marginTop: 22 }}>
+                      <div style={{
+                        display: "flex", justifyContent: "space-between", alignItems: "baseline",
+                        padding: "4px 4px 10px",
+                      }}>
+                        <div style={{
+                          fontFamily: "var(--halo-mono)", fontSize: 10.5, color: C.muted,
+                          letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 700,
+                          display: "flex", alignItems: "center", gap: 8,
+                        }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.shield }} />
+                          defensive sleeve · {defPicks.length}
+                        </div>
+                        {data?.defensiveScore != null && (
+                          <div style={{
+                            fontFamily: "var(--halo-mono)", fontSize: 10, color: C.shield,
+                            fontWeight: 700, letterSpacing: "0.06em",
+                          }}>
+                            shield {data.defensiveScore}/10
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                        {defPicks.map(p => (
+                          <PickRow key={p.ticker} pick={p} onClick={() => setActivePick(p)} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-            <div style={{
-              background: C.subtle, border: `1px solid ${C.border}`,
-              borderRadius: 14, padding: "12px 14px", marginTop: 14,
-            }}>
-              <div style={{ fontSize: 10.5, color: C.muted, lineHeight: 1.7 }}>
-                <strong style={{ color: C.text }}>Not financial advice.</strong>{" "}
-                AI-generated research for informational purposes only. Always do your own due diligence.
-              </div>
+                  <div style={{
+                    marginTop: 18, padding: "10px 14px",
+                    background: C.subtle, border: `1px solid ${C.border}`,
+                    borderRadius: 12,
+                    fontFamily: "var(--halo-mono)", fontSize: 10, color: C.muted, lineHeight: 1.6,
+                  }}>
+                    <strong style={{ color: C.text }}>Not financial advice.</strong>{" "}
+                    AI-generated research for informational purposes only.
+                  </div>
+                </>
+              )}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* ════════ WEEKLY ════════ */}
-        {!loading && !error && tab === "weekly" && (
-          <div style={{ animation: "tabIn 0.3s cubic-bezier(0.32, 0.72, 0, 1)" }}>
-            {weeklyData ? (
-              <>
-                <div style={{ marginBottom: 22 }}>
-                  <div style={{ fontSize: 17, color: C.ink, fontWeight: 700, marginBottom: 4, letterSpacing: "-0.01em" }}>
-                    {weeklyData.weekOf}
-                  </div>
-                  <div style={{ fontSize: 12, color: C.muted }}>
-                    generated {relativeTime(weeklyData.generatedAt)}
-                  </div>
-                </div>
+          {/* ════════ WEEKLY ════════ */}
+          {!loading && !error && tab === "weekly" && (
+            <div style={{ animation: "tabIn 0.3s cubic-bezier(0.32, 0.72, 0, 1)" }}>
+              {weeklyData ? (
+                <>
+                  <div style={{
+                    background: isDark
+                      ? `linear-gradient(135deg, ${C.surface2} 0%, #0f1116 100%)`
+                      : `linear-gradient(135deg, ${C.surface} 0%, ${C.surface2} 100%)`,
+                    border: `1px solid ${C.border}`, borderRadius: 24,
+                    padding: "20px 18px", marginBottom: 16,
+                    boxShadow: isDark
+                      ? `0 12px 40px rgba(0,0,0,0.5), inset 0 1px 0 ${C.primary}22`
+                      : "0 6px 24px rgba(28,31,46,0.06)",
+                  }}>
+                    <div style={{
+                      fontFamily: "var(--halo-mono)", fontSize: 9.5, color: C.primary,
+                      letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 700,
+                      marginBottom: 6,
+                    }}>
+                      ✦ week of
+                    </div>
+                    <div style={{
+                      fontSize: 22, fontWeight: 800, color: C.ink,
+                      letterSpacing: C.titleTrack, lineHeight: 1.15,
+                    }}>
+                      {weeklyData.weekOf}
+                    </div>
+                    <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>
+                      generated {relativeTime(weeklyData.generatedAt)}
+                    </div>
 
-                {weeklyData.summary && (
-                  <SynthesisCard
-                    label="weekly synthesis"
-                    summary={weeklyData.summary}
-                    diversificationNote={weeklyData.diversificationNote}
-                  />
-                )}
+                    {weeklyData.summary && (
+                      <div style={{
+                        marginTop: 14, paddingTop: 14,
+                        borderTop: `1px solid ${C.hairline}`,
+                        fontSize: 13.5, lineHeight: 1.6, color: C.ink,
+                      }}>
+                        {weeklyData.summary}
+                      </div>
+                    )}
+                    {weeklyData.diversificationNote && (
+                      <div style={{
+                        marginTop: 10, paddingTop: 10,
+                        borderTop: `1px solid ${C.hairline}`,
+                        fontSize: 12, color: C.muted, lineHeight: 1.55,
+                      }}>
+                        <span style={{ color: C.primary, fontWeight: 700 }}>diversification · </span>
+                        {weeklyData.diversificationNote}
+                      </div>
+                    )}
 
-                <SectionTitle accent={C.halo}>
-                  weekly top {weeklyData.picks?.length || 0} picks
-                </SectionTitle>
-                {weeklyData.picks?.map((p, i) => <PickCard key={p.ticker + "-w"} pick={p} index={i} />)}
-
-                {weeklyData.macroOutlook && (
-                  <div style={{ marginTop: 14, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <Pill color={outlookColor(C, weeklyData.macroOutlook)} soft={false}>
-                      {weeklyData.macroOutlook}
-                    </Pill>
-                    {weeklyData.defensiveScore != null && (
-                      <Pill color={C.shield}>shield {weeklyData.defensiveScore}/10</Pill>
+                    {(weeklyData.macroOutlook || weeklyData.defensiveScore != null) && (
+                      <div style={{ marginTop: 14, display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        {weeklyData.macroOutlook && (
+                          <Tag color={outlookColor(C, weeklyData.macroOutlook)} solid>
+                            {weeklyData.macroOutlook}
+                          </Tag>
+                        )}
+                        {weeklyData.defensiveScore != null && (
+                          <Tag color={C.shield}>shield {weeklyData.defensiveScore}/10</Tag>
+                        )}
+                      </div>
                     )}
                   </div>
-                )}
-              </>
-            ) : (
-              <Card style={{ textAlign: "center", padding: "44px 24px" }}>
-                <div style={{ marginBottom: 14 }}><HaloMark size={48} /></div>
-                <div style={{ fontWeight: 700, color: C.ink, marginBottom: 8, fontSize: 15 }}>
-                  no weekly report yet
-                </div>
-                <div style={{ color: C.muted, fontSize: 13, lineHeight: 1.7 }}>
-                  Weekly reports are generated every Friday after market close.{"\n"}
-                  Daily picks live in the Picks tab.
-                </div>
-              </Card>
-            )}
-          </div>
-        )}
 
-        {/* ════════ RESEARCH ════════ */}
-        {!loading && !error && tab === "research" && (
-          <div style={{ animation: "tabIn 0.3s cubic-bezier(0.32, 0.72, 0, 1)" }}>
-            {data?.summary && (
-              <Card style={{
-                marginBottom: 18,
-                background: C.name === "dark"
-                  ? `linear-gradient(135deg, ${C.surface}, ${C.halo}10)`
-                  : `linear-gradient(135deg, ${C.surface}, ${C.haloSoft}15)`,
-              }}>
-                <div style={{
-                  fontSize: 10.5, color: C.haloDeep, fontWeight: 700,
-                  letterSpacing: "0.16em", marginBottom: 8, textTransform: "uppercase",
-                }}>
-                  ✦ ai synthesis
-                </div>
-                <ExpandableText>{data.summary}</ExpandableText>
-                {data.diversificationNote && (
-                  <div style={{
-                    marginTop: 12, paddingTop: 12,
-                    borderTop: `1px solid ${C.hairline}`,
-                    fontSize: 12, color: C.muted, lineHeight: 1.6,
-                  }}>
-                    <span style={{ color: C.haloDeep, fontWeight: 700 }}>diversification · </span>
-                    {data.diversificationNote}
+                  <SectionLabel accent={C.primary}>
+                    weekly top {weeklyData.picks?.length || 0}
+                  </SectionLabel>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {weeklyData.picks?.map(p => (
+                      <PickRow key={p.ticker + "-w"} pick={p} onClick={() => setActivePick(p)} />
+                    ))}
                   </div>
-                )}
-              </Card>
-            )}
-
-            <div style={{ marginBottom: 14, color: C.muted, fontSize: 13 }}>
-              Full research data from the latest cycle.
-            </div>
-            {[
-              { id: "macro",    label: "macro climate",             icon: "🌤", color: C.sky      },
-              { id: "sectors",  label: "sector rotation",           icon: "✦",  color: C.halo     },
-              { id: "momentum", label: "price & earnings momentum", icon: "↗",  color: C.mint     },
-              { id: "smart",    label: "smart money tracking",      icon: "◆",  color: C.lavender },
-              { id: "risk",     label: "risk assessment",           icon: "▲",  color: C.coral    },
-            ].map(ph => (
-              <PhaseDetail
-                key={ph.id} label={ph.label} icon={ph.icon} color={ph.color}
-                content={data?.phaseData?.[ph.id]}
-              />
-            ))}
-            {!data?.phaseData?.macro && (
-              <div style={{ textAlign: "center", padding: "40px 0", color: C.muted }}>
-                <HaloMark size={40} />
-                <div style={{ marginTop: 10, fontSize: 13 }}>
-                  Research data appears here after the first cycle.
+                </>
+              ) : (
+                <div style={{
+                  background: C.surface, border: `1px solid ${C.border}`,
+                  borderRadius: 18, padding: "44px 24px", textAlign: "center",
+                }}>
+                  <div style={{ marginBottom: 14, display: "flex", justifyContent: "center" }}><HaloMark size={48} /></div>
+                  <div style={{ fontWeight: 700, color: C.ink, marginBottom: 8, fontSize: 15 }}>
+                    no weekly report yet
+                  </div>
+                  <div style={{ color: C.muted, fontSize: 13, lineHeight: 1.7, whiteSpace: "pre-line" }}>
+                    {"Weekly reports are generated every Friday after market close.\nDaily picks live in the Picks tab."}
+                  </div>
                 </div>
+              )}
+            </div>
+          )}
+
+          {/* ════════ RESEARCH ════════ */}
+          {!loading && !error && tab === "research" && (
+            <div style={{ animation: "tabIn 0.3s cubic-bezier(0.32, 0.72, 0, 1)" }}>
+              {data?.summary && (
+                <div style={{
+                  background: isDark
+                    ? `linear-gradient(135deg, ${C.surface2} 0%, #0f1116 100%)`
+                    : `linear-gradient(135deg, ${C.surface} 0%, ${C.surface2} 100%)`,
+                  border: `1px solid ${C.border}`, borderRadius: 18,
+                  padding: "16px 18px", marginBottom: 16,
+                }}>
+                  <div style={{
+                    fontFamily: "var(--halo-mono)", fontSize: 9.5, color: C.primary,
+                    letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 700,
+                    marginBottom: 8,
+                  }}>
+                    ✦ ai synthesis
+                  </div>
+                  <p style={{ color: C.ink, fontSize: 13.5, lineHeight: 1.65, margin: 0 }}>
+                    {data.summary}
+                  </p>
+                  {data.diversificationNote && (
+                    <div style={{
+                      marginTop: 12, paddingTop: 12,
+                      borderTop: `1px solid ${C.hairline}`,
+                      fontSize: 12, color: C.muted, lineHeight: 1.6,
+                    }}>
+                      <span style={{ color: C.primary, fontWeight: 700 }}>diversification · </span>
+                      {data.diversificationNote}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div style={{ marginBottom: 12, color: C.muted, fontSize: 13 }}>
+                Six-phase research from the latest cycle.
               </div>
-            )}
-          </div>
-        )}
+
+              {phases.map(ph => (
+                <PhaseDetail
+                  key={ph.id} id={ph.id} label={ph.label} color={ph.color}
+                  content={data?.phaseData?.[ph.id]}
+                  open={openPhase === ph.id}
+                  onToggle={() => setOpenPhase(openPhase === ph.id ? null : ph.id)}
+                />
+              ))}
+
+              {!data?.phaseData?.macro && (
+                <div style={{ textAlign: "center", padding: "40px 0", color: C.muted }}>
+                  <HaloMark size={40} />
+                  <div style={{ marginTop: 10, fontSize: 13 }}>
+                    Research data appears here after the first cycle.
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       <BottomNav tab={tab} setTab={setTab} />
+      <DetailSheet pick={activePick} onClose={() => setActivePick(null)} />
       <AboutSheet open={aboutOpen} onClose={() => setAboutOpen(false)} universe={universe} />
     </div>
   );
@@ -1385,7 +1483,7 @@ function HaloApp() {
 // ─── Theme provider + persistence ────────────────────────────────────────────
 export default function App() {
   const [theme, setThemeState] = useState(() => {
-    if (typeof window === "undefined") return "light";
+    if (typeof window === "undefined") return "dark";
     const saved = window.localStorage?.getItem("halo-theme");
     if (saved === "light" || saved === "dark") return saved;
     return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
@@ -1396,10 +1494,6 @@ export default function App() {
     try { window.localStorage?.setItem("halo-theme", t); } catch { /* ignore */ }
   };
 
-  // Keep <meta theme-color>, html, and body in sync so the iOS status bar
-  // and any safe-area gaps match the theme. We update both meta tags
-  // (light + dark variants) and dynamically force-set html/body so a manual
-  // toggle that disagrees with the system color scheme still paints correctly.
   useEffect(() => {
     const palette = theme === "dark" ? DARK : LIGHT;
     const tags = document.querySelectorAll('meta[name="theme-color"]');
@@ -1411,8 +1505,7 @@ export default function App() {
 
   const value = useMemo(() => ({
     palette: theme === "dark" ? DARK : LIGHT,
-    theme,
-    setTheme,
+    theme, setTheme,
   }), [theme]);
 
   return (
