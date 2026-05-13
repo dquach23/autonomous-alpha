@@ -284,6 +284,81 @@ Rules:
   ];
 }
 
+// ─── Quote fetching (Yahoo Finance, no API key) ──────────────────────────────
+// Pulls ~3 months of daily closes per ticker and derives close, prior-day
+// close, and week-ago close. Failures are non-fatal — a missing ticker just
+// goes out without price fields and the UI handles it.
+const YAHOO_CHART_BASE = "https://query1.finance.yahoo.com/v8/finance/chart/";
+const YAHOO_UA = "Mozilla/5.0 (compatible; HaloResearch/1.0)";
+
+function yahooSymbol(ticker) {
+  // Yahoo uses "-" for class shares (BRK.B → BRK-B); universe uses "."
+  return ticker.replace(/\./g, "-");
+}
+
+async function fetchTickerQuote(ticker) {
+  const url = `${YAHOO_CHART_BASE}${encodeURIComponent(yahooSymbol(ticker))}?range=3mo&interval=1d`;
+  const res = await fetch(url, { headers: { "User-Agent": YAHOO_UA } });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json = await res.json();
+  const result = json?.chart?.result?.[0];
+  if (!result) throw new Error("no result block");
+  const timestamps = result.timestamp || [];
+  const closes = result.indicators?.quote?.[0]?.close || [];
+  const series = [];
+  for (let i = 0; i < closes.length; i++) {
+    if (closes[i] == null) continue;
+    series.push({ t: timestamps[i] * 1000, c: Number(closes[i].toFixed(4)) });
+  }
+  if (series.length < 2) throw new Error("insufficient close history");
+  const close = series[series.length - 1].c;
+  const prevClose = series[series.length - 2].c;
+  const weekIdx = Math.max(0, series.length - 1 - 5);
+  const weekAgoClose = series[weekIdx].c;
+  return {
+    close,
+    prevClose,
+    weekAgoClose,
+    asOf: new Date(series[series.length - 1].t).toISOString().slice(0, 10),
+    series: series.map(p => p.c),
+  };
+}
+
+async function fetchQuotes(tickers) {
+  const unique = [...new Set(tickers)];
+  const out = {};
+  const concurrency = 5;
+  for (let i = 0; i < unique.length; i += concurrency) {
+    const batch = unique.slice(i, i + concurrency);
+    const results = await Promise.allSettled(batch.map(t => fetchTickerQuote(t)));
+    batch.forEach((t, idx) => {
+      const r = results[idx];
+      if (r.status === "fulfilled") {
+        out[t] = r.value;
+      } else {
+        console.warn(`  ⚠️  Quote fetch failed for ${t}: ${r.reason?.message || r.reason}`);
+      }
+    });
+  }
+  return out;
+}
+
+function enrichWithQuotes(picksArray, quotes) {
+  if (!Array.isArray(picksArray)) return picksArray;
+  return picksArray.map(p => {
+    const q = quotes[p.ticker];
+    if (!q) return p;
+    return {
+      ...p,
+      close: q.close,
+      prevClose: q.prevClose,
+      weekAgoClose: q.weekAgoClose,
+      priceAsOf: q.asOf,
+      priceSeries: q.series,
+    };
+  });
+}
+
 // ─── Retry helper with exponential backoff for transient API failures ────────
 // Retries on 429 (rate limit), 5xx, and network errors. Anthropic SDK errors
 // expose `status`; APIError subclasses share this shape. Non-retryable errors
@@ -787,6 +862,29 @@ async function runResearch() {
     };
   }
 
+  // ── Fetch live quotes for daily + weekly tickers ──
+  // Yahoo Finance chart endpoint; no API key. Failures per-ticker are non-fatal.
+  const dailyTickers = (picks.picks || []).map(p => p.ticker);
+  const existingWeeklyPicks = existingData?.weeklyReport?.picks || [];
+  // On Friday the weekly report is regenerated from today's picks, so those
+  // tickers are already in dailyTickers. On other days we still want fresh
+  // prices on the preserved weekly report.
+  const weeklyTickers = friday ? [] : existingWeeklyPicks.map(p => p.ticker);
+  const allTickers = [...new Set([...dailyTickers, ...weeklyTickers])];
+  let quotes = {};
+  if (allTickers.length > 0) {
+    console.log(`\n  💹 Fetching live quotes for ${allTickers.length} tickers...`);
+    try {
+      quotes = await fetchQuotes(allTickers);
+      console.log(`  ✅ Quotes attached for ${Object.keys(quotes).length}/${allTickers.length} tickers`);
+    } catch (err) {
+      console.error("  ⚠️ Quote fetch step failed:", err.message);
+    }
+  }
+  if (picks.picks?.length > 0) {
+    picks.picks = enrichWithQuotes(picks.picks, quotes);
+  }
+
   // ── Cycle tracking (single daily run) ──
   const cyclesCompletedToday = 1;
 
@@ -835,6 +933,11 @@ async function runResearch() {
 
   // ── Build / preserve weekly report ──
   let weeklyReport = existingData?.weeklyReport ?? null;
+  if (weeklyReport?.picks?.length > 0) {
+    // Refresh prices on the preserved weekly report so the Weekly tab tracks
+    // live closes between Friday regenerations.
+    weeklyReport = { ...weeklyReport, picks: enrichWithQuotes(weeklyReport.picks, quotes) };
+  }
   if (friday && picks.picks?.length > 0 && !picks.error) {
     weeklyReport = {
       picks:       picks.picks,
