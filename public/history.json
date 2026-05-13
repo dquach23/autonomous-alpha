@@ -1008,11 +1008,11 @@
     },
     {
       "date": "2026-05-13",
-      "generatedAt": "2026-05-13T04:02:36.646Z",
+      "generatedAt": "2026-05-13T23:15:38.131Z",
       "macroOutlook": "Cautiously Bullish",
       "defensiveScore": 4,
-      "summary": "The regime remains late-cycle stagflation overhang: April CPI printed 3.8% YoY with core at +0.4% MoM (hottest since January 2025), rate hike odds have risen to ~30%, and the Fed is structurally blocked from easing. Today's material new development — the US-China 90-day tariff truce reducing duties from 145% to 30% — is a tactical risk-on signal that benefits AMZN (Chinese seller relief), META (Chinese advertiser recovery), and AVGO (supply chain normalization) without changing the core inflation/rate regime. The growth book expresses the regime through five vectors: AI infrastructure compounders with real cash flows (GOOGL, AVGO, AMZN), an energy/geopolitical hedge with $100+ oil (XOM), a defense prime with Iran-driven procurement (RTX), a financial sector NIM/capital-markets beneficiary (GS, SPGI), a secular healthcare compounder (LLY), and selective growth-utility and ad-platform exposure (VST, META). All 10 non-defensive names are carry-overs from the prior 7-day book — thesis continuity is maintained as no position has been invalidated. The defensive sleeve spans gold (GLD, primary inflation/tail hedge), dividend quality equity (SCHD), a cash-fortress conglomerate (BRK.B), intermediate-duration Treasuries (IEF, sized conservatively at 5%), and consumer staples (KO), completing the mandated multi-exposure diversification. The dominant risk being underwritten is AI capex disillusionment — a hyperscaler CapEx reversal would simultaneously hit GOOGL, AVGO, AMZN, and META (four of the top seven names); the defensive sleeve and XOM/RTX/SPGI provide partial offset but the book would drawdown materially in that scenario.",
-      "diversificationNote": "The growth book spans five distinct GICS sectors: Communication Services (GOOGL, META), Information Technology (AVGO), Energy (XOM), Industrials (RTX), Health Care (LLY), Financials (GS, SPGI), Consumer Discretionary (AMZN), and Utilities (VST) — nine names across five-plus sectors, with Financials as the only sector with two names (GS and SPGI serve complementary end markets: capital markets and data/ratings respectively). The two AI-infrastructure picks (GOOGL Cloud and AVGO custom silicon) share secular AI exposure but occupy different points in the value chain — hyperscaler infrastructure vs. custom ASIC design. The defensive sleeve spans four distinct exposures: hard-asset gold (GLD), broad dividend quality equity (SCHD), a conglomerate cash fortress (BRK.B), intermediate Treasury duration (IEF), and consumer staples income (KO) — no exposure is doubled.",
+      "summary": "The regime as of May 13, 2026 is confirmed late-cycle stagflation — CPI at 3.8% YoY and PPI at +6.0% YoY (both hotter than consensus), with futures now pricing just 3% odds of a rate cut in 2026 and 36% odds of a rate hike, while the S&P 500 and Nasdaq paradoxically closed at record highs driven by AI/tech momentum ignoring the inflation data. The 10-name growth book expresses this regime through four interlocking themes: AI infrastructure cash-flow leaders (GOOGL, AVGO, AMZN, META) that generate real nominal earnings in an inflationary environment; geopolitical/commodity beneficiaries (XOM, RTX) that directly monetize the Iran conflict risk premium with WTI above $104; financial sector beneficiaries of the steepening yield curve and IB recovery (GS, SPGI); and selective secular growth with pricing power insulation (LLY, VST). All seven core positions are direct carry-overs from the May 12–13 book — thesis continuity is intact with no forced rotation warranted. The only changes are META stepping down from high to medium conviction (tough Q2 comp after the 57% EPS beat) and the growth book maintaining the same fundamental structure. The 5-name defensive sleeve (GLD, SCHD, BRK.B, IEF, KO) is carried over intact from May 12, providing stagflation hedging (GLD), quality-income ballast (SCHD, KO), optionality on dislocation (BRK.B with $380B cash), and a growth-scare duration hedge (IEF at 4.47% yield). The dominant risk being underwritten is that the AI melt-up continues to defy the macro gravity of 6% PPI and 36% rate hike odds — a 'rational bubble' scenario where earnings momentum temporarily overrides valuation concerns — which could compress the defensives underperform, a risk we accept given the 1–5 year horizon demands protection against the eventual re-rating when the inflation/rate reality reasserts.",
+      "diversificationNote": "The 10-name growth book spans 5 distinct GICS sectors: Communication Services (GOOGL, META — two names sharing the ad/AI monetization theme but with different moats: Search vs. Social), Information Technology (AVGO — custom silicon/ASIC), Energy (XOM — integrated oil/Iran hedge), Industrials (RTX — defense/aerospace), Health Care (LLY — GLP-1 secular), Financials (GS, SPGI — NIM/IB and data/ratings), Utilities (VST — merchant power/data center), and Consumer Discretionary (AMZN — cloud+ad, treated as IT-adjacent). The two Financials names (GS and SPGI) are accepted as sector concentration but are entirely different business models — capital markets revenues vs. recurring subscription/ratings revenue — with near-zero earnings correlation. The defensive sleeve spans four distinct exposures: gold commodity (GLD), broad dividend/quality income equity (SCHD), diversified conglomerate with embedded cash optionality (BRK.B as consumer-staples/insurance/energy proxy), intermediate Treasury duration (IEF), and consumer staples single-name (KO) — explicitly no double-up on any single exposure per construction rules.",
       "picks": [
         {
           "rank": 1,
@@ -1022,8 +1022,8 @@
           "category": "growth",
           "score": 96,
           "conviction": "high",
-          "suggestedWeight": 11,
-          "catalyst": "Q2 2026 earnings (late July) — first full quarter capturing AI Overviews monetization ramp and continued Cloud hyperscaler share gains with $460B backlog conversion"
+          "suggestedWeight": 12,
+          "catalyst": "NVDA earnings May 20 as read-through for hyperscaler AI capex validation; Google I/O product cycle announcements + Waymo expansion (200 sq mi added today)"
         },
         {
           "rank": 2,
@@ -1031,32 +1031,32 @@
           "name": "Broadcom Inc.",
           "sector": "Information Technology",
           "category": "growth",
-          "score": 94,
+          "score": 93,
           "conviction": "high",
-          "suggestedWeight": 10,
-          "catalyst": "Q2 FY2026 earnings on June 3 — first look at AI ASIC revenue trajectory post-hyperscaler capex guidance updates from Meta ($125–145B) and others"
+          "suggestedWeight": 11,
+          "catalyst": "NVDA May 20 earnings as hyperscaler capex validation; Broadcom's own fiscal Q2 2026 earnings report (expected late May/early June) with AI revenue guidance update"
         },
         {
           "rank": 3,
           "ticker": "XOM",
-          "name": "ExxonMobil Corporation",
+          "name": "Exxon Mobil Corporation",
           "sector": "Energy",
           "category": "value",
           "score": 91,
           "conviction": "high",
-          "suggestedWeight": 9,
-          "catalyst": "Q2 2026 earnings (late July) — first full quarter with $100+ oil embedded; Guyana expansion phase 3 volumes coming online mid-year"
+          "suggestedWeight": 10,
+          "catalyst": "Iran conflict escalation risk and SPR release exhaustion keeping oil elevated; Q2 2026 earnings (late July) with upstream volume guidance"
         },
         {
           "rank": 4,
           "ticker": "RTX",
-          "name": "RTX Corporation",
+          "name": "RTX Corporation (Raytheon Technologies)",
           "sector": "Industrials",
           "category": "growth",
           "score": 90,
           "conviction": "high",
           "suggestedWeight": 9,
-          "catalyst": "Q2 2026 earnings (late July) — expected to show continued Pratt & Whitney GTF engine delivery recovery and Raytheon missile backlog conversion; potential new contract announcements from NATO allies"
+          "catalyst": "Pentagon supplemental defense appropriations (likely in Q2–Q3 2026 Congressional session) and allied NATO procurement decisions driven by Iran conflict duration"
         },
         {
           "rank": 5,
@@ -1064,10 +1064,10 @@
           "name": "Eli Lilly and Company",
           "sector": "Health Care",
           "category": "growth",
-          "score": 90,
+          "score": 89,
           "conviction": "high",
           "suggestedWeight": 9,
-          "catalyst": "Q2 2026 earnings (late July) — Zepbound market share vs. Wegovy, Mounjaro diabetes indication volume, and any Alzheimer's drug (donanemab) coverage expansion announcement"
+          "catalyst": "Phase 3 readout for orforglipron (oral GLP-1 pill) — a potential game-changer for the obesity market; Q2 2026 earnings with Zepbound volume/ASP guidance update"
         },
         {
           "rank": 6,
@@ -1075,10 +1075,10 @@
           "name": "Goldman Sachs Group Inc.",
           "sector": "Financials",
           "category": "growth",
-          "score": 88,
+          "score": 87,
           "conviction": "high",
           "suggestedWeight": 8,
-          "catalyst": "Q2 2026 earnings (mid-July) — investment banking fee pipeline from elevated M&A activity and IPO recovery; trading revenue from geopolitical volatility"
+          "catalyst": "Kevin Warsh assumes Fed Chair May 15 — his hawkish posture may re-steepen the curve further, boosting FICC revenues; Q2 2026 IB fee pipeline update in July earnings"
         },
         {
           "rank": 7,
@@ -1086,10 +1086,10 @@
           "name": "Amazon.com Inc.",
           "sector": "Consumer Discretionary",
           "category": "growth",
-          "score": 87,
+          "score": 86,
           "conviction": "high",
           "suggestedWeight": 8,
-          "catalyst": "Q2 2026 earnings (late July) — AWS re-acceleration trajectory confirmation; retail margin recovery from tariff truce; Anthropic-driven GenAI product launches on AWS"
+          "catalyst": "Q2 2026 AWS guidance update (expected late July); Trump-Xi summit May 14–15 trade outcome could remove tariff headwinds on retail/logistics margins"
         },
         {
           "rank": 8,
@@ -1097,10 +1097,10 @@
           "name": "S&P Global Inc.",
           "sector": "Financials",
           "category": "growth",
-          "score": 85,
+          "score": 84,
           "conviction": "high",
           "suggestedWeight": 7,
-          "catalyst": "Q2 2026 earnings (late July) — debt issuance volume trend, Market Intelligence subscriber growth, and Commodity Insights pricing power in elevated energy environment"
+          "catalyst": "Sustained debt issuance wave as corporates refinance ahead of potential rate hike cycle; Platts commodity data/analytics division growing rapidly on energy market volatility driven by Iran conflict"
         },
         {
           "rank": 9,
@@ -1108,10 +1108,10 @@
           "name": "Vistra Corp.",
           "sector": "Utilities",
           "category": "growth",
-          "score": 83,
+          "score": 81,
           "conviction": "medium",
           "suggestedWeight": 6,
-          "catalyst": "Q2 2026 earnings (early August) — ERCOT power price realization, data center power contract announcements, and nuclear uprate progress at its Comanche Peak facility"
+          "catalyst": "Data center power purchase agreement (PPA) announcements with hyperscalers (Microsoft, Google, Amazon have active procurement programs); Q2 2026 power price curve resets"
         },
         {
           "rank": 10,
@@ -1119,43 +1119,43 @@
           "name": "Meta Platforms Inc.",
           "sector": "Communication Services",
           "category": "growth",
-          "score": 81,
+          "score": 80,
           "conviction": "medium",
-          "suggestedWeight": 6,
-          "catalyst": "Q2 2026 earnings (late July) — first full quarter capturing Llama 4 AI ad optimization benefits; Chinese advertiser spend recovery from tariff truce; Reality Labs losses trajectory"
+          "suggestedWeight": 5,
+          "catalyst": "Q2 2026 advertising revenue guidance (late July) — particularly any acceleration in AI-driven ARPU from Advantage+ rollout; Llama ecosystem open-source developer traction creating infrastructure defensibility"
         },
         {
           "rank": 1,
           "ticker": "GLD",
-          "name": "SPDR Gold Shares",
+          "name": "SPDR Gold Shares ETF",
           "sector": "Commodities",
           "category": "defensive",
           "score": 92,
           "conviction": "high",
-          "suggestedWeight": 7,
-          "catalyst": "April PCE inflation release (late May) — a hot reading above 3.2% would accelerate rate-hike pricing and paradoxically strengthen gold as a stagflation hedge"
+          "suggestedWeight": 6,
+          "catalyst": "Kevin Warsh Fed chair assumption May 15 — any hawkish signal that raises real rate uncertainty; April PCE release (late May) that confirms the CPI/PPI regime"
         },
         {
           "rank": 2,
           "ticker": "SCHD",
           "name": "Schwab U.S. Dividend Equity ETF",
-          "sector": "Multi-Sector Defensive",
+          "sector": "Multi-Sector Dividend",
           "category": "defensive",
           "score": 88,
           "conviction": "high",
-          "suggestedWeight": 6,
-          "catalyst": "Ongoing dividend reinvestment yield support; Q2 rebalancing into higher-yielding, lower-beta names as the market digests hot CPI regime"
+          "suggestedWeight": 5,
+          "catalyst": "Any equity market correction driven by rate hike pricing would cause a rotation into quality/dividend factor — SCHD's factor exposure is exactly what institutional allocators reach for in that scenario"
         },
         {
           "rank": 3,
           "ticker": "BRK.B",
           "name": "Berkshire Hathaway Inc. Class B",
-          "sector": "Financials",
+          "sector": "Financials (Diversified)",
           "category": "defensive",
-          "score": 86,
+          "score": 85,
           "conviction": "high",
-          "suggestedWeight": 6,
-          "catalyst": "Q1 2026 13F filing (May 15 — tomorrow) — first look at how Abel deployed any of the $380B cash hoard during Q1's volatile tariff-shock period"
+          "suggestedWeight": 5,
+          "catalyst": "Q1 2026 13F filing due May 15 — market will scrutinize whether Abel deployed any of the $380B cash hoard; any new major acquisition announcement would be an immediate re-rating catalyst"
         },
         {
           "rank": 4,
@@ -1163,10 +1163,10 @@
           "name": "iShares 7-10 Year Treasury ETF",
           "sector": "Fixed Income",
           "category": "defensive",
-          "score": 80,
+          "score": 79,
           "conviction": "medium",
-          "suggestedWeight": 5,
-          "catalyst": "Any deterioration in the labor market (nonfarm payrolls below +100K) or a credit market dislocation that triggers flight-to-safety flows into Treasuries"
+          "suggestedWeight": 4,
+          "catalyst": "Any softening in May non-farm payrolls (due early June) or retail sales data that suggests demand destruction from energy prices is hitting the consumer — would reprice rate cut odds and cause IEF to rally meaningfully"
         },
         {
           "rank": 5,
@@ -1174,10 +1174,10 @@
           "name": "The Coca-Cola Company",
           "sector": "Consumer Staples",
           "category": "defensive",
-          "score": 78,
+          "score": 77,
           "conviction": "medium",
-          "suggestedWeight": 3,
-          "catalyst": "Q2 2026 earnings (late July) — organic revenue growth rate confirmation; FX translation tailwind from weaker USD; pricing power vs. private-label competitive pressure"
+          "suggestedWeight": 5,
+          "catalyst": "Q2 2026 earnings (July) with pricing power confirmation; any consumer spending deterioration data accelerating defensive rotation into staples sector"
         }
       ]
     }
