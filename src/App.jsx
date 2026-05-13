@@ -289,14 +289,15 @@ function ConvictionDots({ conviction }) {
 // ─── Pick row (compact, scannable) ──────────────────────────────────────────
 function PickRow({ pick, onClick, period = "day" }) {
   const C = usePalette();
-  const series = useMemo(() => makeSeries(pick.ticker, pick.score), [pick.ticker, pick.score]);
-  const close = series[series.length - 1];
-  const lookback = period === "week" ? Math.min(5, series.length - 1) : 1;
-  const prior = series[series.length - 1 - lookback];
-  const change = close - prior;
-  const changePct = (change / prior) * 100;
-  const changeColor = change >= 0 ? C.pos : C.neg;
-  const sign = change >= 0 ? "+" : "−";
+  // Prefer real quote data (close, prevClose, weekAgoClose) baked into picks.json
+  // by the research script. Falls back to "—" if a ticker's fetch failed.
+  const hasQuote = pick.close != null;
+  const close = pick.close;
+  const prior = period === "week" ? pick.weekAgoClose : pick.prevClose;
+  const change = hasQuote && prior != null ? close - prior : null;
+  const changePct = change != null ? (change / prior) * 100 : null;
+  const changeColor = change == null ? C.muted : change >= 0 ? C.pos : C.neg;
+  const sign = change == null ? "" : change >= 0 ? "+" : "−";
   const isDefensive = pick.category === "defensive";
   const accent = isDefensive ? C.shield : C.primary;
 
@@ -346,13 +347,15 @@ function PickRow({ pick, onClick, period = "day" }) {
       </div>
       <div style={{ textAlign: "right", minWidth: 92 }}>
         <div style={{ fontFamily: "var(--halo-mono)", fontSize: 14, fontWeight: 700, color: C.ink }}>
-          ${close.toFixed(2)}
+          {hasQuote ? `$${close.toFixed(2)}` : "—"}
         </div>
         <div style={{
           fontFamily: "var(--halo-mono)", fontSize: 10.5, fontWeight: 600,
           color: changeColor, marginTop: 2,
         }}>
-          {sign}${Math.abs(change).toFixed(2)} · {sign}{Math.abs(changePct).toFixed(2)}%
+          {change == null
+            ? "no quote"
+            : `${sign}$${Math.abs(change).toFixed(2)} · ${sign}${Math.abs(changePct).toFixed(2)}%`}
         </div>
       </div>
     </button>
@@ -360,9 +363,15 @@ function PickRow({ pick, onClick, period = "day" }) {
 }
 
 // ─── Big chart for detail view ──────────────────────────────────────────────
-function DetailChart({ ticker, score, height = 180 }) {
+function DetailChart({ ticker, score, priceSeries, height = 180 }) {
   const C = usePalette();
-  const series = useMemo(() => makeSeries(ticker, score, 90), [ticker, score]);
+  // Prefer the real ~90d daily close series from picks.json; fall back to the
+  // modeled series only if no quote data was attached for this ticker.
+  const isReal = Array.isArray(priceSeries) && priceSeries.length > 1;
+  const series = useMemo(
+    () => isReal ? priceSeries : makeSeries(ticker, score, 90),
+    [isReal, priceSeries, ticker, score]
+  );
   const [hoverIdx, setHoverIdx] = useState(null);
   const trend = series[series.length - 1] - series[0];
   const trendColor = trend >= 0 ? C.pos : C.neg;
@@ -399,7 +408,7 @@ function DetailChart({ ticker, score, height = 180 }) {
           </div>
         </div>
         <div style={{ fontFamily: "var(--halo-mono)", fontSize: 10, color: C.faint, letterSpacing: "0.14em", textTransform: "uppercase" }}>
-          modeled
+          {isReal ? `${series.length}d · live` : "modeled"}
         </div>
       </div>
       <svg
@@ -568,7 +577,7 @@ function DetailSheet({ pick, onClose }) {
           background: C.surface, border: `1px solid ${C.border}`,
           borderRadius: C.cardRadius,
         }}>
-          <DetailChart ticker={pick.ticker} score={pick.score} />
+          <DetailChart ticker={pick.ticker} score={pick.score} priceSeries={pick.priceSeries} />
         </div>
 
         <div style={{ padding: "0 20px 14px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
