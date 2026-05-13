@@ -213,34 +213,6 @@ function HeaderButton({ onClick, children, label }) {
   );
 }
 
-// ─── Sparkline ──────────────────────────────────────────────────────────────
-function Sparkline({ data, color, width = 64, height = 24, fill = true, strokeWidth = 1.6 }) {
-  const id = useMemo(() => "sg-" + Math.random().toString(36).slice(2, 8), []);
-  if (!data || data.length === 0) return null;
-  const min = Math.min(...data), max = Math.max(...data);
-  const span = max - min || 1;
-  const stepX = width / (data.length - 1);
-  const points = data.map((v, i) => `${i * stepX},${height - ((v - min) / span) * (height - 4) - 2}`);
-  const path = "M" + points.join(" L");
-  const areaPath = path + ` L${width},${height} L0,${height} Z`;
-  return (
-    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: "block" }}>
-      {fill && (
-        <>
-          <defs>
-            <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={color} stopOpacity="0.32" />
-              <stop offset="100%" stopColor={color} stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          <path d={areaPath} fill={`url(#${id})`} />
-        </>
-      )}
-      <path d={path} fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 // ─── Animated shield ring (0–10) ────────────────────────────────────────────
 function ShieldRing({ value = 0, size = 104, label = "Shield" }) {
   const C = usePalette();
@@ -315,19 +287,23 @@ function ConvictionDots({ conviction }) {
 }
 
 // ─── Pick row (compact, scannable) ──────────────────────────────────────────
-function PickRow({ pick, onClick }) {
+function PickRow({ pick, onClick, period = "day" }) {
   const C = usePalette();
   const series = useMemo(() => makeSeries(pick.ticker, pick.score), [pick.ticker, pick.score]);
-  const trend = series[series.length - 1] - series[0];
-  const trendPct = (trend / series[0]) * 100;
-  const trendColor = trend >= 0 ? C.pos : C.neg;
+  const close = series[series.length - 1];
+  const lookback = period === "week" ? Math.min(5, series.length - 1) : 1;
+  const prior = series[series.length - 1 - lookback];
+  const change = close - prior;
+  const changePct = (change / prior) * 100;
+  const changeColor = change >= 0 ? C.pos : C.neg;
+  const sign = change >= 0 ? "+" : "−";
   const isDefensive = pick.category === "defensive";
   const accent = isDefensive ? C.shield : C.primary;
 
   return (
     <button onClick={onClick} style={{
       width: "100%", display: "grid",
-      gridTemplateColumns: "32px 1fr auto auto",
+      gridTemplateColumns: "32px 1fr auto",
       gap: 12, alignItems: "center",
       padding: "12px 12px",
       border: `1px solid ${C.border}`, background: C.surface,
@@ -354,6 +330,12 @@ function PickRow({ pick, onClick }) {
         }}>
           <span>{pick.ticker}</span>
           <ConvictionDots conviction={pick.conviction} />
+          <span style={{
+            fontFamily: "var(--halo-mono)", fontSize: 11, fontWeight: 700,
+            color: C.muted, letterSpacing: "0.04em",
+          }}>
+            · {pick.score}
+          </span>
         </div>
         <div style={{
           fontSize: 12, color: C.muted, marginTop: 2,
@@ -362,18 +344,15 @@ function PickRow({ pick, onClick }) {
           {pick.name}{pick.sector ? <span style={{ color: C.faint }}> · {pick.sector}</span> : null}
         </div>
       </div>
-      <div style={{ width: 64 }}>
-        <Sparkline data={series} color={trendColor} width={64} height={24} />
-      </div>
-      <div style={{ textAlign: "right", minWidth: 48 }}>
+      <div style={{ textAlign: "right", minWidth: 92 }}>
         <div style={{ fontFamily: "var(--halo-mono)", fontSize: 14, fontWeight: 700, color: C.ink }}>
-          {pick.score}
+          ${close.toFixed(2)}
         </div>
         <div style={{
           fontFamily: "var(--halo-mono)", fontSize: 10.5, fontWeight: 600,
-          color: trendColor, marginTop: 2,
+          color: changeColor, marginTop: 2,
         }}>
-          {trend >= 0 ? "+" : ""}{trendPct.toFixed(1)}%
+          {sign}${Math.abs(change).toFixed(2)} · {sign}{Math.abs(changePct).toFixed(2)}%
         </div>
       </div>
     </button>
@@ -1412,7 +1391,7 @@ function HaloApp() {
                   </SectionLabel>
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {weeklyData.picks?.map(p => (
-                      <PickRow key={p.ticker + "-w"} pick={p} onClick={() => setActivePick(p)} />
+                      <PickRow key={p.ticker + "-w"} pick={p} onClick={() => setActivePick(p)} period="week" />
                     ))}
                   </div>
                 </>
