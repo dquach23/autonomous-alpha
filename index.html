@@ -57,19 +57,21 @@
         text-rendering: optimizeLegibility;
         -webkit-text-size-adjust: 100%;
         text-size-adjust: 100%;
-        /* Prevent pinch-zoom (touch-action) and double-tap zoom together with
-           the viewport meta. iOS Safari ignores user-scalable=no in the browser
-           but honors it in standalone PWA mode; pan-x pan-y also blocks pinch
-           reliably across both. */
-        touch-action: pan-x pan-y;
-        overscroll-behavior-y: contain;
+        width: 100%;
+        overflow-x: hidden;
+        /* Lock the viewport to vertical scrolling only. pan-y blocks horizontal
+           panning (so users can't drag the page sideways) while still allowing
+           native vertical scroll, and — combined with the viewport meta — also
+           blocks pinch-zoom in standalone PWA mode. */
+        touch-action: pan-y;
+        overscroll-behavior: contain;
       }
       @media (prefers-color-scheme: dark) {
         html, body { background: #0a0b10; color: #dcd9d0; }
       }
       /* Disable text selection on UI chrome (kept on content for copy/paste) */
       button { -webkit-user-select: none; user-select: none; font-family: inherit; font-feature-settings: inherit; }
-      #root { min-height: 100vh; }
+      #root { min-height: 100vh; overflow-x: hidden; }
     </style>
   </head>
   <body>
