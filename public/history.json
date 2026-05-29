@@ -3105,6 +3105,181 @@
           "catalyst": "Q2 2026 earnings (mid-July) where organic revenue growth and emerging market volume data will test whether the inflation passthrough in developed markets is still holding; dividend increase announcement expected H2 2026"
         }
       ]
+    },
+    {
+      "date": "2026-05-29",
+      "generatedAt": "2026-05-29T23:27:30.364Z",
+      "macroOutlook": "Cautiously Bullish",
+      "defensiveScore": 4,
+      "summary": "The portfolio is positioned for a late-cycle stagflationary regime — the rarest and most dangerous configuration for long-only equity — where re-accelerating core PCE (3.2% YoY), futures markets pricing Fed rate hikes, and a 3m10y spread oscillating around zero since February 2026 demand a high-conviction, diversified book with explicit downside architecture. The 10-name growth sleeve concentrates in AI infrastructure picks-and-shovels (AVGO, NVDA), AI platform monetizers with clean fundamental setups and no extension flags (GOOGL, AMZN), and cycle-diversifying exposures in Financials (GS, SPGI), Defense (RTX), Energy (XOM), Power Infrastructure (VST), and Healthcare value (MRK) — seven distinct sector exposures with the AI supercycle as the unifying secular thread. From the prior week's book, AVGO was elevated to rank 1 (from rank 2) ahead of the critical June 3 earnings event with $22B revenue guidance far above consensus; GOOGL, NVDA, AMZN, GS, RTX, XOM, SPGI, VST, and MRK are all thesis-intact carry-overs; no names were dropped. The dominant risk being underwritten is a June 17-18 FOMC hike signal from Chair Warsh that would violently reprice the entire growth sleeve — the 5-name defensive sleeve (GLD, SCHD, BRK.B, IEF, KO) collectively hedges this scenario through gold safe-haven, dividend quality rotation, fortress balance sheet exposure, intermediate duration carry, and consumer staples inflation passthrough.",
+      "diversificationNote": "The growth book spans 6 distinct GICS sectors: Information Technology (AVGO, NVDA — 2 names), Communication Services (GOOGL — 1), Consumer Discretionary (AMZN — 1), Financials (GS, SPGI — 2), Industrials (RTX — 1), Energy (XOM — 1), Utilities (VST — 1), and Health Care (MRK — 1); the two IT names (AVGO, NVDA) share secular AI exposure but occupy different points in the value chain (custom silicon ASIC vs. GPU training infrastructure). The defensive sleeve spans long-duration fixed income (IEF at 7-10yr), gold (GLD), broad dividend/quality equity (SCHD), all-weather conglomerate (BRK.B), and consumer staples (KO) — no exposure is doubled up, and the sleeve collectively maintains near-zero or negative correlation to the growth book in a risk-off scenario.",
+      "picks": [
+        {
+          "rank": 1,
+          "ticker": "AVGO",
+          "name": "Broadcom Inc.",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 97,
+          "conviction": "high",
+          "suggestedWeight": 12,
+          "catalyst": "Q2 FY2026 earnings report on June 3, 2026 — guided for $22B revenue (+47% YoY) and $10.7B AI revenue (+140% YoY), with Oppenheimer predicting 30% QoQ AI sales growth"
+        },
+        {
+          "rank": 2,
+          "ticker": "GOOGL",
+          "name": "Alphabet Inc.",
+          "sector": "Communication Services",
+          "category": "growth",
+          "score": 95,
+          "conviction": "high",
+          "suggestedWeight": 11,
+          "catalyst": "June FOMC (June 17-18) risk-on relief if Warsh holds rates steady; ongoing Google I/O product cycle with Gemini Ultra 2 enterprise monetization updates in Q2"
+        },
+        {
+          "rank": 3,
+          "ticker": "NVDA",
+          "name": "NVIDIA Corporation",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 93,
+          "conviction": "high",
+          "suggestedWeight": 10,
+          "catalyst": "GTC/developer conference updates and Q2 FY2027 earnings in August — Blackwell Ultra and Rubin architecture roadmap announcements could re-accelerate the multiple"
+        },
+        {
+          "rank": 4,
+          "ticker": "AMZN",
+          "name": "Amazon.com Inc.",
+          "sector": "Consumer Discretionary",
+          "category": "growth",
+          "score": 92,
+          "conviction": "high",
+          "suggestedWeight": 10,
+          "catalyst": "Q2 2026 AWS revenue print (late July) — any acceleration above +30% YoY would re-rate the stock as AI monetization thesis is confirmed; Prime Day July 8-9 consumer revenue beat"
+        },
+        {
+          "rank": 5,
+          "ticker": "GS",
+          "name": "Goldman Sachs Group Inc.",
+          "sector": "Financials",
+          "category": "growth",
+          "score": 89,
+          "conviction": "high",
+          "suggestedWeight": 8,
+          "catalyst": "Q2 2026 investment banking and trading revenue (July earnings) — any deal volume pickup driven by corporate confidence in stable rates would deliver an EPS upside surprise"
+        },
+        {
+          "rank": 6,
+          "ticker": "RTX",
+          "name": "RTX Corporation",
+          "sector": "Industrials",
+          "category": "growth",
+          "score": 87,
+          "conviction": "high",
+          "suggestedWeight": 8,
+          "catalyst": "Q2 2026 earnings (July) with potential backlog update showing defense orders accelerating; any escalation in Iran conflict scope drives immediate procurement pull-forward"
+        },
+        {
+          "rank": 7,
+          "ticker": "XOM",
+          "name": "Exxon Mobil Corporation",
+          "sector": "Energy",
+          "category": "value",
+          "score": 85,
+          "conviction": "high",
+          "suggestedWeight": 8,
+          "catalyst": "Q2 2026 earnings (late July) — elevated oil prices from Iran conflict should drive FCF materially above $15B quarterly; any ceasefire would reduce near-term price risk but validate the structural thesis"
+        },
+        {
+          "rank": 8,
+          "ticker": "SPGI",
+          "name": "S&P Global Inc.",
+          "sector": "Financials",
+          "category": "value",
+          "score": 83,
+          "conviction": "high",
+          "suggestedWeight": 7,
+          "catalyst": "Mobility Global Inc. spin-off execution and timeline clarity — the Board approved the separation on May 21, 2026; investor day and spin terms will reset the sum-of-the-parts valuation significantly"
+        },
+        {
+          "rank": 9,
+          "ticker": "VST",
+          "name": "Vistra Energy Corp.",
+          "sector": "Utilities",
+          "category": "growth",
+          "score": 80,
+          "conviction": "medium",
+          "suggestedWeight": 5,
+          "catalyst": "Data center power purchase agreement (PPA) announcements — any major hyperscaler multi-year PPA with VST for dedicated nuclear or gas generation would immediately re-rate the stock"
+        },
+        {
+          "rank": 10,
+          "ticker": "MRK",
+          "name": "Merck & Co. Inc.",
+          "sector": "Health Care",
+          "category": "value",
+          "score": 76,
+          "conviction": "medium",
+          "suggestedWeight": 5,
+          "catalyst": "Phase 3 data readouts for MK-0616 (oral PCSK9 inhibitor) and subcutaneous Keytruda formulation in H2 2026 — both would dramatically expand TAM and extend the earnings duration of the Keytruda franchise"
+        },
+        {
+          "rank": 1,
+          "ticker": "GLD",
+          "name": "SPDR Gold Trust",
+          "sector": "Commodities",
+          "category": "defensive",
+          "score": 92,
+          "conviction": "high",
+          "suggestedWeight": 6,
+          "catalyst": "Any failure of the June 17-18 FOMC (Warsh) to signal rate hikes would cause gold to re-accelerate; Iran escalation or Hormuz closure would trigger immediate safe-haven inflows"
+        },
+        {
+          "rank": 2,
+          "ticker": "SCHD",
+          "name": "Schwab U.S. Dividend Equity ETF",
+          "sector": "Multi-Sector",
+          "category": "defensive",
+          "score": 88,
+          "conviction": "high",
+          "suggestedWeight": 5,
+          "catalyst": "Any rotation from growth to value/income — the 2s10s steepening to +55bps historically correlates with outperformance of dividend quality factors over high-multiple growth"
+        },
+        {
+          "rank": 3,
+          "ticker": "BRK.B",
+          "name": "Berkshire Hathaway Inc. Class B",
+          "sector": "Financials",
+          "category": "defensive",
+          "score": 85,
+          "conviction": "high",
+          "suggestedWeight": 5,
+          "catalyst": "Berkshire's Q2 earnings (August) — any major capital deployment from the $397B cash pile into a distressed asset would be a significant positive catalyst; ongoing buybacks are accretive at 1.5x book"
+        },
+        {
+          "rank": 4,
+          "ticker": "IEF",
+          "name": "iShares 7-10 Year Treasury Bond ETF",
+          "sector": "Fixed Income",
+          "category": "defensive",
+          "score": 78,
+          "conviction": "medium",
+          "suggestedWeight": 4,
+          "catalyst": "Any growth shock below 1% SAAR GDP or credit market disruption would drive a flight-to-quality rally in intermediate treasuries; a below-consensus June CPI print would be the first catalyst"
+        },
+        {
+          "rank": 5,
+          "ticker": "KO",
+          "name": "The Coca-Cola Company",
+          "sector": "Consumer Staples",
+          "category": "defensive",
+          "score": 74,
+          "conviction": "medium",
+          "suggestedWeight": 4,
+          "catalyst": "Q2 2026 organic revenue growth print (July) — any pricing volume mix showing sustained organic growth above 4% despite currency headwinds would validate the inflationary pricing power thesis"
+        }
+      ]
     }
   ]
 }
