@@ -4855,6 +4855,181 @@
           "catalyst": "Continued defensive rotation as the tech correction deepens; Q2 2026 earnings (mid-July) showing pricing power durability and international volume recovery; any Fed hawkish surprise at June 16-17 meeting accelerates defensive bid"
         }
       ]
+    },
+    {
+      "date": "2026-06-12",
+      "generatedAt": "2026-06-12T23:34:43.582Z",
+      "macroOutlook": "Cautiously Bullish",
+      "defensiveScore": 4,
+      "summary": "The portfolio is positioned for a late-cycle stagflationary regime where headline CPI is re-accelerating to 4.2%, the Fed has abandoned its easing bias (futures now pricing a December hike), real rates are restrictive at +125–150 bps above neutral, and geopolitical energy shocks from the Iran conflict are embedding into PCE. The 10-position growth book expresses high conviction in the AI capex supercycle (NVDA, AVGO, ORCL), the AI software monetization layer at reasonable relative valuations (GOOGL, AMZN), real-economy inflation beneficiaries (XOM, RTX), financial complexity plays (GS, SPGI), and a defensive healthcare value position (MRK) — together spanning 5 distinct GICS sectors with complementary end-market exposures. All seven prior high-conviction names (NVDA, GOOGL, AVBO, AMZN, ORCL, XOM, RTX, GS) are carried over with theses intact; SPGI is retained at medium conviction given its Mobility separation catalyst, and MRK stays as the healthcare value anchor; META was dropped from the top 10 growth book this session to accommodate better sector diversification (3-name IT cap rule respected across NVDA+AVGO+ORCL). The dominant risk being underwritten is the simultaneous scenario where Iran peace deal collapses AND core CPI accelerates above 3.2% on the July 14 print, forcing the Fed to formally signal a hike at the July 28-29 FOMC — a triple headwind that would compress growth multiples, widen HY spreads above 400 bps, and reprice the equity risk premium sharply negative.",
+      "diversificationNote": "The 10-name growth book spans Information Technology (NVDA, AVGO, ORCL — at the 3-name sector cap), Communication Services (GOOGL), Consumer Discretionary (AMZN), Energy (XOM), Industrials (RTX), Financials (GS, SPGI — two names but in distinct sub-sectors: capital markets vs. financial data infrastructure), and Health Care (MRK) — 7 distinct GICS sectors, well above the 5-sector minimum; within IT, NVDA/AVGO/ORCL are intentionally complementary (GPU silicon, custom ASIC silicon, cloud infrastructure software) rather than competing for the same dollar; the defensive sleeve spans gold commodity (GLD), dividend quality equity (SCHD), fortress conglomerate (BRK.B), intermediate Treasury duration (IEF), and consumer staples (KO) — covering all 5 required defensive exposure categories with zero duplication.",
+      "picks": [
+        {
+          "rank": 1,
+          "ticker": "NVDA",
+          "name": "NVIDIA Corporation",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 96,
+          "conviction": "high",
+          "suggestedWeight": 11,
+          "catalyst": "Q2 FY2027 earnings print (late August) with Blackwell Ultra ramp confirmation and hyperscaler order book update"
+        },
+        {
+          "rank": 2,
+          "ticker": "GOOGL",
+          "name": "Alphabet Inc. (Class A)",
+          "sector": "Communication Services",
+          "category": "growth",
+          "score": 94,
+          "conviction": "high",
+          "suggestedWeight": 10,
+          "catalyst": "Q2 2026 earnings (late July) — first full quarter with Gemini AI integration across Search and Cloud; Google Cloud growth rate expected to re-accelerate above 30% YoY"
+        },
+        {
+          "rank": 3,
+          "ticker": "AVGO",
+          "name": "Broadcom Inc.",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 93,
+          "conviction": "high",
+          "suggestedWeight": 9,
+          "catalyst": "Q3 FY2026 earnings (September) confirming $29.4B revenue guide and FY27 AI ASIC design win pipeline; any hyperscaler announcement of next-gen custom chip program with Broadcom"
+        },
+        {
+          "rank": 4,
+          "ticker": "AMZN",
+          "name": "Amazon.com Inc.",
+          "sector": "Consumer Discretionary",
+          "category": "growth",
+          "score": 92,
+          "conviction": "high",
+          "suggestedWeight": 9,
+          "catalyst": "Q2 2026 earnings (late July) — AWS revenue growth rate and operating income margin expansion vs. consensus; any announcement of Trainium3 availability or next-gen AI inference offering"
+        },
+        {
+          "rank": 5,
+          "ticker": "ORCL",
+          "name": "Oracle Corporation",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 90,
+          "conviction": "high",
+          "suggestedWeight": 8,
+          "catalyst": "Q1 FY2027 earnings (September 2026) — first proof point on the 34% FY27 revenue growth guide; any new hyperscaler or sovereign cloud partnership announcement"
+        },
+        {
+          "rank": 6,
+          "ticker": "XOM",
+          "name": "Exxon Mobil Corporation",
+          "sector": "Energy",
+          "category": "value",
+          "score": 88,
+          "conviction": "high",
+          "suggestedWeight": 8,
+          "catalyst": "Q2 2026 earnings (late July) — Pioneer integration synergy realization, Guyana Yellowtail volumes, and Permian production update; Iran peace deal resolution (either direction is tradable)"
+        },
+        {
+          "rank": 7,
+          "ticker": "RTX",
+          "name": "RTX Corporation (Raytheon Technologies)",
+          "sector": "Industrials",
+          "category": "growth",
+          "score": 87,
+          "conviction": "high",
+          "suggestedWeight": 7,
+          "catalyst": "Q2 2026 earnings (late July) — Patriot missile contract delivery update, Pratt & Whitney GTF engine production ramp, and FY2026 guidance confirmation amid elevated geopolitical demand"
+        },
+        {
+          "rank": 8,
+          "ticker": "GS",
+          "name": "Goldman Sachs Group Inc.",
+          "sector": "Financials",
+          "category": "value",
+          "score": 86,
+          "conviction": "high",
+          "suggestedWeight": 7,
+          "catalyst": "Q2 2026 earnings (mid-July) — trading revenue and IB fee pipeline update; any signal of M&A dealflow acceleration from deregulation tailwinds under current administration"
+        },
+        {
+          "rank": 9,
+          "ticker": "SPGI",
+          "name": "S&P Global Inc.",
+          "sector": "Financials",
+          "category": "growth",
+          "score": 85,
+          "conviction": "medium",
+          "suggestedWeight": 6,
+          "catalyst": "Mobility business separation completion (expected H2 2026) — catalyst for sum-of-the-parts re-rating; Q2 2026 earnings demonstrating bond issuance volume acceleration and Market Intelligence AI growth"
+        },
+        {
+          "rank": 10,
+          "ticker": "MRK",
+          "name": "Merck & Co. Inc.",
+          "sector": "Health Care",
+          "category": "value",
+          "score": 82,
+          "conviction": "medium",
+          "suggestedWeight": 5,
+          "catalyst": "Pembrolizumab Phase 3 readout in earlier-stage cancers (adjuvant settings) expanding label; any positive data from the MK-1084 KRAS inhibitor program; FDA approval of subcutaneous Keytruda formulation"
+        },
+        {
+          "rank": 1,
+          "ticker": "GLD",
+          "name": "SPDR Gold Shares ETF",
+          "sector": "Commodities",
+          "category": "defensive",
+          "score": 91,
+          "conviction": "high",
+          "suggestedWeight": 7,
+          "catalyst": "July 14 CPI print (June data) — if headline CPI prints above 4.5%, gold re-rates as the stagflation hedge of choice; any deterioration in Iran peace deal talks reigniting geopolitical premium"
+        },
+        {
+          "rank": 2,
+          "ticker": "SCHD",
+          "name": "Schwab U.S. Dividend Equity ETF",
+          "sector": "Multi-sector / Dividend Quality",
+          "category": "defensive",
+          "score": 88,
+          "conviction": "high",
+          "suggestedWeight": 6,
+          "catalyst": "Any Fed dovish pivot or peace deal — rate-sensitive dividend stocks re-rate; dividend growth compounding is a time-independent catalyst with each quarterly reinvestment"
+        },
+        {
+          "rank": 3,
+          "ticker": "BRK.B",
+          "name": "Berkshire Hathaway Inc. (Class B)",
+          "sector": "Financials / Conglomerate",
+          "category": "defensive",
+          "score": 87,
+          "conviction": "high",
+          "suggestedWeight": 6,
+          "catalyst": "Any risk-off equity selloff — BRK.B becomes the institutional flight-to-quality vehicle; Q2 2026 earnings (August) confirming deployment of cash hoard into equities or acquisitions; share buyback continuation"
+        },
+        {
+          "rank": 4,
+          "ticker": "IEF",
+          "name": "iShares 7-10 Year Treasury Bond ETF",
+          "sector": "Fixed Income",
+          "category": "defensive",
+          "score": 83,
+          "conviction": "medium",
+          "suggestedWeight": 5,
+          "catalyst": "Iran peace deal confirmation causing oil to fall sharply → CPI deceleration → Fed hike narrative reversal → Treasury rally; or July 14 CPI print showing core deceleration below 2.5%"
+        },
+        {
+          "rank": 5,
+          "ticker": "KO",
+          "name": "The Coca-Cola Company",
+          "sector": "Consumer Staples",
+          "category": "defensive",
+          "score": 80,
+          "conviction": "medium",
+          "suggestedWeight": 6,
+          "catalyst": "Q2 2026 earnings (late July) — organic revenue growth and pricing power confirmation; any USD weakening providing international revenue translation tailwind; trade-down consumer behavior benefiting packaged beverages"
+        }
+      ]
     }
   ]
 }
