@@ -5380,6 +5380,181 @@
           "catalyst": "New hyperscaler PPA announcement for nuclear power supply to AI data centers, or federal nuclear energy legislation providing production tax credits clarity"
         }
       ]
+    },
+    {
+      "date": "2026-06-17",
+      "generatedAt": "2026-06-17T23:50:18.768Z",
+      "macroOutlook": "Cautiously Bullish",
+      "defensiveScore": 4,
+      "summary": "Today's macro regime has materially shifted to confirmed hawkish-hold: the June 17 FOMC dot plot with 9/18 members projecting at least one 2026 rate hike, PCE revised up to 3.6%, and GDP revised down to 2.2% validates the stagflationary transition thesis — the S&P 500 closed -1.21% at 7,420 and the Nasdaq -1.34% with the 2Y yield spiking 16bps to 4.216%, confirming the rate-cut trade is dead for 2026. The growth book concentrates conviction in AI infrastructure (NVDA, GOOGL, AMZN, META) where earnings revisions remain the strongest in the market and valuation reset provides asymmetric entry, energy via XOM as the single sector with +57% EPS revision where today's emerging Iran peace deal creates a convex scenario (peace = lower CPI = broader multiple re-rating, no peace = XOM earns more), defense/industrials (RTX, PWR) as government-contracted earnings that are rate-insensitive, and Financials (GS, SPGI) benefiting from elevated volatility and higher-for-longer yield curve dynamics. Nine of 10 growth picks are carryovers with thesis continuity intact — the only subtle evolution is a medium-conviction MRK at #9 (held since June 9) firming as a mean-reversion healthcare entry. The dominant risk being underwritten is an AI capex cycle air pocket — if hyperscalers cut 2027 capex guidance by 20%+, NVDA, AMZN, and GOOGL would all face estimate resets simultaneously; the defensive sleeve (GLD, SCHD, BRK.B, IEF, CEG) is sized at exactly 20% of the book to provide meaningful ballast against this and the stagflation trap scenarios.",
+      "diversificationNote": "The 10-name growth book spans 5 GICS sectors — Information Technology (NVDA), Communication Services (GOOGL, META — capped at 2 given the 3-sector limit), Energy (XOM), Industrials (RTX, PWR — 2 names, different end markets: defense/aerospace vs. grid electrification), Financials (GS, SPGI — 2 names: capital markets vs. data/ratings), and Health Care (MRK); GOOGL and META share the Communication Services sector label but have entirely distinct business models (cloud/search vs. social advertising) and uncorrelated risk factors. The defensive sleeve spans 4 distinct exposures: gold (GLD), broad dividend/quality equity (SCHD), conglomerate cash fortress (BRK.B), intermediate-duration fixed income (IEF), and nuclear/contracted utility (CEG) — the AI-capex factor concentration in NVDA+AMZN+GOOGL is deliberately accepted given the earnings revision dominance, partially offset by XOM and RTX which are negatively correlated to a pure-AI-demand thesis.",
+      "picks": [
+        {
+          "rank": 1,
+          "ticker": "NVDA",
+          "name": "NVIDIA Corporation",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 93,
+          "conviction": "high",
+          "suggestedWeight": 11,
+          "catalyst": "Q2 FY2027 earnings report — management guided record revenues with Blackwell ramp continuation; plus any positive Hormuz/Iran peace resolution removes the export-control overhang"
+        },
+        {
+          "rank": 2,
+          "ticker": "GOOGL",
+          "name": "Alphabet Inc.",
+          "sector": "Communication Services",
+          "category": "growth",
+          "score": 91,
+          "conviction": "high",
+          "suggestedWeight": 10,
+          "catalyst": "Q2 2026 earnings (late July) — Google Cloud re-acceleration and Search AI Overviews monetization update; potential Iran peace deal removing energy-driven CPI pressure and re-opening risk appetite"
+        },
+        {
+          "rank": 3,
+          "ticker": "AMZN",
+          "name": "Amazon.com Inc.",
+          "sector": "Consumer Discretionary",
+          "category": "growth",
+          "score": 89,
+          "conviction": "high",
+          "suggestedWeight": 10,
+          "catalyst": "Q2 2026 earnings (late July) — AWS re-acceleration guidance and operating margin trajectory; Amazon quantum computing timeline announcement already moving the stock this week"
+        },
+        {
+          "rank": 4,
+          "ticker": "META",
+          "name": "Meta Platforms Inc.",
+          "sector": "Communication Services",
+          "category": "growth",
+          "score": 88,
+          "conviction": "high",
+          "suggestedWeight": 9,
+          "catalyst": "Q3 2026 earnings guidance (late October) — Meta's ad revenue is positively correlated with consumer spending data which today's retail sales beat (+0.9% MoM vs 0.6% expected) supports"
+        },
+        {
+          "rank": 5,
+          "ticker": "XOM",
+          "name": "Exxon Mobil Corporation",
+          "sector": "Energy",
+          "category": "value",
+          "score": 87,
+          "conviction": "high",
+          "suggestedWeight": 9,
+          "catalyst": "Potential U.S.-Iran peace deal and Strait of Hormuz reopening — paradoxically, this reduces headline CPI which unlocks Fed optionality and supports equity multiples broadly while XOM's Pioneer synergy FCF continues regardless"
+        },
+        {
+          "rank": 6,
+          "ticker": "RTX",
+          "name": "RTX Corporation",
+          "sector": "Industrials",
+          "category": "growth",
+          "score": 85,
+          "conviction": "high",
+          "suggestedWeight": 9,
+          "catalyst": "Next NATO defense spending summit committing allies to 3.5% GDP defense budgets; Q2 2026 earnings with Pratt & Whitney GTF engine remediation update and missile/interceptor order backlog expansion from the Iran conflict"
+        },
+        {
+          "rank": 7,
+          "ticker": "GS",
+          "name": "The Goldman Sachs Group Inc.",
+          "sector": "Financials",
+          "category": "growth",
+          "score": 84,
+          "conviction": "high",
+          "suggestedWeight": 8,
+          "catalyst": "Q2 2026 earnings (mid-July) — investment banking fees, FICC trading revenues, and asset management AUM growth against the backdrop of today's elevated volatility environment"
+        },
+        {
+          "rank": 8,
+          "ticker": "SPGI",
+          "name": "S&P Global Inc.",
+          "sector": "Financials",
+          "category": "growth",
+          "score": 82,
+          "conviction": "high",
+          "suggestedWeight": 7,
+          "catalyst": "Q2 2026 earnings showing ratings revenue recovery as corporate bond issuance accelerates in 2H 2026; Commodity Insights segment benefiting from Iran-war-driven energy data demand"
+        },
+        {
+          "rank": 9,
+          "ticker": "MRK",
+          "name": "Merck & Co. Inc.",
+          "sector": "Health Care",
+          "category": "value",
+          "score": 80,
+          "conviction": "medium",
+          "suggestedWeight": 6,
+          "catalyst": "Subcutaneous Keytruda FDA approval (extends patent runway meaningfully past 2028 cliff); Q2 2026 earnings update on Keytruda volume growth and Winrevair (pulmonary hypertension) commercial launch trajectory"
+        },
+        {
+          "rank": 10,
+          "ticker": "PWR",
+          "name": "Quanta Services Inc.",
+          "sector": "Industrials",
+          "category": "growth",
+          "score": 78,
+          "conviction": "high",
+          "suggestedWeight": 6,
+          "catalyst": "Q2 2026 earnings (August) — backlog growth update reflecting AI data center grid connections and DOE grid resilience program awards; any federal infrastructure spending bill provisions"
+        },
+        {
+          "rank": 1,
+          "ticker": "GLD",
+          "name": "SPDR Gold Shares ETF",
+          "sector": "Commodities",
+          "category": "defensive",
+          "score": 88,
+          "conviction": "high",
+          "suggestedWeight": 7,
+          "catalyst": "Sustained real rate compression scenario if growth disappoints in H2 2026; geopolitical escalation in the Middle East if the Iran peace deal stalls; any fiscal shock (debt ceiling, sovereign credit concern) driving dollar weakness"
+        },
+        {
+          "rank": 2,
+          "ticker": "SCHD",
+          "name": "Schwab U.S. Dividend Equity ETF",
+          "sector": "Multi-Sector ETF",
+          "category": "defensive",
+          "score": 85,
+          "conviction": "high",
+          "suggestedWeight": 5,
+          "catalyst": "Mean reversion in equal-weight vs. mega-cap growth — the 86% vs. 43% 3-year return gap between S&P 500 cap-weight and equal-weight historically mean-reverts; any broadening of market breadth beyond the AI names benefits SCHD's diversified composition"
+        },
+        {
+          "rank": 3,
+          "ticker": "BRK.B",
+          "name": "Berkshire Hathaway Inc. Class B",
+          "sector": "Financials",
+          "category": "defensive",
+          "score": 84,
+          "conviction": "high",
+          "suggestedWeight": 5,
+          "catalyst": "Q2 2026 13F filing (~August 14) revealing Greg Abel's first independent capital allocation decisions; any major equity deployment from the $397B cash hoard would be a re-rating event; Berkshire's insurance operations benefiting from hard pricing cycle"
+        },
+        {
+          "rank": 4,
+          "ticker": "IEF",
+          "name": "iShares 7-10 Year Treasury Bond ETF",
+          "sector": "Fixed Income",
+          "category": "defensive",
+          "score": 79,
+          "conviction": "medium",
+          "suggestedWeight": 4,
+          "catalyst": "Any growth disappointment in H2 2026 (payrolls falling below 75K, GDP revision toward 1%) would trigger a flight-to-quality bid; a Hormuz reopening causing energy-driven CPI collapse could also re-price rate cuts back into the curve"
+        },
+        {
+          "rank": 5,
+          "ticker": "CEG",
+          "name": "Constellation Energy Corporation",
+          "sector": "Utilities",
+          "category": "defensive",
+          "score": 77,
+          "conviction": "high",
+          "suggestedWeight": 4,
+          "catalyst": "Additional long-term nuclear Power Purchase Agreement announcements with hyperscalers (Microsoft, Amazon, Google all actively negotiating expanded nuclear supply); federal nuclear production tax credit clarity under IRA; potential DOE loan guarantees for Crane Clean Energy Center restart"
+        }
+      ]
     }
   ]
 }
