@@ -6616,6 +6616,181 @@
           "catalyst": "Q2 2026 earnings (late July) — pricing realization vs. volume elasticity metrics; any dividend increase announcement"
         }
       ]
+    },
+    {
+      "date": "2026-06-26",
+      "generatedAt": "2026-06-26T23:20:55.421Z",
+      "macroOutlook": "Cautiously Bullish",
+      "defensiveScore": 4,
+      "summary": "We remain in a Late-Cycle, Elevated-Inflation Variant regime — the Fed is boxed in at 3.625% (62 bps above neutral), headline PCE is 4.1% on energy-driven re-acceleration, and the Strait of Hormuz resurfaced as a live risk this week with a new cargo ship attack near Oman. The 10 growth picks maintain strong thesis continuity from prior sessions: NVDA, META, GOOGL, AVGO, GS, SPGI, RTX, MU, PWR, and XOM are all carry-overs with intact catalysts — the MU position is reinforced by the strongest quarterly results in Micron's history reported this week, and PWR by its record $48.5B backlog and Q1 beat-and-raise. The defensive sleeve (GLD, SCHD, BRK.B, IEF, MRK) spans gold, dividend quality, fortress conglomerate, intermediate duration, and defensive pharma — hedging against the portfolio's primary risks of AI multiple compression, geopolitical escalation, and a hawkish Fed surprise. The dominant risk we are underwriting is a simultaneous AI capex pause (hyperscaler pullback hitting NVDA/AVGO/MU) coinciding with a hot CPI print (July 11) that re-prices Fed hikes and compresses multiples across the growth book — GLD and IEF are the explicit hedges against that scenario.",
+      "diversificationNote": "The growth book spans 5 GICS sectors: Information Technology (NVDA, AVGO, MU — 3-name sector cap respected), Communication Services (META, GOOGL), Financials (GS, SPGI), Industrials (RTX, PWR), and Energy (XOM); two AI-infrastructure names (NVDA, AVGO) share the secular AI capex theme but occupy different value-chain positions (GPU compute vs. custom ASIC/networking silicon). The defensive sleeve spans 5 distinct exposures: gold commodity hedge (GLD), dividend quality equity (SCHD), diversified conglomerate fortress (BRK.B), intermediate Treasury duration (IEF), and defensive pharma (MRK) — no exposure is doubled up.",
+      "picks": [
+        {
+          "rank": 1,
+          "ticker": "NVDA",
+          "name": "NVIDIA Corporation",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 95,
+          "conviction": "high",
+          "suggestedWeight": 11,
+          "catalyst": "Q2 FY2027 earnings report featuring Vera Rubin ramp revenue disclosure and updated hyperscaler order commitments"
+        },
+        {
+          "rank": 2,
+          "ticker": "META",
+          "name": "Meta Platforms Inc.",
+          "sector": "Communication Services",
+          "category": "growth",
+          "score": 93,
+          "conviction": "high",
+          "suggestedWeight": 10,
+          "catalyst": "Q2 2026 earnings with AI-driven ad revenue growth and Llama monetization update"
+        },
+        {
+          "rank": 3,
+          "ticker": "GOOGL",
+          "name": "Alphabet Inc.",
+          "sector": "Communication Services",
+          "category": "growth",
+          "score": 92,
+          "conviction": "high",
+          "suggestedWeight": 10,
+          "catalyst": "Q2 2026 earnings with Google Cloud margin progression and Gemini AI revenue attach rate disclosure"
+        },
+        {
+          "rank": 4,
+          "ticker": "AVGO",
+          "name": "Broadcom Inc.",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 91,
+          "conviction": "high",
+          "suggestedWeight": 9,
+          "catalyst": "Q3 FY2026 earnings with AI revenue segment disclosure and Jalapeño chip production timeline update"
+        },
+        {
+          "rank": 5,
+          "ticker": "GS",
+          "name": "Goldman Sachs Group Inc.",
+          "sector": "Financials",
+          "category": "growth",
+          "score": 89,
+          "conviction": "high",
+          "suggestedWeight": 8,
+          "catalyst": "Q2 2026 earnings with M&A advisory and equity underwriting revenue disclosure — pipeline rebuild confirmation"
+        },
+        {
+          "rank": 6,
+          "ticker": "SPGI",
+          "name": "S&P Global Inc.",
+          "sector": "Financials",
+          "category": "growth",
+          "score": 88,
+          "conviction": "high",
+          "suggestedWeight": 8,
+          "catalyst": "Mobility segment spin completion and Q2 2026 earnings with revised guidance for remaining core segments"
+        },
+        {
+          "rank": 7,
+          "ticker": "RTX",
+          "name": "RTX Corporation",
+          "sector": "Industrials",
+          "category": "growth",
+          "score": 87,
+          "conviction": "high",
+          "suggestedWeight": 8,
+          "catalyst": "Q2 2026 earnings with defense backlog update and Pratt & Whitney GTF engine settlement progress"
+        },
+        {
+          "rank": 8,
+          "ticker": "MU",
+          "name": "Micron Technology Inc.",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 86,
+          "conviction": "high",
+          "suggestedWeight": 8,
+          "catalyst": "Post-blowout Q3 earnings guidance for Q4 FY2026 — management's HBM pricing and allocation commentary will set near-term trajectory"
+        },
+        {
+          "rank": 9,
+          "ticker": "PWR",
+          "name": "Quanta Services Inc.",
+          "sector": "Industrials",
+          "category": "growth",
+          "score": 85,
+          "conviction": "high",
+          "suggestedWeight": 7,
+          "catalyst": "Q2 2026 earnings with backlog progression toward $50B+ and full-year guidance raise"
+        },
+        {
+          "rank": 10,
+          "ticker": "XOM",
+          "name": "Exxon Mobil Corporation",
+          "sector": "Energy",
+          "category": "value",
+          "score": 83,
+          "conviction": "high",
+          "suggestedWeight": 7,
+          "catalyst": "Strait of Hormuz situation resolution/escalation — next geopolitical headline is the binary catalyst; Q2 earnings with Permian production update"
+        },
+        {
+          "rank": 1,
+          "ticker": "GLD",
+          "name": "SPDR Gold Shares",
+          "sector": "Commodities",
+          "category": "defensive",
+          "score": 92,
+          "conviction": "high",
+          "suggestedWeight": 6,
+          "catalyst": "Any Iran ceasefire breakdown or Strait of Hormuz re-closure would send gold materially higher; conversely, durable peace is a partial headwind but inflation floor supports the asset"
+        },
+        {
+          "rank": 2,
+          "ticker": "SCHD",
+          "name": "Schwab U.S. Dividend Equity ETF",
+          "sector": "Multi-Sector (Dividend Quality)",
+          "category": "defensive",
+          "score": 89,
+          "conviction": "high",
+          "suggestedWeight": 5,
+          "catalyst": "Any equity market rotation from growth to quality/value in response to hawkish Fed surprises or hot CPI prints accelerates SCHD inflows"
+        },
+        {
+          "rank": 3,
+          "ticker": "BRK.B",
+          "name": "Berkshire Hathaway Class B",
+          "sector": "Financials (Diversified)",
+          "category": "defensive",
+          "score": 88,
+          "conviction": "high",
+          "suggestedWeight": 5,
+          "catalyst": "Any market dislocation enabling Berkshire to deploy portion of $330B cash reserve at distressed valuations — the ultimate asymmetric optionality"
+        },
+        {
+          "rank": 4,
+          "ticker": "IEF",
+          "name": "iShares 7-10 Year Treasury Bond ETF",
+          "sector": "Fixed Income",
+          "category": "defensive",
+          "score": 84,
+          "conviction": "medium",
+          "suggestedWeight": 4,
+          "catalyst": "Sub-100K payroll print (July 3 jobs report) or June CPI at 0.1% MoM would trigger rates rally and IEF appreciation"
+        },
+        {
+          "rank": 5,
+          "ticker": "MRK",
+          "name": "Merck & Co. Inc.",
+          "sector": "Health Care",
+          "category": "defensive",
+          "score": 82,
+          "conviction": "medium",
+          "suggestedWeight": 7,
+          "catalyst": "Phase 3 pipeline readouts on next-generation oncology and cardiovascular candidates, plus any M&A announcement leveraging balance sheet capacity"
+        }
+      ]
     }
   ]
 }
