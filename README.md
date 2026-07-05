@@ -1,6 +1,6 @@
 # ✦ Halo
 
-**AI-powered market intelligence.** Halo automatically researches the market every weekday after the close and delivers a ranked Top 10 long-term picks plus a Top 5 defensive picks/ETFs sleeve — no manual input.
+**AI-powered market intelligence.** Halo automatically researches the market every weekday after the close and delivers a ranked Top 10 long-term picks, a Top 5 defensive picks/ETFs sleeve, and a Top 5 tactical (2–8 week) trades sleeve — no manual input.
 
 Built with Claude AI (Anthropic), GitHub Actions, React, and deployable to Vercel as an iPhone-friendly PWA with a soft Apple-aesthetic UI.
 
@@ -13,23 +13,36 @@ Every weekday at 22:00 UTC (post-close, year-round)
        ↓
 GitHub Actions triggers research.js
        ↓
-Claude AI runs 6 phases with live web search:
+Local quant engine (scripts/quant.js, free Yahoo Finance data):
+  1y of daily closes for the whole universe + SPY →
+  relative-strength momentum, trend position (50/200dma),
+  RSI, distance from 52w high, realized vol, composite rank
+       ↓
+Claude AI runs 6 phases, grounded in the quant snapshot + live web search:
   1. Macro Climate
   2. Sector Rotation
-  3. Price & Earnings Momentum
+  3. Price & Earnings Momentum  (AI ranks WITHIN the quant pre-screen)
   4. Smart Money Tracking
-  5. Risk Assessment
-  6. Top 10 Picks + 5 Defensive Synthesis
+  5. Risk Assessment            (anchored to laggard / extended screens)
+  6. Synthesis → Top 10 long-term + 5 Defensive + 5 Tactical (2–8 wk,
+     with concrete entry zone / target / stop from real price levels)
        ↓
 Results saved to public/picks.json
        ↓
 Auto-commit pushed → Vercel redeploys → app updates
 ```
 
+The quant snapshot is computed locally for free, so the AI spends its web
+searches on what price data can't cover (earnings revisions, news, macro,
+positioning) instead of hunting for prices — better grounding at lower cost.
+
 The three "stable" phases (macro, sector rotation, smart money) are cached for
-28 hours and only get a quick delta-update on Tue–Thu, cutting search and token
-usage by ~60% on most days. A full refresh runs every Monday (weekend gap) and
-Friday (weekly report — end of trading week).
+28 hours and only get a quick delta-update on Tue–Thu — and those delta checks
+run on Claude Haiku (~3x cheaper per token than Sonnet), cutting search and
+token usage by ~60% on most days. Full research phases run on Claude Sonnet
+with the newer web-search tool (dynamic filtering — more signal per search).
+A full refresh runs every Monday (weekend gap) and Friday (weekly report —
+end of trading week).
 
 The schedule uses 22:00 UTC so the workflow always fires after the 4 PM ET
 close, year-round (avoiding DST drift on a UTC-only cron).
@@ -98,6 +111,10 @@ within ~3–5 minutes after a successful run.
 
 Edit [`public/universe.json`](public/universe.json) — the universe is shared between
 the research script and the frontend, so changes show up in both immediately.
+The universe covers ~170 tickers across 12 groups. Adding tickers is close to
+free: the local quant engine pre-ranks the whole universe from Yahoo Finance
+data (no API key, no AI tokens) and only the top candidates flow into the AI
+prompts, so prompt size — and cost — stays flat as the universe grows.
 
 ## Changing the Schedule
 
@@ -120,6 +137,7 @@ halo/
 │       └── research.yml          # GitHub Actions schedule
 ├── scripts/
 │   ├── research.js               # AI research engine
+│   ├── quant.js                  # Local quant engine (free Yahoo data)
 │   └── package.json
 ├── src/
 │   ├── App.jsx                   # React frontend (Halo UI)
@@ -141,7 +159,12 @@ halo/
 
 - **GitHub Actions**: free (well within free tier)
 - **Vercel**: free (static hosting)
-- **Anthropic API**: ~$0.10–0.30 per daily run; phase caching cuts cost on Tue–Thu
+- **Yahoo Finance quant data**: free (no API key)
+- **Anthropic API**: ~$0.10–0.30 per daily run. Three levers keep it low:
+  - Tue–Thu delta updates run on Claude Haiku (~3x cheaper per token)
+  - The local quant snapshot replaces price-hunting web searches
+  - The tactical sleeve is generated inside the existing synthesis call
+    (no extra API call)
 
 Monthly cost: **< $5**
 

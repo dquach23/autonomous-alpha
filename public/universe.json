@@ -3,57 +3,62 @@
     {
       "label": "Mega-Cap Tech / AI / Semis",
       "key": "tech",
-      "tickers": ["NVDA","MSFT","AAPL","AMZN","GOOGL","META","TSLA","AVGO","TSM","AMD","QCOM","MU","ARM","MRVL","ANET","ORCL","ADBE","INTU","NFLX","UBER"]
+      "tickers": ["NVDA","MSFT","AAPL","AMZN","GOOGL","META","TSLA","AVGO","TSM","AMD","QCOM","MU","ARM","MRVL","ANET","ORCL","ADBE","INTU","NFLX","UBER","ASML","LRCX","AMAT","KLAC","TXN","ADI","CDNS","SNPS"]
     },
     {
       "label": "Cybersecurity / Cloud / SaaS",
       "key": "saas",
-      "tickers": ["PANW","CRWD","ZS","PLTR","SNOW","CRM","NOW","NET"]
+      "tickers": ["PANW","CRWD","ZS","PLTR","SNOW","CRM","NOW","NET","DDOG","MDB","TEAM","FTNT"]
+    },
+    {
+      "label": "Communication / Media",
+      "key": "comm",
+      "tickers": ["DIS","CMCSA","TMUS","SPOT"]
     },
     {
       "label": "Healthcare / Biotech / MedTech",
       "key": "health",
-      "tickers": ["LLY","NVO","UNH","JNJ","ABBV","MRK","PFE","AMGN","ISRG","BSX","TMO","VRTX","REGN","GILD","ELV"]
+      "tickers": ["LLY","NVO","UNH","JNJ","ABBV","MRK","PFE","AMGN","ISRG","BSX","TMO","VRTX","REGN","GILD","ELV","ABT","SYK","MDT","DHR"]
     },
     {
       "label": "Financials / Fintech",
       "key": "fin",
-      "tickers": ["BRK.B","JPM","BAC","GS","MS","V","MA","AXP","BLK","SPGI"]
+      "tickers": ["BRK.B","JPM","BAC","GS","MS","V","MA","AXP","BLK","SPGI","WFC","SCHW","KKR","BX","PGR","CB"]
     },
     {
       "label": "Energy / Oil & Gas / Pipelines",
       "key": "energy",
-      "tickers": ["XOM","CVX","OXY","SLB","EOG","COP","MPC","WMB"]
+      "tickers": ["XOM","CVX","OXY","SLB","EOG","COP","MPC","WMB","FANG","PSX","VLO","LNG"]
     },
     {
       "label": "Industrials / Defense / Aerospace",
       "key": "industrial",
-      "tickers": ["ETN","NEE","PWR","VST","CEG","RTX","LMT","NOC","CAT","GE"]
+      "tickers": ["ETN","NEE","PWR","VST","CEG","RTX","LMT","NOC","CAT","GE","BA","HWM","TDG","URI","PH"]
     },
     {
       "label": "Consumer / Retail",
       "key": "consumer",
-      "tickers": ["COST","WMT","HD","TJX","SBUX","NKE","MCD","LOW","TGT","BKNG"]
+      "tickers": ["COST","WMT","HD","TJX","SBUX","NKE","MCD","LOW","TGT","BKNG","LULU","CMG","ORLY","AZO","MAR","ABNB"]
     },
     {
       "label": "Materials / Diversified Industrial",
       "key": "materials",
-      "tickers": ["EMR","HON","DE","LIN","APD","NEM","FCX","ALB","SHW"]
+      "tickers": ["EMR","HON","DE","LIN","APD","NEM","FCX","ALB","SHW","NUE","VMC","MLM"]
     },
     {
       "label": "REITs / Infrastructure",
       "key": "reits",
-      "tickers": ["AMT","PLD","EQIX","WELL","O"]
+      "tickers": ["AMT","PLD","EQIX","WELL","O","DLR","PSA","CCI"]
     },
     {
       "label": "High-Growth / Emerging Leaders",
       "key": "growth",
-      "tickers": ["ALAB","ONTO","FLUT","CELH","ENPH"]
+      "tickers": ["ALAB","ONTO","FLUT","CELH","ENPH","VRT","CLS","AXON","HIMS"]
     },
     {
       "label": "Defensive / Bonds / Safe Haven",
       "key": "defensive",
-      "tickers": ["KO","PG","PEP","CL","PM","VZ","T","D","SO","DUK","TLT","IEF","GLD","SCHD","VYM"]
+      "tickers": ["KO","PG","PEP","CL","PM","VZ","T","D","SO","DUK","TLT","IEF","GLD","SCHD","VYM","KMB","GIS","MDLZ","USMV","SGOV"]
     }
   ]
 }

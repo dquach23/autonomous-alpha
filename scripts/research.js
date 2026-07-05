@@ -10,6 +10,13 @@ import Anthropic from "@anthropic-ai/sdk";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import {
+  buildQuantSnapshot,
+  renderMomentumTable,
+  renderRiskTable,
+  renderSynthesisTable,
+  quoteFromSnapshot,
+} from "./quant.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR    = path.join(__dirname, "../public");
@@ -20,6 +27,17 @@ const REPORTS_DIR   = path.join(__dirname, "../reports");
 const CYCLE_INFO = { number: 1, label: "After-Market", timeET: "5:00 PM ET" };
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+// ── Model + search-tool tiers ────────────────────────────────────────────────
+// Full research phases run on Sonnet with the newer web-search tool (dynamic
+// filtering: results are filtered server-side before hitting the context
+// window — more signal per search, fewer tokens). Tue–Thu delta updates are
+// trivial "did anything change since yesterday" checks, so they run on Haiku
+// (~3x cheaper per token) with the basic search variant Haiku supports.
+const FULL_MODEL   = "claude-sonnet-4-6";
+const DELTA_MODEL  = "claude-haiku-4-5";
+const FULL_SEARCH  = { type: "web_search_20260209", name: "web_search" };
+const DELTA_SEARCH = { type: "web_search_20250305", name: "web_search" };
 
 // ── Phase caching ─────────────────────────────────────────────────────────────
 // Stable phases (macro climate, sector rotation, smart money) change slowly —
@@ -91,7 +109,10 @@ function getTodayLabel() {
 function loadUniverse() {
   const raw = fs.readFileSync(UNIVERSE_PATH, "utf8");
   const data = JSON.parse(raw);
-  return data.groups.flatMap(g => g.tickers);
+  return {
+    all: data.groups.flatMap(g => g.tickers),
+    defensive: data.groups.find(g => g.key === "defensive")?.tickers ?? [],
+  };
 }
 
 // ─── Phase Definitions ────────────────────────────────────────────────────────
@@ -99,7 +120,10 @@ function loadUniverse() {
 // portfolio manager would consult before making allocation decisions. Prompts
 // are deliberately demanding — concrete numbers, specific levels, named
 // catalysts — because vague output corrupts the synthesis.
-function getPhases(collected, today, universe, historyDigest = "") {
+function getPhases(collected, today, universe, historyDigest = "", quant = null, defensiveTickers = []) {
+  const momentumTable  = quant ? renderMomentumTable(quant)                    : "";
+  const riskTable      = quant ? renderRiskTable(quant)                        : "";
+  const synthesisTable = quant ? renderSynthesisTable(quant, defensiveTickers) : "";
   return [
     {
       id: "macro",
@@ -151,16 +175,21 @@ Rank top→bottom for a 1–5 year long-only investor. For each, give: relative 
       id: "momentum",
       label: "Price & Earnings Momentum",
       prompt: `You are a quantitative analyst running a multi-factor momentum + quality screen. Today is ${today}.
-From this universe: ${universe.join(", ")}
-
-Score each candidate on:
-- **Price momentum**: 3M / 6M / 12M total return vs SPY (relative, not absolute)
+${momentumTable ? `
+PRE-COMPUTED PRICE DATA (calculated locally from actual daily closes — treat as ground truth; do NOT search for prices or returns):
+The universe has already been quantitatively pre-screened. These are the top candidates by relative-strength composite ("mom" = cross-sectional momentum percentile, 100 = strongest):
+---
+${momentumTable}
+---
+` : `From this universe: ${universe.join(", ")}
+`}
+Your job is the layers the price data can't capture. Score the candidates on:
 - **Earnings revisions**: analyst FY estimate revision direction last 4–13 weeks (up = good)
 - **Earnings surprise rate**: % beat on last 4 quarters of EPS
-- **Accumulation**: rising on-balance volume / institutional accumulation signals
 - **Quality overlay**: gross margin trend, FCF yield, ROIC trajectory (penalize stocks with deteriorating fundamentals even if price is mooning)
+- **Price momentum**: ${momentumTable ? "already computed in the table above — use it, don't re-derive it" : "3M / 6M / 12M total return vs SPY (relative, not absolute)"}
 
-Identify the TOP 10 names with the strongest combined factor scores. For each, give: ticker, a 1-sentence rationale citing specific recent data (last earnings beat %, est revision direction, RSI vs SPY), and flag any "extended" names (ones whose price momentum is dangerously ahead of fundamentals — common warning sign of late-stage rallies).`,
+Identify the TOP 12 names with the strongest combined factor scores. For each, give: ticker, a 1-sentence rationale citing specific recent data (last earnings beat %, est revision direction, momentum score from the table), and flag any "extended" names (RSI > 75 or far above the 200dma with fundamentals lagging — common warning sign of late-stage rallies). Also flag names whose strong momentum is CONFIRMED by improving fundamentals — those are the highest-quality signals.`,
     },
     {
       id: "smart",
@@ -189,7 +218,13 @@ Focus on positions relevant for 1+ year holding periods. Ignore short-term tradi
       label: "Risk Assessment",
       prompt: `You are a risk officer reviewing the book before a portfolio manager rebalances. Today is ${today}.
 From this universe: ${universe.join(", ")}
-
+${riskTable ? `
+PRE-COMPUTED RISK SCREENS (from actual daily closes — treat as ground truth, do not search for price data):
+---
+${riskTable}
+---
+Use these screens to anchor your single-stock risk calls: laggards breaking down below trend are drawdown candidates; extended names are mean-reversion candidates.
+` : ""}
 Cover:
 1. **Single-stock blow-up risk** — 5 names in this universe with the highest probability of -25%+ drawdown over the next 6–12 months. Be specific: which ones are priced for perfection on stretched multiples? Which have deteriorating gross margins, customer concentration, regulatory overhang, or pending legal/antitrust action?
 
@@ -223,14 +258,15 @@ ${collected.smart || "(no smart money data available)"}
 RISK ASSESSMENT:
 ${collected.risk || "(no risk data available)"}
 ${historyDigest ? `\nYOUR RECENT POSITIONING (last 7 trading days):\n${historyDigest}\n\nIMPORTANT: Maintain thesis continuity. If a name was top-ranked recently and the thesis is still intact, KEEP IT — name churn destroys returns. Only drop a name if the thesis broke or a clearly better opportunity emerged. In the summary, briefly note carry-overs vs. changes and why.\n` : ""}
-
+${synthesisTable ? `\nQUANT SNAPSHOT (computed locally from actual daily closes as of ${quant.asOf} — treat every number as ground truth; use these for entry levels, targets, and stops):\n---\n${synthesisTable}\n---\n` : ""}
 Universe: ${universe.join(", ")}
 
-YOUR JOB: produce TWO complementary sleeves that together form a complete portfolio for a 1–5 year hold horizon:
-  • **Growth book** — the 10 highest risk-adjusted non-defensive long ideas (category: growth / value / income).
+YOUR JOB: produce THREE complementary sleeves:
+  • **Growth book** — the 10 highest risk-adjusted non-defensive long ideas for a 1–5 year hold (category: growth / value / income).
   • **Defensive sleeve** — the 5 highest-conviction defensive picks/ETFs (category: defensive). Always include this sleeve regardless of macro outlook; size the rest of the book around defensiveScore.
+  • **Tactical sleeve** — 5 SHORT-TERM ideas (2–8 week horizon) in a separate "tacticalPicks" array. These are catalyst- or momentum-driven trades, NOT portfolio holdings: each needs a specific near-term catalyst or setup, a concrete entry zone, a price target, and a hard stop — all derived from the quant snapshot's actual price levels. Tactical picks MAY overlap with the growth book when a near-term catalyst justifies it, and may include short-term defensive/hedge expressions (e.g. GLD, TLT) when the tape warrants.
 
-15 picks total. They must function together as one portfolio.
+The 15 portfolio picks (growth book + defensive sleeve) must function together as one portfolio; the 5 tactical picks stand alone as trades.
 
 PORTFOLIO CONSTRUCTION RULES (HARD CONSTRAINTS):
 1. **Sleeve composition**: exactly 10 non-defensive picks (category ∈ {growth, value, income}) AND exactly 5 defensive picks (category = defensive). No more, no fewer.
@@ -266,19 +302,40 @@ CRITICAL: Respond with ONLY a single valid JSON object. No markdown fences, no p
       "smartMoneyBacking": true
     }
   ],
+  "tacticalPicks": [
+    {
+      "rank": 1,
+      "ticker": "XXXX",
+      "score": 88,
+      "name": "Full Company Name",
+      "sector": "GICS sector",
+      "horizon": "2-8 weeks",
+      "category": "tactical",
+      "conviction": "high",
+      "rationale": "2-3 sentences. What is the setup (momentum breakout, oversold quality name, pre-catalyst positioning) and why the next 2-8 weeks specifically. Cite the quant snapshot numbers.",
+      "catalyst": "The specific near-term event or setup driving this trade",
+      "catalystWindow": "Specific timeframe within the next 8 weeks",
+      "entryZone": "Concrete price range to enter, anchored to the snapshot's current price and levels (e.g. '$182–188, on a pullback toward the 50dma at $184')",
+      "target": "Concrete price target with the % upside (e.g. '$215 (+15%)')",
+      "stop": "Hard stop level with the % downside (e.g. '$172 (-6%), below the 50dma')",
+      "keyRisk": "The single biggest risk to this trade, named specifically"
+    }
+  ],
   "summary": "3-4 sentences. Open with the macro/regime call. State how the 10 growth picks plus the 5 defensive picks express that view as a portfolio. Note carry-overs from prior days and any new additions. Close with the dominant risk you're underwriting.",
+  "tacticalNote": "1-2 sentences on the short-term (2-8 week) tape: what the tactical sleeve is positioned for and the market condition that would invalidate it.",
   "diversificationNote": "1-2 sentences explicitly naming the sectors covered in the growth book and the exposures in the defensive sleeve, plus any factor concentration you accepted (e.g. 'two AI-infrastructure names — NVDA, AVGO — share secular exposure but different points in the value chain; defensive sleeve spans long duration, gold, dividend equity').",
   "macroOutlook": "Cautiously Bullish",
   "defensiveScore": 4
 }
 
 Rules:
-- category must be exactly one of: "growth", "defensive", "value", "income"
+- In "picks", category must be exactly one of: "growth", "defensive", "value", "income"; in "tacticalPicks", category is always "tactical"
 - conviction must be exactly one of: "high", "medium", "speculative"
-- suggestedWeight is an integer 3–15 representing % of the equity allocation; all 15 weights should sum to roughly 100
+- suggestedWeight is an integer 3–15 representing % of the equity allocation; all 15 weights should sum to roughly 100 (tactical picks carry no suggestedWeight)
 - macroOutlook must be exactly one of: "Bullish", "Cautiously Bullish", "Neutral", "Cautious", "Bearish"
 - defensiveScore is 1-10 (1 = full risk-on, 10 = full defensive)
 - Include exactly 15 picks: 10 with category != "defensive" (rank 1–10 by conviction) followed by 5 with category == "defensive" (rank 1–5 by conviction). Order the picks array growth-book first, defensive sleeve second.
+- Include exactly 5 tacticalPicks (rank 1–5 by conviction), every one with concrete entryZone / target / stop price levels consistent with the quant snapshot's current prices
 - All string fields are required and must be substantive (no "TBD", no empty strings)`,
     },
   ];
@@ -389,12 +446,13 @@ async function runPhase(phaseConfig, today, maxTokens = 4000) {
   console.log(`\n  🔍 Running: ${phaseConfig.label}...`);
 
   const response = await withRetry(() => client.messages.create({
-    model: "claude-sonnet-4-6",
+    model: FULL_MODEL,
     max_tokens: maxTokens,
-    tools: [{ type: "web_search_20250305", name: "web_search" }],
+    tools: [{ ...FULL_SEARCH, max_uses: 2 }],
     system: `You are an autonomous financial research AI. Today is ${today}.
 Use web search to find CURRENT, REAL market data and news. Be specific and data-driven.
 Cite actual numbers, company names, and recent events. Avoid vague generalities.
+When pre-computed price data is provided in the prompt, treat it as ground truth and spend your searches on what it can't cover (earnings, estimates, news, positioning).
 SEARCH LIMIT: Use at most 2 web searches per phase. Choose your queries carefully to get the most signal per search.`,
     messages: [{ role: "user", content: phaseConfig.prompt }],
   }), phaseConfig.label);
@@ -414,9 +472,11 @@ async function runDeltaPhase(phaseId, phaseLabel, cachedText, today) {
   console.log(`\n  ⚡ Delta update: ${phaseLabel} (cache hit)...`);
 
   const response = await withRetry(() => client.messages.create({
-    model: "claude-sonnet-4-6",
+    // Delta updates are cheap freshness checks against yesterday's analysis,
+    // so they run on Haiku (~3x cheaper than Sonnet) with the basic search tool.
+    model: DELTA_MODEL,
     max_tokens: 1500,
-    tools: [{ type: "web_search_20250305", name: "web_search" }],
+    tools: [{ ...DELTA_SEARCH, max_uses: 1 }],
     system: `You are an autonomous financial research AI. Today is ${today}.
 Use web search sparingly — at most 1 search. Only search if you need to verify a specific recent development since yesterday.`,
     messages: [{ role: "user", content: getDeltaPrompt(phaseId, cachedText, today) }],
@@ -642,6 +702,21 @@ function buildHistoryDigest(history, days = HISTORY_DIGEST_DAYS) {
   return rows.join("\n");
 }
 
+// ─── Shared tactical-pick renderer (daily + weekly markdown) ─────────────────
+function renderTacticalPick(p) {
+  let out = `### ${p.rank}. ${p.ticker} — ${p.name} · ⚡ TACTICAL\n`;
+  out += `**Score** ${p.score}/100 · **Sector** ${p.sector} · **Horizon** ${p.horizon ?? "2-8 weeks"}`;
+  if (p.conviction) out += ` · **Conviction** ${p.conviction}`;
+  out += `\n\n`;
+  out += `**Setup.** ${p.rationale}\n\n`;
+  if (p.catalyst)  out += `**Catalyst.** ${p.catalyst}${p.catalystWindow ? ` _(window: ${p.catalystWindow})_` : ""}\n\n`;
+  if (p.entryZone) out += `**Entry zone.** ${p.entryZone}\n\n`;
+  if (p.target)    out += `**Target.** ${p.target}\n\n`;
+  if (p.stop)      out += `**Stop.** ${p.stop}\n\n`;
+  if (p.keyRisk)   out += `**Key risk.** ${p.keyRisk}\n\n`;
+  return out;
+}
+
 // ─── Generate daily markdown archive (permanent record per cycle) ────────────
 function generateDailyMarkdown(picks, collected, dateStr, todayLabel) {
   let md = `# Halo Daily Brief — ${todayLabel}\n`;
@@ -671,6 +746,12 @@ function generateDailyMarkdown(picks, collected, dateStr, todayLabel) {
   growthPicks.forEach(p => { md += renderPick(p); });
   md += `---\n\n## Top 5 Defensive Picks/ETFs · Shield Sleeve\n\n`;
   defensivePicks.forEach(p => { md += renderPick(p); });
+  const tacticals = picks.tacticalPicks || [];
+  if (tacticals.length > 0) {
+    md += `---\n\n## Top 5 Tactical Trades · 2–8 Week Horizon\n\n`;
+    if (picks.tacticalNote) md += `${picks.tacticalNote}\n\n`;
+    tacticals.forEach(p => { md += renderTacticalPick(p); });
+  }
   md += `---\n\n## Research Phases\n\n`;
   [
     { id: "macro",    label: "Macro Climate" },
@@ -721,6 +802,12 @@ function generateWeeklyMarkdown(picks, collected, weekLabel, history) {
   growthPicks.forEach(p => { md += renderPick(p); });
   md += `---\n\n## Top 5 Defensive Picks/ETFs · Shield Sleeve\n\n`;
   defensivePicks.forEach(p => { md += renderPick(p); });
+  const weeklyTacticals = picks.tacticalPicks || [];
+  if (weeklyTacticals.length > 0) {
+    md += `---\n\n## Top 5 Tactical Trades · 2–8 Week Horizon\n\n`;
+    if (picks.tacticalNote) md += `${picks.tacticalNote}\n\n`;
+    weeklyTacticals.forEach(p => { md += renderTacticalPick(p); });
+  }
 
   // Week-over-week thesis evolution (using history)
   if (history?.entries?.length > 1) {
@@ -760,7 +847,8 @@ async function runResearch() {
   const friday       = isFriday() || forceWeekly;
   const fullRefresh  = needsFullRefresh() || forceWeekly;
   const weekLabel    = getWeekLabel();
-  const universe     = loadUniverse();
+  const universeData = loadUniverse();
+  const universe     = universeData.all;
   const history      = loadHistory();
   const historyDigest = buildHistoryDigest(history);
 
@@ -782,6 +870,25 @@ async function runResearch() {
   //  for forensic inspection.)
   quarantineBadPicksFile();
 
+  // ── Local quant snapshot: real price data for the whole universe ──
+  // Free (Yahoo Finance, no key) and deterministic. Grounds the AI phases in
+  // actual numbers, pre-ranks the expanded universe so prompts stay compact,
+  // and doubles as the quote source for the frontend. Failure is non-fatal —
+  // the phases fall back to their search-driven behavior.
+  let quant = null;
+  try {
+    console.log(`\n  📈 Building quant snapshot for ${universe.length} tickers + SPY...`);
+    quant = await buildQuantSnapshot(universe);
+    const covered = Object.keys(quant.tickers).length;
+    console.log(`  ✅ Quant snapshot ready (${covered}/${universe.length} tickers)`);
+    if (covered < universe.length * 0.5) {
+      console.warn("  ⚠️ Quant coverage below 50% — falling back to search-driven prompts");
+      quant = null;
+    }
+  } catch (err) {
+    console.error("  ⚠️ Quant snapshot failed (non-fatal):", err.message);
+  }
+
   // ── Read existing picks.json to preserve weekly report + phase cache ──
   let existingData = {};
   try {
@@ -801,7 +908,7 @@ async function runResearch() {
 
   // ── Run research phases 1–5 ──
   const collected = {};
-  const phases    = getPhases(collected, today, universe, historyDigest);
+  const phases    = getPhases(collected, today, universe, historyDigest, quant, universeData.defensive);
 
   for (const phase of phases.slice(0, 5)) {
     try {
@@ -836,53 +943,72 @@ async function runResearch() {
   console.log("\n  🏆 Generating Top 10 Picks + 5 Defensive (synthesizing all phases)...");
   let picks = null;
   try {
-    const picksPhase = getPhases(collected, today, universe, historyDigest)[5];
+    const picksPhase = getPhases(collected, today, universe, historyDigest, quant, universeData.defensive)[5];
     const picksRaw   = await runPhase(picksPhase, today, 16000);
     picks = extractJSON(picksRaw);
     // Validate we actually got picks
     if (!Array.isArray(picks.picks) || picks.picks.length === 0) {
       throw new Error("Picks array is missing or empty");
     }
+    // Tactical sleeve is best-effort — an empty array just hides the section in the UI
+    if (!Array.isArray(picks.tacticalPicks)) picks.tacticalPicks = [];
     const growthTickers    = picks.picks.filter(p => p.category !== "defensive").map(p => p.ticker);
     const defensiveTickers = picks.picks.filter(p => p.category === "defensive").map(p => p.ticker);
+    const tacticalTickers  = picks.tacticalPicks.map(p => p.ticker);
     console.log(`\n  🎯 GROWTH (${growthTickers.length}): ${growthTickers.join(", ")}`);
     console.log(`  🛡  DEFENSIVE (${defensiveTickers.length}): ${defensiveTickers.join(", ")}`);
+    console.log(`  ⚡ TACTICAL (${tacticalTickers.length}): ${tacticalTickers.join(", ")}`);
   } catch (err) {
     console.error("  ❌ Picks generation failed:", err.message);
     // Preserve previous picks rather than blanking the UI on a transient failure
     const prior = existingData?.picks?.length > 0 ? existingData.picks : [];
     picks = {
       picks: prior,
+      tacticalPicks: existingData?.tacticalPicks ?? [],
       summary: prior.length > 0
         ? "Today's research cycle failed; showing previous picks."
         : "Research cycle encountered an error generating picks.",
+      tacticalNote: existingData?.tacticalNote,
       macroOutlook: existingData?.macroOutlook ?? "Neutral",
       defensiveScore: existingData?.defensiveScore ?? 5,
       error: err.message,
     };
   }
 
-  // ── Fetch live quotes for daily + weekly tickers ──
-  // Yahoo Finance chart endpoint; no API key. Failures per-ticker are non-fatal.
-  const dailyTickers = (picks.picks || []).map(p => p.ticker);
+  // ── Attach quotes for daily + tactical + weekly tickers ──
+  // The quant snapshot already holds a year of closes per universe ticker, so
+  // quotes come from it for free; only tickers missing from the snapshot
+  // (fetch failure, non-universe weekly holdover) hit Yahoo again.
+  const dailyTickers    = (picks.picks || []).map(p => p.ticker);
+  const tacticalTickers = (picks.tacticalPicks || []).map(p => p.ticker);
   const existingWeeklyPicks = existingData?.weeklyReport?.picks || [];
   // On Friday the weekly report is regenerated from today's picks, so those
   // tickers are already in dailyTickers. On other days we still want fresh
   // prices on the preserved weekly report.
   const weeklyTickers = friday ? [] : existingWeeklyPicks.map(p => p.ticker);
-  const allTickers = [...new Set([...dailyTickers, ...weeklyTickers])];
+  const allTickers = [...new Set([...dailyTickers, ...tacticalTickers, ...weeklyTickers])];
   let quotes = {};
   if (allTickers.length > 0) {
-    console.log(`\n  💹 Fetching live quotes for ${allTickers.length} tickers...`);
-    try {
-      quotes = await fetchQuotes(allTickers);
-      console.log(`  ✅ Quotes attached for ${Object.keys(quotes).length}/${allTickers.length} tickers`);
-    } catch (err) {
-      console.error("  ⚠️ Quote fetch step failed:", err.message);
+    for (const t of allTickers) {
+      const q = quoteFromSnapshot(quant, t);
+      if (q) quotes[t] = q;
     }
+    const missing = allTickers.filter(t => !quotes[t]);
+    if (missing.length > 0) {
+      console.log(`\n  💹 Fetching live quotes for ${missing.length} tickers not in quant snapshot...`);
+      try {
+        Object.assign(quotes, await fetchQuotes(missing));
+      } catch (err) {
+        console.error("  ⚠️ Quote fetch step failed:", err.message);
+      }
+    }
+    console.log(`  ✅ Quotes attached for ${Object.keys(quotes).length}/${allTickers.length} tickers`);
   }
   if (picks.picks?.length > 0) {
     picks.picks = enrichWithQuotes(picks.picks, quotes);
+  }
+  if (picks.tacticalPicks?.length > 0) {
+    picks.tacticalPicks = enrichWithQuotes(picks.tacticalPicks, quotes);
   }
 
   // ── Cycle tracking (single daily run) ──
@@ -912,6 +1038,17 @@ async function runResearch() {
         suggestedWeight: p.suggestedWeight,
         catalyst:   p.catalyst,
       })),
+      ...(picks.tacticalPicks?.length > 0 ? {
+        tacticalPicks: picks.tacticalPicks.map(p => ({
+          rank:       p.rank,
+          ticker:     p.ticker,
+          conviction: p.conviction,
+          catalyst:   p.catalyst,
+          entryZone:  p.entryZone,
+          target:     p.target,
+          stop:       p.stop,
+        })),
+      } : {}),
       ...(picks.error ? { error: picks.error } : {}),
     };
     appendHistoryEntry(history, historyEntry);
@@ -941,7 +1078,9 @@ async function runResearch() {
   if (friday && picks.picks?.length > 0 && !picks.error) {
     weeklyReport = {
       picks:       picks.picks,
+      tacticalPicks: picks.tacticalPicks || [],
       summary:     picks.summary,
+      tacticalNote: picks.tacticalNote,
       diversificationNote: picks.diversificationNote,
       macroOutlook:picks.macroOutlook,
       defensiveScore: picks.defensiveScore,
@@ -964,7 +1103,9 @@ async function runResearch() {
   const output = {
     // Daily picks (latest cycle)
     picks:        picks.picks || [],
+    tacticalPicks: picks.tacticalPicks || [],
     summary:      picks.summary,
+    tacticalNote: picks.tacticalNote,
     diversificationNote: picks.diversificationNote,
     macroOutlook: picks.macroOutlook,
     defensiveScore: picks.defensiveScore ?? 5,
@@ -1004,6 +1145,7 @@ async function runResearch() {
       failedPhases:       failedPhases,
       fullRefresh:        fullRefresh || friday,
       historyEntries:     history.entries.length,
+      quantCoverage:      quant ? Object.keys(quant.tickers).length : 0,
     },
 
     ...(picks.error ? { error: picks.error } : {}),

@@ -299,7 +299,8 @@ function PickRow({ pick, onClick, period = "day" }) {
   const changeColor = change == null ? C.muted : change >= 0 ? C.pos : C.neg;
   const sign = change == null ? "" : change >= 0 ? "+" : "−";
   const isDefensive = pick.category === "defensive";
-  const accent = isDefensive ? C.shield : C.primary;
+  const isTactical  = pick.category === "tactical";
+  const accent = isDefensive ? C.shield : isTactical ? C.warn : C.primary;
 
   return (
     <button onClick={onClick} style={{
@@ -322,7 +323,7 @@ function PickRow({ pick, onClick, period = "day" }) {
         fontFamily: "var(--halo-mono)", fontSize: 13, fontWeight: 700,
         color: accent,
       }}>
-        {isDefensive ? "✦" : pick.rank}
+        {isDefensive ? "✦" : isTactical ? "⚡" : pick.rank}
       </div>
       <div style={{ minWidth: 0 }}>
         <div style={{
@@ -512,7 +513,8 @@ function DetailSheet({ pick, onClose }) {
   if (!pick) return null;
 
   const isDefensive = pick.category === "defensive";
-  const accent = isDefensive ? C.shield : C.primary;
+  const isTactical  = pick.category === "tactical";
+  const accent = isDefensive ? C.shield : isTactical ? C.warn : C.primary;
   const convictionColor = pick.conviction === "high" ? C.pos : pick.conviction === "medium" ? C.primary : C.purple;
 
   return (
@@ -541,7 +543,7 @@ function DetailSheet({ pick, onClose }) {
             display: "flex", alignItems: "center", justifyContent: "center",
             fontWeight: 800, color: accent, fontSize: 16, flexShrink: 0,
           }}>
-            {isDefensive ? "✦" : pick.rank}
+            {isDefensive ? "✦" : isTactical ? "⚡" : pick.rank}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{
@@ -567,7 +569,7 @@ function DetailSheet({ pick, onClose }) {
         <div style={{ padding: "0 20px 14px", display: "flex", gap: 6, flexWrap: "wrap" }}>
           {pick.sector  && <Tag color={C.muted}>{pick.sector}</Tag>}
           {pick.horizon && <Tag color={C.primary}>{pick.horizon}</Tag>}
-          {pick.category && <Tag color={isDefensive ? C.shield : C.pos}>{pick.category}</Tag>}
+          {pick.category && <Tag color={isDefensive ? C.shield : isTactical ? C.warn : C.pos}>{pick.category}</Tag>}
           {pick.conviction && <Tag color={convictionColor} solid>{pick.conviction}</Tag>}
           {pick.smartMoneyBacking && <Tag color={C.purple}>✦ smart $</Tag>}
         </div>
@@ -604,6 +606,9 @@ function DetailSheet({ pick, onClose }) {
         )}
 
         <div style={{ padding: "0 20px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+          {pick.entryZone   && <Block color={C.pos}     label="Entry zone"   text={pick.entryZone} />}
+          {pick.target      && <Block color={C.primary} label="Target"       text={pick.target} />}
+          {pick.stop        && <Block color={C.neg}     label="Stop"         text={pick.stop} />}
           {pick.entryNote   && <Block color={C.pos}  label="Entry"        text={pick.entryNote} />}
           {pick.exitTrigger && <Block color={C.warn} label="Exit trigger" text={pick.exitTrigger} />}
           {pick.keyRisk     && <Block color={C.neg}  label="Key risk"     text={pick.keyRisk} />}
@@ -1133,6 +1138,7 @@ function HaloApp() {
   const isDark = theme === "dark";
   const growthPicks = (data?.picks || []).filter(p => p.category !== "defensive");
   const defPicks    = (data?.picks || []).filter(p => p.category === "defensive");
+  const tactPicks   = data?.tacticalPicks || [];
 
   const phases = [
     { id: "macro",    label: "Macro climate",             color: C.info   },
@@ -1292,6 +1298,44 @@ function HaloApp() {
                       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                         {defPicks.map(p => (
                           <PickRow key={p.ticker} pick={p} onClick={() => setActivePick(p)} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {tactPicks.length > 0 && (
+                    <div style={{ marginTop: 22 }}>
+                      <div style={{
+                        display: "flex", justifyContent: "space-between", alignItems: "baseline",
+                        padding: "4px 4px 10px",
+                      }}>
+                        <div style={{
+                          fontFamily: "var(--halo-mono)", fontSize: 10.5, color: C.muted,
+                          letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 700,
+                          display: "flex", alignItems: "center", gap: 8,
+                        }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.warn }} />
+                          tactical trades · {tactPicks.length}
+                        </div>
+                        <div style={{
+                          fontFamily: "var(--halo-mono)", fontSize: 10, color: C.warn,
+                          fontWeight: 700, letterSpacing: "0.06em",
+                        }}>
+                          2–8 wk horizon
+                        </div>
+                      </div>
+                      {data?.tacticalNote && (
+                        <div style={{
+                          margin: "0 0 10px", padding: "10px 12px",
+                          background: `${C.warn}10`, border: `1px solid ${C.warn}33`,
+                          borderRadius: 12, fontSize: 12.5, color: C.text, lineHeight: 1.55,
+                        }}>
+                          {data.tacticalNote}
+                        </div>
+                      )}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                        {tactPicks.map(p => (
+                          <PickRow key={p.ticker + "-t"} pick={p} onClick={() => setActivePick(p)} />
                         ))}
                       </div>
                     </div>
