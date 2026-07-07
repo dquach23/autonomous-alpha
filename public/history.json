@@ -7841,6 +7841,181 @@
           "catalyst": "Q2 2026 earnings (late July) with organic revenue growth and pricing power metrics in EM markets; June CPI July 14 as inflation-persistence driver boosting defensive rotation"
         }
       ]
+    },
+    {
+      "date": "2026-07-07",
+      "generatedAt": "2026-07-07T23:12:39.097Z",
+      "macroOutlook": "Cautiously Bullish",
+      "defensiveScore": 4,
+      "summary": "The portfolio is constructed for a late-cycle regime where the AI capex supercycle ($750B in hyperscaler spend in 2026) remains the dominant earnings driver, but real risks are accumulating: core PCE re-accelerating to 3.40%, June payrolls weakening to 57K, an equity risk premium near zero, and a new Fed Chair (Warsh) signaling pure data dependence with a hawkish dot-plot skew. The 10-name growth book is concentrated in the highest-conviction secular themes — AI semiconductors (NVDA, AVGO, MRVL in three distinct value-chain positions), AI cloud/platform monetization (META, GOOGL), AI infrastructure and power (PWR, VST), enterprise software security (CRWD), financial data oligopoly (SPGI), and defense/aerospace (RTX) — spanning 5 distinct GICS sectors to satisfy diversification constraints. The 5-name defensive sleeve (GLD, SCHD, BRK.B, IEF, KO) provides explicit hedges against the three dominant tail risks: an AI CapEx ROI Reckoning (GLD, BRK.B cash optionality), inflation-driven rate hikes (IEF as a duration hedge if growth slows faster than inflation, GLD as a monetary hedge if the Fed falls behind), and late-cycle consumer squeeze (KO, SCHD as defensive rotation beneficiaries). Key carry-overs from June 26 through today: NVDA, AVGO, META, GOOGL, SPGI, RTX, PWR held continuously at high conviction with thesis intact; VST re-enters replacing XOM (superior earnings visibility and smarter smart-money backing from Tepper); MRVL added fresh on record-high momentum and multi-analyst price-target upgrades; CRWD added to provide cybersecurity diversification as a fourth technology sub-sector exposure. The dominant risk being underwritten is that AI capex ROI disappointment or a hot July 14 CPI print triggers simultaneous multiple compression in growth names and a hawkish repricing of the Fed curve — the defensive sleeve is explicitly sized to cushion this scenario.",
+      "diversificationNote": "The growth book spans 5 GICS sectors: Information Technology (NVDA, AVGO, MRVL, CRWD — four names but across GPU compute, custom ASIC, CXL networking, and cybersecurity — distinct value-chain points with limited revenue-customer overlap), Communication Services (META, GOOGL — differentiated by cloud/AI-platform vs. search/autonomous), Industrials (RTX, PWR — defense/aerospace and power infrastructure, two non-correlated end markets), Utilities (VST — power generation with contracted AI PPA revenue), and Financials (SPGI — financial data oligopoly). The defensive sleeve spans four exposures: physical gold inflation/geopolitical hedge (GLD), broad dividend quality income (SCHD), fortress balance sheet equity-proxy (BRK.B), and intermediate-duration Treasuries for recession hedge (IEF), plus consumer staples pricing-power compounder (KO) — no exposure is doubled up. Accepted concentration: three AI-semiconductor names (NVDA, AVGO, MRVL) share the hyperscaler capex cycle as a common factor, mitigated by their distinct points in the value chain (GPU compute vs. custom ASIC vs. CXL/networking silicon).",
+      "picks": [
+        {
+          "rank": 1,
+          "ticker": "NVDA",
+          "name": "NVIDIA Corporation",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 90,
+          "conviction": "high",
+          "suggestedWeight": 10,
+          "catalyst": "FY Q2 2027 earnings report with Blackwell revenue ramp and data-center guidance; hyperscaler capex commentary in Q2 earnings season beginning mid-July"
+        },
+        {
+          "rank": 2,
+          "ticker": "AVGO",
+          "name": "Broadcom Inc.",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 94,
+          "conviction": "high",
+          "suggestedWeight": 10,
+          "catalyst": "Q3 FY2026 earnings report (~September) + ongoing Street estimate revisions from the Apple custom ASIC win and hyperscaler XPU design ramp"
+        },
+        {
+          "rank": 3,
+          "ticker": "META",
+          "name": "Meta Platforms Inc.",
+          "sector": "Communication Services",
+          "category": "growth",
+          "score": 80,
+          "conviction": "high",
+          "suggestedWeight": 9,
+          "catalyst": "Q2 2026 earnings (late July) — first opportunity to quantify AI cloud infrastructure revenue; Llama model commercialization update and Reality Labs path-to-profitability disclosure"
+        },
+        {
+          "rank": 4,
+          "ticker": "GOOGL",
+          "name": "Alphabet Inc.",
+          "sector": "Communication Services",
+          "category": "growth",
+          "score": 86,
+          "conviction": "high",
+          "suggestedWeight": 8,
+          "catalyst": "Q2 2026 earnings (late July) — Cloud revenue acceleration and Gemini monetization evidence; DOJ search antitrust remedy clarity"
+        },
+        {
+          "rank": 5,
+          "ticker": "MRVL",
+          "name": "Marvell Technology Inc.",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 88,
+          "conviction": "high",
+          "suggestedWeight": 8,
+          "catalyst": "Q2 FY2027 earnings report + ongoing hyperscaler design win announcements; CXL/custom ASIC ramp confirmation"
+        },
+        {
+          "rank": 6,
+          "ticker": "SPGI",
+          "name": "S&P Global Inc.",
+          "sector": "Financials",
+          "category": "growth",
+          "score": 84,
+          "conviction": "high",
+          "suggestedWeight": 8,
+          "catalyst": "Q2 2026 earnings on July 28 — first post-spin financials; M&A deal volume data for H1 confirming ratings revenue acceleration"
+        },
+        {
+          "rank": 7,
+          "ticker": "RTX",
+          "name": "RTX Corporation",
+          "sector": "Industrials",
+          "category": "growth",
+          "score": 83,
+          "conviction": "high",
+          "suggestedWeight": 8,
+          "catalyst": "Q2 2026 earnings on July 28 with potential further guidance raise; new defense contract announcements from NATO burden-sharing commitments"
+        },
+        {
+          "rank": 8,
+          "ticker": "PWR",
+          "name": "Quanta Services Inc.",
+          "sector": "Industrials",
+          "category": "growth",
+          "score": 81,
+          "conviction": "high",
+          "suggestedWeight": 7,
+          "catalyst": "Q2 2026 earnings (late July/early August) — backlog update and FY guidance raise expected as data center electrical work accelerates; utility customer capex budget announcements"
+        },
+        {
+          "rank": 9,
+          "ticker": "VST",
+          "name": "Vistra Corp.",
+          "sector": "Utilities",
+          "category": "growth",
+          "score": 82,
+          "conviction": "high",
+          "suggestedWeight": 7,
+          "catalyst": "Q2 2026 earnings (early August) — power pricing data and new long-term PPA announcement with a hyperscaler; any announced nuclear capacity addition or PPA extension"
+        },
+        {
+          "rank": 10,
+          "ticker": "CRWD",
+          "name": "CrowdStrike Holdings Inc.",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 84,
+          "conviction": "high",
+          "suggestedWeight": 6,
+          "catalyst": "Q2 FY2027 earnings (late August) — net new ARR print and Falcon Flex adoption metrics; any major enterprise security breach at a non-CRWD customer would accelerate consolidation onto the platform"
+        },
+        {
+          "rank": 1,
+          "ticker": "GLD",
+          "name": "SPDR Gold Shares",
+          "sector": "Commodities",
+          "category": "defensive",
+          "score": 88,
+          "conviction": "high",
+          "suggestedWeight": 6,
+          "catalyst": "June CPI print on July 14 — a hot print pressures the Fed toward hikes, which historically has been gold-supportive as it signals fiscal-monetary policy conflict; any escalation in Iran conflict"
+        },
+        {
+          "rank": 2,
+          "ticker": "SCHD",
+          "name": "Schwab U.S. Dividend Equity ETF",
+          "sector": "Multi-Sector (Dividend Quality)",
+          "category": "defensive",
+          "score": 82,
+          "conviction": "high",
+          "suggestedWeight": 5,
+          "catalyst": "Defensive rotation continuation — any further deterioration in labor data (next NFP August 7) or a hot CPI print (July 14) accelerating rate-hike fears would drive flows into dividend quality; SCHD benefits from Consumer Staples at record highs"
+        },
+        {
+          "rank": 3,
+          "ticker": "BRK.B",
+          "name": "Berkshire Hathaway Inc. Class B",
+          "sector": "Financials",
+          "category": "defensive",
+          "score": 85,
+          "conviction": "high",
+          "suggestedWeight": 5,
+          "catalyst": "Any market dislocation (CPI shock July 14, FOMC hawkishness July 29) where Berkshire deploys capital at scale — 'Buffett buys X' headlines are historically powerful re-rating catalysts; Q2 13F (August 14) may reveal new positions"
+        },
+        {
+          "rank": 4,
+          "ticker": "IEF",
+          "name": "iShares 7-10 Year Treasury Bond ETF",
+          "sector": "Fixed Income",
+          "category": "defensive",
+          "score": 72,
+          "conviction": "medium",
+          "suggestedWeight": 4,
+          "catalyst": "June CPI print on July 14 (a cooling print sends rates lower and IEF higher); any deterioration in July/August labor data; FOMC dovish pivot signal at July 29 meeting"
+        },
+        {
+          "rank": 5,
+          "ticker": "KO",
+          "name": "The Coca-Cola Company",
+          "sector": "Consumer Staples",
+          "category": "defensive",
+          "score": 79,
+          "conviction": "medium",
+          "suggestedWeight": 7,
+          "catalyst": "Q2 2026 earnings (late July) — organic revenue growth and pricing power evidence; Consumer Staples sector momentum continuation as defensive rotation deepens into Q3"
+        }
+      ]
     }
   ]
 }
