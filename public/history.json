@@ -8891,6 +8891,181 @@
           "catalyst": "Q2 2026 earnings (expected late July) — organic revenue growth rate and volume/price mix commentary in emerging markets; USD weakening on CPI surprise provides a sequential international revenue tailwind"
         }
       ]
+    },
+    {
+      "date": "2026-07-15",
+      "generatedAt": "2026-07-15T23:07:00.861Z",
+      "macroOutlook": "Cautiously Bullish",
+      "defensiveScore": 4,
+      "summary": "The portfolio reflects an unambiguous late-cycle stagflationary regime — Fed on hold at 3.50–3.75%, core PCE at 3.4%, June CPI softened but heavily energy-distorted, and the July 29 FOMC carrying disproportionate weight without a SEP to anchor expectations. The 10-name growth book concentrates in AI infrastructure compounders that are winning regardless of the rate cycle (AVGO, MU, CRWD), quality financials validated by blowout Q2 earnings (GS with 55% IB fee growth and 5-year record backlog), real-asset power infrastructure with AI demand tailwinds (VST, PWR), and geopolitical defensives in defense (RTX) and data monetization (SPGI), collectively spanning five distinct GICS sectors. The defensive sleeve (GLD, SCHD, BRK.B, IEF, KO) hedges duration risk, geopolitical tail, and equity drawdown without sacrificing real income — collectively providing a ~25% notional buffer against the primary risk of an AI ROI disappointment triggering a de-rating of the growth book. Carry-overs dominate: all ten growth names and all five defensive picks are continuations from July 14, with no new additions — CRWD's 12.14% surge on July 14 validates the cybersecurity thesis emphatically, GS's 6%+ jump on blowout IB fees re-validates the Financials thesis, and AVGO's confirmed Q3 guidance of $29.4B revenue and $16B AI chips makes it the undisputed #1 holding. The dominant risk being underwritten is AI capex ROI disappointment — 45% of institutional investors per BofA survey cite it as the top tail risk — which would simultaneously impair AVGO, MU, and CRWD, the three most AI-dependent names in the growth book.",
+      "diversificationNote": "The growth book spans five GICS sectors: Information Technology (AVGO, MU, CRWD — complementary across custom silicon, memory, and endpoint security), Communication Services (GOOGL, META — search/cloud and social/AI cloud respectively), Financials (GS, SPGI — capital markets and financial data infrastructure), Industrials (RTX, PWR — defense and electrical contracting), and Utilities (VST — merchant power/nuclear); the defensive sleeve spans four exposures with no duplication: gold (GLD), broad dividend/quality income ETF (SCHD), low-beta equity compounder (BRK.B), intermediate-duration Treasuries (IEF), and consumer staples blue chip (KO).",
+      "picks": [
+        {
+          "rank": 1,
+          "ticker": "AVGO",
+          "name": "Broadcom Inc.",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 97,
+          "conviction": "high",
+          "suggestedWeight": 12,
+          "catalyst": "Q3 FY2026 earnings report with guidance reset and FY27 $100B AI revenue target validation"
+        },
+        {
+          "rank": 2,
+          "ticker": "GOOGL",
+          "name": "Alphabet Inc.",
+          "sector": "Communication Services",
+          "category": "growth",
+          "score": 93,
+          "conviction": "high",
+          "suggestedWeight": 10,
+          "catalyst": "Q2 2026 earnings report — cloud revenue growth rate acceleration vs. AWS, and any update on AI Overviews monetization and TPU deployment scale"
+        },
+        {
+          "rank": 3,
+          "ticker": "GS",
+          "name": "Goldman Sachs Group Inc.",
+          "sector": "Financials",
+          "category": "growth",
+          "score": 91,
+          "conviction": "high",
+          "suggestedWeight": 9,
+          "catalyst": "Goldman shares up 6%+ on Q2 report; deals backlog at 5-year high drives H2 2026 revenue upgrades and positive estimate revisions"
+        },
+        {
+          "rank": 4,
+          "ticker": "META",
+          "name": "Meta Platforms Inc.",
+          "sector": "Communication Services",
+          "category": "growth",
+          "score": 91,
+          "conviction": "high",
+          "suggestedWeight": 9,
+          "catalyst": "Q2 2026 earnings — first read on Meta Compute traction; AI chip production timeline update; and Llama-powered ad targeting monetization progress"
+        },
+        {
+          "rank": 5,
+          "ticker": "MU",
+          "name": "Micron Technology Inc.",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 88,
+          "conviction": "high",
+          "suggestedWeight": 8,
+          "catalyst": "Fiscal Q3 2026 earnings report and HBM4 pricing/allocation update; NVDA Blackwell ramp volumes directly drive MU order cadence"
+        },
+        {
+          "rank": 6,
+          "ticker": "SPGI",
+          "name": "S&P Global Inc.",
+          "sector": "Financials",
+          "category": "value",
+          "score": 89,
+          "conviction": "high",
+          "suggestedWeight": 8,
+          "catalyst": "Q2 2026 earnings on July 28 — first clean quarter post-Mobility spin; bond issuance volumes and ratings revenue acceleration"
+        },
+        {
+          "rank": 7,
+          "ticker": "RTX",
+          "name": "RTX Corporation",
+          "sector": "Industrials",
+          "category": "growth",
+          "score": 87,
+          "conviction": "high",
+          "suggestedWeight": 7,
+          "catalyst": "Q2 2026 earnings report with defense backlog update and Pratt & Whitney GTF engine repair program progression"
+        },
+        {
+          "rank": 8,
+          "ticker": "PWR",
+          "name": "Quanta Services Inc.",
+          "sector": "Industrials",
+          "category": "growth",
+          "score": 85,
+          "conviction": "high",
+          "suggestedWeight": 7,
+          "catalyst": "Q2 2026 earnings — backlog growth rate and power/utility segment revenue confirmation of 35%+ growth trajectory"
+        },
+        {
+          "rank": 9,
+          "ticker": "VST",
+          "name": "Vistra Corp.",
+          "sector": "Utilities",
+          "category": "growth",
+          "score": 84,
+          "conviction": "high",
+          "suggestedWeight": 7,
+          "catalyst": "PJM capacity auction results and AI power purchase agreement announcements; Q2 2026 earnings with data center offtake contract update"
+        },
+        {
+          "rank": 10,
+          "ticker": "CRWD",
+          "name": "CrowdStrike Holdings Inc.",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 83,
+          "conviction": "high",
+          "suggestedWeight": 7,
+          "catalyst": "Q2 FY2027 earnings — ARR growth acceleration and net new ARR confirmation post the July 14 sector rally; FedRAMP authorization expansion for government segment"
+        },
+        {
+          "rank": 1,
+          "ticker": "GLD",
+          "name": "SPDR Gold Shares ETF",
+          "sector": "Commodities",
+          "category": "defensive",
+          "score": 95,
+          "conviction": "high",
+          "suggestedWeight": 6,
+          "catalyst": "Geopolitical escalation (Iran-US military exchanges) or a hot July CPI print reigniting stagflation narrative; Fed Warsh hawkish pivot solidifying"
+        },
+        {
+          "rank": 2,
+          "ticker": "SCHD",
+          "name": "Schwab U.S. Dividend Equity ETF",
+          "sector": "Multi-Sector ETF",
+          "category": "defensive",
+          "score": 90,
+          "conviction": "high",
+          "suggestedWeight": 5,
+          "catalyst": "Equal-weight rotation continuing vs. mega-cap tech; dividend income increasingly attractive as Fed holds rates high, reducing the opportunity cost of yield"
+        },
+        {
+          "rank": 3,
+          "ticker": "BRK.B",
+          "name": "Berkshire Hathaway Inc. Class B",
+          "sector": "Financials",
+          "category": "defensive",
+          "score": 88,
+          "conviction": "high",
+          "suggestedWeight": 5,
+          "catalyst": "Q2 2026 Berkshire earnings — first full Abel quarter with potential deployment signal from the $397B cash pile; any major acquisition announcement would be a significant re-rating catalyst"
+        },
+        {
+          "rank": 4,
+          "ticker": "IEF",
+          "name": "iShares 7-10 Year Treasury Bond ETF",
+          "sector": "Fixed Income",
+          "category": "defensive",
+          "score": 82,
+          "conviction": "medium",
+          "suggestedWeight": 4,
+          "catalyst": "July 28–29 FOMC — any softening in the hiking bias, or July 30 PCE coming in below 3.3%, would drive yields lower and IEF higher"
+        },
+        {
+          "rank": 5,
+          "ticker": "KO",
+          "name": "Coca-Cola Company",
+          "sector": "Consumer Staples",
+          "category": "defensive",
+          "score": 80,
+          "conviction": "medium",
+          "suggestedWeight": 6,
+          "catalyst": "Q2 2026 earnings — organic revenue growth and pricing volume mix update; any evidence that geographic diversification (EM exposure) is offsetting US consumer softness"
+        }
+      ]
     }
   ]
 }
