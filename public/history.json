@@ -9766,6 +9766,181 @@
           "catalyst": "Q2 2026 earnings (July 23) — organic revenue growth rate and international volume recovery metrics"
         }
       ]
+    },
+    {
+      "date": "2026-07-22",
+      "generatedAt": "2026-07-22T23:15:26.647Z",
+      "macroOutlook": "Cautiously Bullish",
+      "defensiveScore": 4,
+      "summary": "The portfolio is constructed for a late-cycle stagflationary regime: restrictive real rates (+100bps above core CPI), a 3m10y yield curve that just re-inverted, 57K June payrolls, and a hawkish Fed holding at 3.50–3.75% with no cuts likely before September at earliest — all point toward quality-and-cash-flow discipline over speculative growth. The 10-name growth book concentrates in secular AI infrastructure winners (AVGO, GOOGL, MU, CRWD) with diversification into capital markets (GS, SPGI), defense/grid electrification Industrials (RTX, PWR), AI power (VST), and social/ad-tech (META) — a deliberate spread across five sectors that captures the 'what's working' themes from the macro brief while avoiding the rate-cut-dependent Consumer Discretionary and leveraged Small Cap traps. Today's GOOGL earnings (Google Cloud 'massive beat' per analyst commentary, stock sinking on capex hike) reinforce the thesis that AI infrastructure names offer the best entry points on capex-overhang-induced dips. All seven carry-overs from prior days (AVGO, GOOGL, META, GS, SPGI, RTX, PWR, VST, CRWD, MU) maintain intact theses — MU benefits from Morgan Stanley's July 18 forecast of 25% memory price increases; CRWD gains from IBM's July 22 cybersecurity urgency comments; the defensives (GLD, SCHD, BRK.B, IEF, KO) remain unchanged as the July 28–29 FOMC and July 30 PCE represent back-to-back binary risk events the defensive sleeve is specifically sized to absorb. The dominant risk being underwritten is an AI capex ROI reckoning — the most elevated tail risk at 35-45% probability — where hyperscaler capex announcements disappoint and trigger sector-wide multiple compression across AVGO, MU, and CRWD simultaneously.",
+      "diversificationNote": "The growth book spans five GICS sectors: Information Technology (AVGO, MU, CRWD — three AI-infrastructure names with differentiated value-chain exposure: custom ASIC/networking, HBM memory, and endpoint cybersecurity), Communication Services (GOOGL, META — Cloud compounding and ad-tech monetization respectively, different revenue models), Financials (GS, SPGI — capital markets revenue and ratings/data duopoly, low correlation to semis), Industrials (RTX, PWR — defense backlog and grid electrification contractor, physical-asset HALO plays), and Utilities (VST — nuclear/gas power merchant, AI electricity demand). The defensive sleeve spans four exposures: gold commodity hedge (GLD), broad dividend/quality income ETF (SCHD), all-weather equity fortress with $397B cash (BRK.B), and intermediate-duration Treasuries (IEF) plus consumer staples anchor (KO) — no duplicate exposures across the five defensive slots.",
+      "picks": [
+        {
+          "rank": 1,
+          "ticker": "AVGO",
+          "name": "Broadcom Inc.",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 95,
+          "conviction": "high",
+          "suggestedWeight": 11,
+          "catalyst": "Q3 FY2026 earnings (expected ~September 2026) with continued AI ASIC order momentum and VMware synergy flow-through to FCF margins"
+        },
+        {
+          "rank": 2,
+          "ticker": "GOOGL",
+          "name": "Alphabet Inc.",
+          "sector": "Communication Services",
+          "category": "growth",
+          "score": 93,
+          "conviction": "high",
+          "suggestedWeight": 10,
+          "catalyst": "Q2 2026 earnings call today — Google Cloud beat confirmation and full-year capex/guidance reset establishing a new earnings baseline"
+        },
+        {
+          "rank": 3,
+          "ticker": "MU",
+          "name": "Micron Technology Inc.",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 91,
+          "conviction": "high",
+          "suggestedWeight": 9,
+          "catalyst": "FY2026 Q4 earnings (expected late September) with memory pricing and HBM3E ramp confirmation; Morgan Stanley's July 18 25%-memory-price-rise forecast is a pre-earnings tailwind"
+        },
+        {
+          "rank": 4,
+          "ticker": "META",
+          "name": "Meta Platforms Inc.",
+          "sector": "Communication Services",
+          "category": "growth",
+          "score": 90,
+          "conviction": "high",
+          "suggestedWeight": 9,
+          "catalyst": "Q2 2026 earnings July 29 — guidance on AI-driven ad revenue acceleration, Llama 4 deployment cost savings, and capex trajectory vs. Oracle's negative precedent"
+        },
+        {
+          "rank": 5,
+          "ticker": "GS",
+          "name": "Goldman Sachs Group Inc.",
+          "sector": "Financials",
+          "category": "growth",
+          "score": 88,
+          "conviction": "high",
+          "suggestedWeight": 9,
+          "catalyst": "Q2 2026 earnings confirmation of investment banking revenue re-acceleration; sustained M&A and IPO pipeline visibility into H2 2026"
+        },
+        {
+          "rank": 6,
+          "ticker": "SPGI",
+          "name": "S&P Global Inc.",
+          "sector": "Financials",
+          "category": "growth",
+          "score": 87,
+          "conviction": "high",
+          "suggestedWeight": 8,
+          "catalyst": "Q2 2026 earnings (expected late July) — bond issuance volume and Platts commodity data subscription growth are the key metrics; any credit re-rating cycle from HY to IG accelerates ratings revenue"
+        },
+        {
+          "rank": 7,
+          "ticker": "RTX",
+          "name": "RTX Corporation",
+          "sector": "Industrials",
+          "category": "growth",
+          "score": 86,
+          "conviction": "high",
+          "suggestedWeight": 8,
+          "catalyst": "Q2 2026 earnings (expected late July) — Pratt & Whitney GTF engine retrofit revenue ramp and Raytheon missile system backlog growth are the key metrics vs. consensus"
+        },
+        {
+          "rank": 8,
+          "ticker": "PWR",
+          "name": "Quanta Services Inc.",
+          "sector": "Industrials",
+          "category": "growth",
+          "score": 85,
+          "conviction": "high",
+          "suggestedWeight": 8,
+          "catalyst": "Q2 2026 earnings (late July/early August) — backlog size and composition (renewable vs. grid hardening vs. data center interconnect) will indicate duration of the demand cycle"
+        },
+        {
+          "rank": 9,
+          "ticker": "VST",
+          "name": "Vistra Energy Corp.",
+          "sector": "Utilities",
+          "category": "growth",
+          "score": 84,
+          "conviction": "high",
+          "suggestedWeight": 7,
+          "catalyst": "Q2 2026 earnings (early August) — power price realizations, nuclear capacity factor, and data center contract pipeline are the key metrics; any new long-term PPA announcements with hyperscalers are immediate re-rating events"
+        },
+        {
+          "rank": 10,
+          "ticker": "CRWD",
+          "name": "CrowdStrike Holdings Inc.",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 83,
+          "conviction": "high",
+          "suggestedWeight": 7,
+          "catalyst": "FY2027 Q2 earnings (expected late August) — net new ARR growth rate vs. 32% benchmark and gross retention rate above 97% are the critical confirmation metrics"
+        },
+        {
+          "rank": 1,
+          "ticker": "GLD",
+          "name": "SPDR Gold Shares ETF",
+          "sector": "Commodities",
+          "category": "defensive",
+          "score": 90,
+          "conviction": "high",
+          "suggestedWeight": 5,
+          "catalyst": "July 28-29 FOMC — any hawkish surprise or hike signal from Chair Warsh would be an immediate gold tailwind as real rates expectations adjust; Iran MOU framework sustainability is the ongoing geopolitical trigger"
+        },
+        {
+          "rank": 2,
+          "ticker": "SCHD",
+          "name": "Schwab U.S. Dividend Equity ETF",
+          "sector": "Multi-Sector",
+          "category": "defensive",
+          "score": 87,
+          "conviction": "high",
+          "suggestedWeight": 5,
+          "catalyst": "Continued late-cycle defensive rotation — any FOMC hawkish surprise or payroll deterioration below 57K accelerates institutional rotation into dividend quality names that SCHD owns"
+        },
+        {
+          "rank": 3,
+          "ticker": "BRK.B",
+          "name": "Berkshire Hathaway Class B",
+          "sector": "Financials",
+          "category": "defensive",
+          "score": 86,
+          "conviction": "high",
+          "suggestedWeight": 5,
+          "catalyst": "Q2 2026 13F filing (~August 14) will reveal Abel's full positioning as of June 30 — including the Alphabet private placement confirmation and any new deployments from the $397B cash reserve"
+        },
+        {
+          "rank": 4,
+          "ticker": "IEF",
+          "name": "iShares 7-10 Year Treasury Bond ETF",
+          "sector": "Fixed Income",
+          "category": "defensive",
+          "score": 78,
+          "conviction": "medium",
+          "suggestedWeight": 4,
+          "catalyst": "July 28-29 FOMC hold confirmation (already priced) followed by June PCE data July 30 — a sub-3.0% core PCE print would be the single largest positive catalyst for IEF as rate-cut expectations re-price September timing"
+        },
+        {
+          "rank": 5,
+          "ticker": "KO",
+          "name": "The Coca-Cola Company",
+          "sector": "Consumer Staples",
+          "category": "defensive",
+          "score": 75,
+          "conviction": "medium",
+          "suggestedWeight": 5,
+          "catalyst": "Q2 2026 earnings (expected late July) — organic revenue growth vs. volume/price mix split; emerging market volume acceleration and pricing power in the face of tariff-driven input cost inflation are the critical metrics"
+        }
+      ]
     }
   ]
 }
