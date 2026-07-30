@@ -13,10 +13,14 @@ Every weekday at 22:00 UTC (post-close, year-round)
        ↓
 GitHub Actions triggers research.js
        ↓
-Claude AI runs 6 phases with live web search:
+Quant screen computed locally from real price data (Yahoo Finance, 1y daily):
+  trailing 1M/3M/6M/12M returns, relative strength vs SPY,
+  distance from 52-week high, 50dma trend — for the FULL universe
+       ↓
+Claude AI runs 6 phases with live web search, grounded in the screen:
   1. Macro Climate
   2. Sector Rotation
-  3. Price & Earnings Momentum
+  3. Price & Earnings Momentum  ← reads the computed screen as ground truth
   4. Smart Money Tracking
   5. Risk Assessment
   6. Top 10 Picks + 5 Defensive Synthesis
@@ -25,6 +29,23 @@ Results saved to public/picks.json
        ↓
 Auto-commit pushed → Vercel redeploys → app updates
 ```
+
+### Freshness mechanics (anti-staleness)
+
+Three signals are computed each run and injected into the analysis so picks
+respond to the market instead of anchoring on yesterday's list:
+
+- **Quant screen** — real trailing returns and relative strength for every
+  universe name, ranked by composite momentum. The momentum phase treats it as
+  ground truth instead of re-deriving prices from memory.
+- **Holding staleness** — consecutive days each current holding has been in the
+  book, plus universe names never picked in the last 30 cycles. Any name held
+  15+ days must be re-underwritten with fresh evidence or replaced, and the
+  defensive sleeve is re-derived from the current regime daily.
+- **Challengers & spotlight** — the highest-momentum names *not* currently held
+  must be explicitly evaluated each day (rejections require a data-based
+  reason), and a rotating universe group gets extra scrutiny so the whole
+  universe is re-examined roughly every two weeks.
 
 The three "stable" phases (macro, sector rotation, smart money) are cached for
 28 hours and only get a quick delta-update on Tue–Thu, cutting search and token

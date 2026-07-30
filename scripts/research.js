@@ -1,6 +1,12 @@
 /**
  * Halo - Daily Research Engine (1x/day at market close)
- * Runs 6 research phases using Claude AI + web search
+ * Runs 6 research phases using Claude AI + web search, grounded in a
+ * locally-computed quantitative factor screen (1y of real price data for the
+ * full universe: trailing returns, relative strength vs SPY, 52w-high
+ * distance, trend). The screen drives daily pick freshness: holding-staleness
+ * stats, a rotating spotlight group, and a challenger list of high-momentum
+ * names not currently held are all fed into the synthesis prompt so
+ * continuity is earned with data instead of anchored on yesterday's list.
  * Stable phases (macro, sectors, smart money) are cached for 28h and only
  * delta-updated on Tue–Thu, cutting searches and tokens by ~60% on most days.
  * Saves results to ../public/picks.json for the frontend to consume
@@ -88,10 +94,23 @@ function getTodayLabel() {
 // ── Stock Universe ────────────────────────────────────────────────────────────
 // Loaded from public/universe.json so the frontend and research script share
 // a single source of truth.
-function loadUniverse() {
+function loadUniverseData() {
   const raw = fs.readFileSync(UNIVERSE_PATH, "utf8");
-  const data = JSON.parse(raw);
-  return data.groups.flatMap(g => g.tickers);
+  return JSON.parse(raw);
+}
+
+function loadUniverse() {
+  return loadUniverseData().groups.flatMap(g => g.tickers);
+}
+
+// Rotating spotlight: one non-defensive universe group per day gets explicit
+// scrutiny in the momentum phase, so the whole universe gets fresh eyes over
+// a ~2-week cycle instead of the same mega-caps being re-examined forever.
+function pickSpotlightGroup(groups) {
+  const eligible = groups.filter(g => g.key !== "defensive");
+  if (eligible.length === 0) return null;
+  const dayIndex = Math.floor(Date.now() / 86_400_000);
+  return eligible[dayIndex % eligible.length];
 }
 
 // ─── Phase Definitions ────────────────────────────────────────────────────────
@@ -99,7 +118,14 @@ function loadUniverse() {
 // portfolio manager would consult before making allocation decisions. Prompts
 // are deliberately demanding — concrete numbers, specific levels, named
 // catalysts — because vague output corrupts the synthesis.
-function getPhases(collected, today, universe, historyDigest = "") {
+function getPhases(collected, today, universe, historyDigest = "", extras = {}) {
+  const {
+    quantTable = "",       // full computed factor screen (momentum phase)
+    quantCompact = "",     // leaders + laggards digest (picks synthesis)
+    stalenessText = "",    // holding streaks + never-picked names
+    challengers = [],      // top quant names not currently held
+    spotlight = null,      // today's rotating universe group
+  } = extras;
   return [
     {
       id: "macro",
@@ -151,16 +177,25 @@ Rank top→bottom for a 1–5 year long-only investor. For each, give: relative 
       id: "momentum",
       label: "Price & Earnings Momentum",
       prompt: `You are a quantitative analyst running a multi-factor momentum + quality screen. Today is ${today}.
-From this universe: ${universe.join(", ")}
 
-Score each candidate on:
-- **Price momentum**: 3M / 6M / 12M total return vs SPY (relative, not absolute)
+${quantTable
+  ? `TODAY'S COMPUTED FACTOR SCREEN for the full universe — real price data (trailing total returns, relative strength vs SPY, distance from 52-week high, trend). Treat these numbers as ground truth for price momentum; do NOT re-derive returns from memory:
+
+${quantTable}`
+  : `Universe: ${universe.join(", ")}\n(Computed price screen unavailable today — use web search to establish 3M/6M relative strength vs SPY.)`}
+
+Your job — combine the price screen above with FUNDAMENTAL momentum you verify via web search (max 2 searches):
 - **Earnings revisions**: analyst FY estimate revision direction last 4–13 weeks (up = good)
 - **Earnings surprise rate**: % beat on last 4 quarters of EPS
-- **Accumulation**: rising on-balance volume / institutional accumulation signals
 - **Quality overlay**: gross margin trend, FCF yield, ROIC trajectory (penalize stocks with deteriorating fundamentals even if price is mooning)
 
-Identify the TOP 10 names with the strongest combined factor scores. For each, give: ticker, a 1-sentence rationale citing specific recent data (last earnings beat %, est revision direction, RSI vs SPY), and flag any "extended" names (ones whose price momentum is dangerously ahead of fundamentals — common warning sign of late-stage rallies).`,
+Prioritize your searches on names the screen ranks highly that are NOT already obvious consensus picks — that is where verification adds the most value.
+${spotlight ? `
+TODAY'S SPOTLIGHT GROUP: **${spotlight.label}** (${spotlight.tickers.join(", ")}). Give each spotlight name one line of assessment even if it doesn't make your top list — this group rotates daily so the entire universe gets a fresh look over time.
+` : ""}
+Output:
+1. The TOP 10 names with the strongest combined price + fundamental momentum. For each: ticker, a 1-sentence rationale citing screen numbers plus fundamental data, and flag any "extended" names (price momentum dangerously ahead of fundamentals — common warning sign of late-stage rallies).
+${challengers.length > 0 ? `2. CHALLENGER ASSESSMENT: for each of these high-momentum names that are NOT in the current book — ${challengers.join(", ")} — one sentence on whether today's data supports inclusion. Be honest: if one deserves a slot over an incumbent, say so plainly.` : ""}`,
     },
     {
       id: "smart",
@@ -222,7 +257,15 @@ ${collected.smart || "(no smart money data available)"}
 
 RISK ASSESSMENT:
 ${collected.risk || "(no risk data available)"}
-${historyDigest ? `\nYOUR RECENT POSITIONING (last 7 trading days):\n${historyDigest}\n\nIMPORTANT: Maintain thesis continuity. If a name was top-ranked recently and the thesis is still intact, KEEP IT — name churn destroys returns. Only drop a name if the thesis broke or a clearly better opportunity emerged. In the summary, briefly note carry-overs vs. changes and why.\n` : ""}
+${quantCompact ? `\nTODAY'S QUANTITATIVE SCREEN (computed from real price data — this is ground truth for any momentum/trend claim you make):\n${quantCompact}\n` : ""}${historyDigest ? `\nYOUR RECENT POSITIONING (last 7 trading days):\n${historyDigest}\n${stalenessText ? `\nHOLDING STALENESS:\n${stalenessText}\n` : ""}
+CONTINUITY vs FRESHNESS — read carefully:
+- Build today's book from TODAY'S evidence FIRST, then compare against your recent positioning. Never start from yesterday's list and hunt for reasons to keep it.
+- Carrying a name over requires a current, data-backed reason (a screen number, a datapoint from today's research). "It was in the book yesterday" is not a reason.
+- Any name held 15+ consecutive days must be explicitly re-underwritten: its rationale must cite fresh evidence from today's research or the quant screen — or the name gets replaced.
+${challengers.length > 0 ? `- CHALLENGERS to evaluate today (highest-momentum universe names not currently held): ${challengers.join(", ")}. Include the ones today's data supports. For any you reject in favor of an incumbent, the summary must say specifically why the incumbent wins on today's numbers — not by default.\n` : ""}- Re-derive the defensive sleeve from the CURRENT regime (rates, credit spreads, USD, VIX) every day. Duration vs gold vs staples vs utilities vs dividend equity should shift as the regime shifts — do not copy yesterday's sleeve forward unexamined.
+- Thesis continuity is still a virtue when it is earned: a name that keeps re-qualifying on fresh data should stay. What is forbidden is continuity by inertia.
+- In the summary, note carry-overs vs. changes and the data-based reason for each.
+` : ""}
 
 Universe: ${universe.join(", ")}
 
@@ -297,7 +340,8 @@ function yahooSymbol(ticker) {
 }
 
 async function fetchTickerQuote(ticker) {
-  const url = `${YAHOO_CHART_BASE}${encodeURIComponent(yahooSymbol(ticker))}?range=3mo&interval=1d`;
+  // 1y of history so real 1M/3M/6M/12M momentum can be computed locally.
+  const url = `${YAHOO_CHART_BASE}${encodeURIComponent(yahooSymbol(ticker))}?range=1y&interval=1d`;
   const res = await fetch(url, { headers: { "User-Agent": YAHOO_UA } });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const json = await res.json();
@@ -311,16 +355,34 @@ async function fetchTickerQuote(ticker) {
     series.push({ t: timestamps[i] * 1000, c: Number(closes[i].toFixed(4)) });
   }
   if (series.length < 2) throw new Error("insufficient close history");
-  const close = series[series.length - 1].c;
-  const prevClose = series[series.length - 2].c;
-  const weekIdx = Math.max(0, series.length - 1 - 5);
-  const weekAgoClose = series[weekIdx].c;
+  const c = series.map(p => p.c);
+  const close = c[c.length - 1];
+  const prevClose = c[c.length - 2];
+  const weekIdx = Math.max(0, c.length - 1 - 5);
+  const trailingReturn = (days) => {
+    const idx = c.length - 1 - days;
+    if (idx < 0) return null;
+    return Number(((close / c[idx] - 1) * 100).toFixed(1));
+  };
+  const high52 = Math.max(...c);
+  const sma50 = c.length >= 50
+    ? c.slice(-50).reduce((a, b) => a + b, 0) / 50
+    : null;
   return {
     close,
     prevClose,
-    weekAgoClose,
+    weekAgoClose: c[weekIdx],
     asOf: new Date(series[series.length - 1].t).toISOString().slice(0, 10),
-    series: series.map(p => p.c),
+    series: c.slice(-63), // UI sparkline stays ~3 months
+    metrics: {
+      r1w:  trailingReturn(5),
+      r1m:  trailingReturn(21),
+      r3m:  trailingReturn(63),
+      r6m:  trailingReturn(126),
+      r12m: trailingReturn(251),
+      pctFrom52wHigh: Number(((close / high52 - 1) * 100).toFixed(1)),
+      above50dma: sma50 != null ? close > sma50 : null,
+    },
   };
 }
 
@@ -357,6 +419,86 @@ function enrichWithQuotes(picksArray, quotes) {
       priceSeries: q.series,
     };
   });
+}
+
+// ─── Quantitative factor screen (computed locally from real price data) ──────
+// Replaces the model's from-memory guesses about price momentum with ground
+// truth: trailing returns, relative strength vs SPY, distance from 52w high,
+// and trend. This is what changes day-to-day, so it's what drives pick churn
+// when the tape actually shifts — and pick stability when it doesn't.
+function fmtSigned(v) {
+  if (v == null) return "—";
+  return (v >= 0 ? "+" : "") + v.toFixed(1);
+}
+
+function buildQuantScreen(quotes, universe) {
+  const spy = quotes["SPY"]?.metrics ?? null;
+  const rows = [];
+  for (const ticker of universe) {
+    const m = quotes[ticker]?.metrics;
+    if (!m) continue;
+    const rel = (r, s) => (r != null && s != null) ? Number((r - s).toFixed(1)) : null;
+    const rel1m = spy ? rel(m.r1m, spy.r1m) : null;
+    const rel3m = spy ? rel(m.r3m, spy.r3m) : null;
+    const rel6m = spy ? rel(m.r6m, spy.r6m) : null;
+    // Composite momentum: weight 3M/6M relative strength most, 1M least
+    // (short windows are noise, long windows are stale).
+    const score =
+      0.2 * (rel1m ?? m.r1m ?? 0) +
+      0.4 * (rel3m ?? m.r3m ?? 0) +
+      0.4 * (rel6m ?? m.r6m ?? 0);
+    rows.push({ ticker, score: Number(score.toFixed(1)), m, rel1m, rel3m, rel6m });
+  }
+  rows.sort((a, b) => b.score - a.score);
+  const line = (r) =>
+    `${r.ticker.padEnd(6)} 1M ${fmtSigned(r.m.r1m)}%  3M ${fmtSigned(r.m.r3m)}%  6M ${fmtSigned(r.m.r6m)}%  ` +
+    `vsSPY(3M) ${fmtSigned(r.rel3m)}  off52wHi ${fmtSigned(r.m.pctFrom52wHigh)}%  ` +
+    `${r.m.above50dma == null ? "" : r.m.above50dma ? ">50dma" : "<50dma"}`;
+  const header = spy
+    ? `Benchmark SPY: 1M ${fmtSigned(spy.r1m)}%  3M ${fmtSigned(spy.r3m)}%  6M ${fmtSigned(spy.r6m)}%\n`
+    : "";
+  const table = rows.length
+    ? header + "Ranked by composite relative momentum (best → worst):\n" + rows.map(line).join("\n")
+    : "";
+  // Compact variant for the synthesis prompt: leaders + laggards only.
+  const compact = rows.length
+    ? header +
+      "Momentum leaders (top 25):\n" + rows.slice(0, 25).map(line).join("\n") +
+      (rows.length > 35
+        ? "\nMomentum laggards (bottom 10 — avoid or underweight without a strong contrarian thesis):\n" +
+          rows.slice(-10).map(line).join("\n")
+        : "")
+    : "";
+  return { rows, table, compact };
+}
+
+// ─── Staleness stats: how long has each current holding been in the book? ────
+// Surfaced to the synthesis prompt so continuity is a conscious, re-underwritten
+// decision instead of silent anchoring on yesterday's list.
+function buildStalenessStats(history, universe) {
+  const entries = history?.entries ?? [];
+  if (entries.length === 0) return { text: "", currentTickers: [] };
+  const last = entries[entries.length - 1];
+  const currentTickers = (last.picks || []).map(p => p.ticker);
+  const streaks = currentTickers.map(t => {
+    let n = 0;
+    for (let i = entries.length - 1; i >= 0; i--) {
+      if ((entries[i].picks || []).some(p => p.ticker === t)) n++;
+      else break;
+    }
+    return { ticker: t, days: n };
+  }).sort((a, b) => b.days - a.days);
+  const recent30 = new Set();
+  for (const e of entries.slice(-30)) {
+    for (const p of e.picks || []) recent30.add(p.ticker);
+  }
+  const neverRecent = universe.filter(t => !recent30.has(t));
+  let text = `Consecutive trading days each current holding has been in the book: ` +
+    streaks.map(s => `${s.ticker} ${s.days}d`).join(", ");
+  if (neverRecent.length > 0) {
+    text += `\nUniverse names NOT picked once in the last 30 cycles (potential blind spots): ${neverRecent.join(", ")}`;
+  }
+  return { text, currentTickers };
 }
 
 // ─── Retry helper with exponential backoff for transient API failures ────────
@@ -760,7 +902,8 @@ async function runResearch() {
   const friday       = isFriday() || forceWeekly;
   const fullRefresh  = needsFullRefresh() || forceWeekly;
   const weekLabel    = getWeekLabel();
-  const universe     = loadUniverse();
+  const universeData = loadUniverseData();
+  const universe     = universeData.groups.flatMap(g => g.tickers);
   const history      = loadHistory();
   const historyDigest = buildHistoryDigest(history);
 
@@ -799,9 +942,39 @@ async function runResearch() {
   const usedCachedPhases = [];
   const failedPhases = [];
 
+  // ── Universe-wide quant screen (real price data, computed locally) ──
+  // Fetched BEFORE the research phases so the momentum phase and the picks
+  // synthesis reason from actual returns instead of the model's priors.
+  console.log(`\n  📈 Building quant screen: fetching ${universe.length + 1} tickers (1y daily closes)...`);
+  let quotes = {};
+  try {
+    quotes = await fetchQuotes([...universe, "SPY"]);
+    console.log(`  ✅ Price data for ${Object.keys(quotes).length}/${universe.length + 1} tickers`);
+  } catch (err) {
+    console.error("  ⚠️ Quant screen fetch failed:", err.message);
+  }
+  const quant     = buildQuantScreen(quotes, universe);
+  const staleness = buildStalenessStats(history, universe);
+  const spotlight = pickSpotlightGroup(universeData.groups);
+  const currentSet   = new Set(staleness.currentTickers);
+  const defensiveSet = new Set(universeData.groups.find(g => g.key === "defensive")?.tickers ?? []);
+  const challengers  = quant.rows
+    .filter(r => !currentSet.has(r.ticker) && !defensiveSet.has(r.ticker))
+    .slice(0, 8)
+    .map(r => r.ticker);
+  const phaseExtras = {
+    quantTable:    quant.table,
+    quantCompact:  quant.compact,
+    stalenessText: staleness.text,
+    challengers,
+    spotlight,
+  };
+  if (spotlight)          console.log(`  🔦 Spotlight group today: ${spotlight.label}`);
+  if (challengers.length) console.log(`  🥊 Challengers (high-momentum, not held): ${challengers.join(", ")}`);
+
   // ── Run research phases 1–5 ──
   const collected = {};
-  const phases    = getPhases(collected, today, universe, historyDigest);
+  const phases    = getPhases(collected, today, universe, historyDigest, phaseExtras);
 
   for (const phase of phases.slice(0, 5)) {
     try {
@@ -836,7 +1009,7 @@ async function runResearch() {
   console.log("\n  🏆 Generating Top 10 Picks + 5 Defensive (synthesizing all phases)...");
   let picks = null;
   try {
-    const picksPhase = getPhases(collected, today, universe, historyDigest)[5];
+    const picksPhase = getPhases(collected, today, universe, historyDigest, phaseExtras)[5];
     const picksRaw   = await runPhase(picksPhase, today, 16000);
     picks = extractJSON(picksRaw);
     // Validate we actually got picks
@@ -871,16 +1044,19 @@ async function runResearch() {
   // prices on the preserved weekly report.
   const weeklyTickers = friday ? [] : existingWeeklyPicks.map(p => p.ticker);
   const allTickers = [...new Set([...dailyTickers, ...weeklyTickers])];
-  let quotes = {};
-  if (allTickers.length > 0) {
-    console.log(`\n  💹 Fetching live quotes for ${allTickers.length} tickers...`);
+  // The quant-screen fetch already covered the whole universe; only fetch
+  // tickers that fell outside it (or failed earlier).
+  const missingTickers = allTickers.filter(t => !quotes[t]);
+  if (missingTickers.length > 0) {
+    console.log(`\n  💹 Fetching quotes for ${missingTickers.length} tickers not covered by the quant screen...`);
     try {
-      quotes = await fetchQuotes(allTickers);
-      console.log(`  ✅ Quotes attached for ${Object.keys(quotes).length}/${allTickers.length} tickers`);
+      const extra = await fetchQuotes(missingTickers);
+      quotes = { ...quotes, ...extra };
     } catch (err) {
       console.error("  ⚠️ Quote fetch step failed:", err.message);
     }
   }
+  console.log(`  ✅ Quotes available for ${allTickers.filter(t => quotes[t]).length}/${allTickers.length} pick tickers`);
   if (picks.picks?.length > 0) {
     picks.picks = enrichWithQuotes(picks.picks, quotes);
   }
@@ -1004,6 +1180,9 @@ async function runResearch() {
       failedPhases:       failedPhases,
       fullRefresh:        fullRefresh || friday,
       historyEntries:     history.entries.length,
+      quantScreenTickers: quant.rows.length,
+      spotlightGroup:     spotlight?.key ?? null,
+      challengers,
     },
 
     ...(picks.error ? { error: picks.error } : {}),
@@ -1026,7 +1205,22 @@ async function runResearch() {
 }
 
 // ─── Entry point ─────────────────────────────────────────────────────────────
-runResearch().catch(err => {
-  console.error("Fatal error:", err);
-  process.exit(1);
-});
+// Guarded so the pure helpers can be imported by tests without kicking off a
+// full (API-spending) research run.
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  runResearch().catch(err => {
+    console.error("Fatal error:", err);
+    process.exit(1);
+  });
+}
+
+export {
+  buildQuantScreen,
+  buildStalenessStats,
+  pickSpotlightGroup,
+  fetchTickerQuote,
+  fetchQuotes,
+  getPhases,
+  extractJSON,
+  buildHistoryDigest,
+};
