@@ -2,181 +2,6 @@
   "version": 1,
   "entries": [
     {
-      "date": "2026-05-21",
-      "generatedAt": "2026-05-21T23:11:07.689Z",
-      "macroOutlook": "Cautiously Bullish",
-      "defensiveScore": 4,
-      "summary": "Today's research cycle failed; showing previous picks.",
-      "picks": [
-        {
-          "rank": 1,
-          "ticker": "GOOGL",
-          "name": "Alphabet Inc.",
-          "sector": "Communication Services",
-          "category": "growth",
-          "score": 96,
-          "conviction": "high",
-          "suggestedWeight": 11,
-          "catalyst": "Google I/O 2026 Gemini 3.5 Flash launch (confirmed live May 19) and next Cloud revenue quarter (Q2 earnings ~late July)"
-        },
-        {
-          "rank": 2,
-          "ticker": "AVGO",
-          "name": "Broadcom Inc.",
-          "sector": "Information Technology",
-          "category": "growth",
-          "score": 93,
-          "conviction": "high",
-          "suggestedWeight": 10,
-          "catalyst": "Q2 FY2026 earnings expected early June with hyperscaler custom silicon pipeline update"
-        },
-        {
-          "rank": 3,
-          "ticker": "NVDA",
-          "name": "NVIDIA Corporation",
-          "sector": "Information Technology",
-          "category": "growth",
-          "score": 92,
-          "conviction": "high",
-          "suggestedWeight": 9,
-          "catalyst": "Q2 FY2027 earnings (August 26, 2026) with Vera Rubin ramp revenue recognition and updated $91B+ guidance confirmation"
-        },
-        {
-          "rank": 4,
-          "ticker": "RTX",
-          "name": "RTX Corporation",
-          "sector": "Industrials",
-          "category": "growth",
-          "score": 90,
-          "conviction": "high",
-          "suggestedWeight": 9,
-          "catalyst": "Q2 2026 earnings (expected late July) with Pratt & Whitney GTF engine backlog update and Raytheon missile defense order flow from NATO partners"
-        },
-        {
-          "rank": 5,
-          "ticker": "XOM",
-          "name": "Exxon Mobil Corporation",
-          "sector": "Energy",
-          "category": "value",
-          "score": 88,
-          "conviction": "high",
-          "suggestedWeight": 9,
-          "catalyst": "Q2 2026 earnings (late July) with Pioneer integration update and Permian volume guidance; any Hormuz escalation scenario is a near-term positive catalyst"
-        },
-        {
-          "rank": 6,
-          "ticker": "GS",
-          "name": "Goldman Sachs Group Inc.",
-          "sector": "Financials",
-          "category": "growth",
-          "score": 87,
-          "conviction": "high",
-          "suggestedWeight": 8,
-          "catalyst": "Q2 2026 earnings (mid-July) with trading revenue and investment banking fee pipeline; revival of M&A advisory fees as deal confidence returns"
-        },
-        {
-          "rank": 7,
-          "ticker": "LLY",
-          "name": "Eli Lilly and Company",
-          "sector": "Health Care",
-          "category": "growth",
-          "score": 85,
-          "conviction": "high",
-          "suggestedWeight": 8,
-          "catalyst": "Foundayo commercial ramp with Medicare reimbursement access starting July 1, 2026; retatrutide Phase 3 obesity data readout in H2 2026"
-        },
-        {
-          "rank": 8,
-          "ticker": "SPGI",
-          "name": "S&P Global Inc.",
-          "sector": "Financials",
-          "category": "growth",
-          "score": 84,
-          "conviction": "high",
-          "suggestedWeight": 7,
-          "catalyst": "Q2 2026 earnings (late July) with bond issuance volume update; any acceleration in corporate debt refinancing from rising rates is a direct revenue tailwind"
-        },
-        {
-          "rank": 9,
-          "ticker": "AMZN",
-          "name": "Amazon.com Inc.",
-          "sector": "Consumer Discretionary",
-          "category": "growth",
-          "score": 83,
-          "conviction": "high",
-          "suggestedWeight": 8,
-          "catalyst": "Q2 2026 AWS revenue and operating income print (late July); any AWS operating margin expansion signal from Trainium AI chip adoption would be a major re-rating event"
-        },
-        {
-          "rank": 10,
-          "ticker": "VST",
-          "name": "Vistra Corp",
-          "sector": "Utilities",
-          "category": "growth",
-          "score": 80,
-          "conviction": "medium",
-          "suggestedWeight": 5,
-          "catalyst": "Federal grid infrastructure policy announcement or new data center power purchase agreement (PPA) signed with a hyperscaler in Q2/Q3 2026"
-        },
-        {
-          "rank": 1,
-          "ticker": "GLD",
-          "name": "SPDR Gold Shares ETF",
-          "sector": "Commodities",
-          "category": "defensive",
-          "score": 91,
-          "conviction": "high",
-          "suggestedWeight": 6,
-          "catalyst": "Any hot PCE print above 2.9% (due ~May 30) reconfirming stagflation thesis; Moody's downgrade follow-through in credit markets; Middle East escalation"
-        },
-        {
-          "rank": 2,
-          "ticker": "SCHD",
-          "name": "Schwab U.S. Dividend Equity ETF",
-          "sector": "Multi-Sector Dividend",
-          "category": "defensive",
-          "score": 88,
-          "conviction": "high",
-          "suggestedWeight": 5,
-          "catalyst": "Stagflation signal intensification driving further defensive rotation; any market sell-off accelerates SCHD's relative outperformance vs. growth names"
-        },
-        {
-          "rank": 3,
-          "ticker": "BRK.B",
-          "name": "Berkshire Hathaway Inc. Class B",
-          "sector": "Financials",
-          "category": "defensive",
-          "score": 86,
-          "conviction": "high",
-          "suggestedWeight": 5,
-          "catalyst": "A market sell-off scenario in which Berkshire deploys its $397B cash hoard into large acquisitions at attractive prices — the 'Buffett put' effect"
-        },
-        {
-          "rank": 4,
-          "ticker": "IEF",
-          "name": "iShares 7-10 Year Treasury ETF",
-          "sector": "Fixed Income",
-          "category": "defensive",
-          "score": 78,
-          "conviction": "medium",
-          "suggestedWeight": 4,
-          "catalyst": "A weaker-than-expected May jobs report or Q2 GDP miss that forces markets to reprice recession risk and drives a flight-to-quality into Treasuries"
-        },
-        {
-          "rank": 5,
-          "ticker": "KO",
-          "name": "The Coca-Cola Company",
-          "sector": "Consumer Staples",
-          "category": "defensive",
-          "score": 76,
-          "conviction": "medium",
-          "suggestedWeight": 6,
-          "catalyst": "Stagflation intensification driving defensive rotation into consumer staples; Q2 earnings showing continued pricing power with international volume recovery"
-        }
-      ],
-      "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.\"},\"request_id\":\"req_011CbGZP1jYEyA6BMLBx1G2Q\"}"
-    },
-    {
       "date": "2026-05-22",
       "generatedAt": "2026-05-22T23:15:48.778Z",
       "macroOutlook": "Cautiously Bullish",
@@ -10509,6 +10334,181 @@
           "conviction": "medium",
           "suggestedWeight": 5,
           "catalyst": "Q3 earnings (October 2026) reflecting gold prices above $4,400/oz flowing into realized revenue; any Hormuz escalation driving gold through $4,600 would catalyze a significant NEM re-rating"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-14",
+      "generatedAt": "2026-08-14T22:37:44.045Z",
+      "macroOutlook": "Cautiously Bullish",
+      "defensiveScore": 4,
+      "summary": "The portfolio is constructed for a confirmed late-cycle, stagflationary regime: Fed funds at 3.625% (~62bps above neutral), headline CPI at 3.4%, core PCE at ~3.3%, a 42% September hike probability, and a deeply negative equity risk premium (-76bps) that makes multiple compression the dominant portfolio risk over the next 1–3 quarters. The 10-name growth book expresses three high-conviction sector overweights — cybersecurity/AI infrastructure (PANW, CRWD, NET, ANET, MSFT), late-cycle defensible growth (MPC in energy, SPGI in financials capital markets), and healthcare quality (AMGN, LLY) — while the defensive sleeve (GLD, SCHD, BRK.B, IEF, AMGN) underweights rate-sensitive long duration and overweights geopolitical hedges and quality income. Key carry-overs with fresh data justification: PANW (Q4 guidance: NGS ARR +60% YoY, new 52-week high), CRWD (only -3.8% off highs, PANW read-across catalyst Sept 1), MPC (only -0.3% off 52-week high, Iran supply bid intact), MSFT (+23.5% 1M, Azure $100B milestone, Ackman 5.65M share add), RTX (only -0.5% off high, defense capex structural), SPGI (capital markets activity at peak, 60-day re-underwrite justified by curve steepening), NET (+60.1% vs SPY 3M, Druckenmiller new position), ANET (82% operating margin, -5.5% off high), AMGN (-0.6% off 52-week high, 17x forward P/E vs sector at 18x), LLY (healthcare Tier 2 leader, GLP-1 duopoly execution). SNOW is excluded despite #1 momentum rank — it reports September 2 while running +118% over 3 months at -2.5% off all-time highs with CFO transition risk; the risk/reward into earnings does not justify adding a new position today. PLTR is excluded on 175x P/E at 41x forward revenue with Burry short and DoD concentration risk. NVDA was held 1 day and exits today — the dominant risk being underwritten is the AI capex bubble and multiple compression scenario, which is most acute for names that share NVDA's hyperscaler dependency.",
+      "diversificationNote": "The growth book spans 4 GICS sectors: Information Technology (PANW, CRWD, MSFT, NET, ANET — 5 names, but across cybersecurity platform, hyperscaler cloud, edge/zero-trust, and data center networking — four distinct end-market exposures), Energy (MPC — refining), Financials (SPGI — capital markets data), and Health Care (AMGN, LLY — pharma/biologics). The defensive sleeve spans 4 distinct exposures: commodities/inflation hedge (GLD), broad dividend quality equity (SCHD), all-weather conglomerate with T-bill cash optionality (BRK.B), intermediate duration Treasuries (IEF), and healthcare defensive quality/income (AMGN). Accepted concentration: 5 of 10 growth positions are in Information Technology; within IT, all 5 serve different end markets (network security, endpoint/cloud security, productivity+cloud, edge networking, data center switching) — the common factor is AI infrastructure capex, which is a deliberate regime bet, not an oversight.",
+      "picks": [
+        {
+          "rank": 1,
+          "ticker": "PANW",
+          "name": "Palo Alto Networks",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 95,
+          "conviction": "high",
+          "suggestedWeight": 11,
+          "catalyst": "Q4 FY2026 earnings report on September 1, 2026 — consensus expects $0.97 EPS and $3.35B revenue; any beat-and-raise follows the pattern of the prior quarter's $0.85 vs $0.79 beat"
+        },
+        {
+          "rank": 2,
+          "ticker": "CRWD",
+          "name": "CrowdStrike Holdings",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 92,
+          "conviction": "high",
+          "suggestedWeight": 10,
+          "catalyst": "Next quarterly earnings report (expected November 2026 cycle) with continued ARR and net new ARR momentum; interim catalyst is PANW's Sept 1 print which will reprice the entire cybersecurity sector"
+        },
+        {
+          "rank": 3,
+          "ticker": "MPC",
+          "name": "Marathon Petroleum Corporation",
+          "sector": "Energy",
+          "category": "value",
+          "score": 89,
+          "conviction": "high",
+          "suggestedWeight": 9,
+          "catalyst": "Q3 2026 earnings report (expected late October/early November) with crack spread data; Iran/Hormuz escalation or de-escalation as the real-time pricing catalyst"
+        },
+        {
+          "rank": 4,
+          "ticker": "MSFT",
+          "name": "Microsoft Corporation",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 88,
+          "conviction": "high",
+          "suggestedWeight": 10,
+          "catalyst": "Azure AI consumption growth trajectory in Q1 FY2027 results (expected October 2026) and Copilot enterprise seat expansion disclosures"
+        },
+        {
+          "rank": 5,
+          "ticker": "RTX",
+          "name": "RTX Corporation",
+          "sector": "Industrials",
+          "category": "growth",
+          "score": 87,
+          "conviction": "high",
+          "suggestedWeight": 8,
+          "catalyst": "Q3 2026 earnings (expected late October) with defense backlog and Pratt & Whitney engine delivery updates; any Iran escalation is an immediate RTX tailwind"
+        },
+        {
+          "rank": 6,
+          "ticker": "SPGI",
+          "name": "S&P Global Inc.",
+          "sector": "Financials",
+          "category": "growth",
+          "score": 86,
+          "conviction": "high",
+          "suggestedWeight": 8,
+          "catalyst": "Q3 2026 earnings (expected late October/early November) with debt issuance volume data and Platts commodity data growth given energy/geopolitical backdrop"
+        },
+        {
+          "rank": 7,
+          "ticker": "NET",
+          "name": "Cloudflare Inc.",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 85,
+          "conviction": "high",
+          "suggestedWeight": 7,
+          "catalyst": "Q3 2026 earnings (expected early November) with net new ARR and large enterprise customer count disclosures"
+        },
+        {
+          "rank": 8,
+          "ticker": "ANET",
+          "name": "Arista Networks Inc.",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 84,
+          "conviction": "high",
+          "suggestedWeight": 7,
+          "catalyst": "Q3 2026 earnings (expected late October/early November) with data center switching revenue growth and hyperscaler order backlog disclosure"
+        },
+        {
+          "rank": 9,
+          "ticker": "AMGN",
+          "name": "Amgen Inc.",
+          "sector": "Health Care",
+          "category": "value",
+          "score": 82,
+          "conviction": "high",
+          "suggestedWeight": 7,
+          "catalyst": "MariTide Phase 3 obesity trial readout (expected 2026–2027) and Q3 2026 earnings with biosimilar revenue and IMDELLTRA (DLL3 BiTE) lung cancer uptake data"
+        },
+        {
+          "rank": 10,
+          "ticker": "LLY",
+          "name": "Eli Lilly and Company",
+          "sector": "Health Care",
+          "category": "growth",
+          "score": 81,
+          "conviction": "high",
+          "suggestedWeight": 7,
+          "catalyst": "Zepbound quarter-over-quarter prescription volume data (IMS/Symphony Health weekly scripts) and Q3 2026 earnings with revenue guidance for 2027"
+        },
+        {
+          "rank": 1,
+          "ticker": "GLD",
+          "name": "SPDR Gold Shares ETF",
+          "sector": "Commodities",
+          "category": "defensive",
+          "score": 91,
+          "conviction": "high",
+          "suggestedWeight": 6,
+          "catalyst": "Iran/Hormuz escalation event or September FOMC hike (42% probability) — either triggers immediate gold repricing as a safe haven"
+        },
+        {
+          "rank": 2,
+          "ticker": "SCHD",
+          "name": "Schwab U.S. Dividend Equity ETF",
+          "sector": "Multi-Sector",
+          "category": "defensive",
+          "score": 88,
+          "conviction": "high",
+          "suggestedWeight": 5,
+          "catalyst": "Continued sector rotation from momentum tech into quality dividend names — each week of Mag-7 underperformance strengthens SCHD's relative return"
+        },
+        {
+          "rank": 3,
+          "ticker": "BRK.B",
+          "name": "Berkshire Hathaway Class B",
+          "sector": "Financials",
+          "category": "defensive",
+          "score": 86,
+          "conviction": "high",
+          "suggestedWeight": 5,
+          "catalyst": "Q2 13F filing disclosure after close today (Aug 14) will reveal full Q2 equity purchases — any surprise new positions or further GOOGL additions could be a catalyst for BRK.B re-rating"
+        },
+        {
+          "rank": 4,
+          "ticker": "IEF",
+          "name": "iShares 7-10 Year Treasury Bond ETF",
+          "sector": "Fixed Income",
+          "category": "defensive",
+          "score": 74,
+          "conviction": "medium",
+          "suggestedWeight": 4,
+          "catalyst": "July PCE print due August 29 — a soft reading (core PCE below 3.2% YoY) would reduce September hike probability from 42% to below 20%, sending IEF +3–5% in a day"
+        },
+        {
+          "rank": 5,
+          "ticker": "AMGN",
+          "name": "Amgen Inc. (Defensive Anchor — Staples/Healthcare Quality)",
+          "sector": "Health Care",
+          "category": "defensive",
+          "score": 79,
+          "conviction": "high",
+          "suggestedWeight": 6,
+          "catalyst": "MariTide Phase 3 interim data and Q3 2026 earnings — defensive value is preserved regardless of MariTide outcome by the core biosimilar + established brand revenue base"
         }
       ]
     }
