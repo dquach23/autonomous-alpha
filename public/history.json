@@ -10339,121 +10339,121 @@
     },
     {
       "date": "2026-09-08",
-      "generatedAt": "2026-09-08T00:14:52.375Z",
+      "generatedAt": "2026-09-09T00:03:57.365Z",
       "macroOutlook": "Cautiously Bullish",
       "defensiveScore": 4,
-      "summary": "The regime remains Late-Cycle / Restrictive-but-Resilient: real policy rate at +95bp above neutral, 56% implied probability of a September FOMC hike, 10Y at 4.79% with rising term premium, and HY OAS at cycle-tight 2.65% — all demanding a cautiously bullish posture with meaningful defensive ballast at defensiveScore 4. The growth book is concentrated in the highest-momentum, fundamentally-supported names across Healthcare (REGN, AMGN, VRTX), Technology/AI Infrastructure (CRM, CRWD, ANET, MU), Financials (SPGI, BAC), and Energy (MPC) — collectively expressing the 'earnings quality beats duration risk' thesis while spanning six GICS sectors. Today's key changes: ANET is added to the growth book (S&P 100 inclusion September 21 is a hard 2-week catalyst, Deutsche Bank Buy initiated, Q2 revenue +37.7% YoY) replacing PANW (which remains below the 50-DMA); MU is added (Altimeter's new $242M Q2 position, HBM/AI memory structural demand, +17.7% 3M above 50-DMA) and NEM rotates from the growth book to the defensive sleeve at a reduced weight; IEF is exited from the defensive sleeve and replaced by GS (duration is the wrong hedge with 56% hike odds and rising term premium — GS monetizes the steepening curve and capital markets volume instead). The dominant risk being underwritten is a September 11 CPI surprise above 0.3% MoM core that pushes 10Y toward 5.0%+, compresses the equity risk premium from its already-thin 1.5% level, and forces a valuation reset — the GLD, SCHD, BRK.B, and NEM defensive positions are explicitly sized to absorb that scenario.",
-      "diversificationNote": "The 10-name growth book spans six GICS sectors: Information Technology (CRM, CRWD, ANET, MU — four names but across cybersecurity, AI networking, CRM/software, and memory — complementary value chains, not duplicative factor exposures), Health Care (REGN, AMGN, VRTX — three names at the sector maximum, spanning antibody biologics, metabolic/obesity pipeline, and rare disease/pain respectively), Financials (SPGI, BAC — data/ratings vs. commercial banking, differentiated revenue drivers), and Energy (MPC — refining, distinct from upstream E&P). The defensive sleeve spans four distinct exposures: direct gold commodity (GLD), broad dividend-quality equity income (SCHD), all-weather diversified compounder with cash buffer (BRK.B), capital-markets-leveraged financials as a rate-regime hedge (GS), and gold mining equity with operating leverage (NEM) — no defensive exposure is duplicated.",
+      "summary": "The regime remains Late-Cycle / Restrictive-but-Resilient with a material escalation today: Saudi Arabia oil facility attacks and Iran-US tit-for-tat strikes have introduced a fresh geopolitical shock that simultaneously supports energy (MPC), gold (GLD/NEM), and reinforces the hawkish Fed path (66% September hike odds) — sharpening the already-acute tension between a resilient earnings cycle and a restrictive real rate of +95bp. The 10-position growth book expresses this via three secular AI infrastructure themes (CRM, SNOW, CRWD in Technology), three healthcare leaders with M&A/GLP-1/rare-disease tailwinds (REGN, AMGN, VRTX), a geopolitically-turbocharged refinery play (MPC in Energy), two cheap-valuation Financials benefiting from the steepening yield curve (SPGI, BAC), and a copper electrification compounder (FCX in Materials) — collectively spanning 5 distinct GICS sectors. The defensive sleeve holds gold (GLD), dividend quality (SCHD), Berkshire's cash fortress (BRK.B), intermediate duration as a binary CPI hedge (IEF at reduced conviction), and leveraged gold equity (NEM) — re-derived from today's regime rather than carried forward by inertia, with TLT explicitly excluded given 66% hike odds. The dominant risk underwritten is a hot August CPI print on September 11 pushing the 10Y toward 5.0% and forcing an FOMC hike on September 16, which would compress IT/Healthcare multiples while simultaneously validating the Energy and Financials overweights — the portfolio is deliberately constructed to be partially self-hedging in that scenario.",
+      "diversificationNote": "Growth book spans 5 GICS sectors: Information Technology (CRM, SNOW, CRWD — at the 3-name maximum), Health Care (REGN, AMGN, VRTX — at the 3-name maximum), Energy (MPC), Financials (SPGI, BAC — two names but distinct business models: data/ratings vs. consumer/commercial banking), and Materials (FCX); the two IT sub-themes are enterprise software AI monetization (CRM), AI data cloud (SNOW), and cybersecurity platform (CRWD) — different end markets despite shared sector classification. Defensive sleeve spans four distinct exposures: physical gold ETF (GLD), broad dividend/quality equity (SCHD), conglomerate cash fortress (BRK.B), intermediate Treasury duration (IEF), and gold mining equity leverage (NEM) — with TLT deliberately excluded given the live September hike risk and 4.79% 10Y yield.",
       "picks": [
         {
           "rank": 1,
           "ticker": "CRM",
-          "name": "Salesforce, Inc.",
+          "name": "Salesforce Inc.",
           "sector": "Information Technology",
-          "category": "growth",
-          "score": 95,
-          "conviction": "high",
-          "suggestedWeight": 10,
-          "catalyst": "Q3 FY2027 earnings report with Agentforce adoption metrics and updated annual guidance"
-        },
-        {
-          "rank": 2,
-          "ticker": "REGN",
-          "name": "Regeneron Pharmaceuticals, Inc.",
-          "sector": "Health Care",
           "category": "growth",
           "score": 93,
           "conviction": "high",
+          "suggestedWeight": 10,
+          "catalyst": "Dreamforce 2026 conference (mid-September) and Q3 FY27 earnings with Agentforce adoption metrics and enterprise ARR update"
+        },
+        {
+          "rank": 2,
+          "ticker": "SNOW",
+          "name": "Snowflake Inc.",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 91,
+          "conviction": "high",
           "suggestedWeight": 9,
-          "catalyst": "Dupixent label expansions (COPD and new indications) and Phase 3 pipeline readouts in oncology through Q4 2026"
+          "catalyst": "FY27 product revenue guidance execution tracking ($6.07B raised target) and Q3 FY27 earnings report in early December 2026"
         },
         {
           "rank": 3,
-          "ticker": "MPC",
-          "name": "Marathon Petroleum Corporation",
-          "sector": "Energy",
-          "category": "value",
-          "score": 91,
-          "conviction": "high",
-          "suggestedWeight": 8,
-          "catalyst": "Q3 2026 earnings release with refining margin update and capital return announcement (buyback/dividend)"
-        },
-        {
-          "rank": 4,
-          "ticker": "AMGN",
-          "name": "Amgen, Inc.",
-          "sector": "Health Care",
-          "category": "growth",
-          "score": 90,
-          "conviction": "high",
-          "suggestedWeight": 8,
-          "catalyst": "MariTide (AMG 133 obesity drug) Phase 3 interim data readout and Q3 earnings with obesity revenue ramp"
-        },
-        {
-          "rank": 5,
-          "ticker": "VRTX",
-          "name": "Vertex Pharmaceuticals Incorporated",
-          "sector": "Health Care",
+          "ticker": "CRWD",
+          "name": "CrowdStrike Holdings Inc.",
+          "sector": "Information Technology",
           "category": "growth",
           "score": 89,
           "conviction": "high",
           "suggestedWeight": 8,
-          "catalyst": "JOURNAVX (acute pain) commercial launch ramp data and Crinetics pipeline integration milestones through Q4 2026"
+          "catalyst": "Q2 FY27 earnings report (expected late September 2026) with ARR growth and FCF margin trajectory"
         },
         {
-          "rank": 6,
-          "ticker": "CRWD",
-          "name": "CrowdStrike Holdings, Inc.",
-          "sector": "Information Technology",
+          "rank": 4,
+          "ticker": "REGN",
+          "name": "Regeneron Pharmaceuticals Inc.",
+          "sector": "Health Care",
           "category": "growth",
           "score": 88,
           "conviction": "high",
           "suggestedWeight": 8,
-          "catalyst": "Q3 FY2027 earnings (late November) showing ARR growth above $5.5B and operating leverage improvement"
+          "catalyst": "Dupixent new indication FDA approvals and late-stage obesity pipeline readout (REGN4461 / trevogrumab data)"
         },
         {
-          "rank": 7,
-          "ticker": "SPGI",
-          "name": "S&P Global Inc.",
-          "sector": "Financials",
-          "category": "growth",
-          "score": 87,
-          "conviction": "high",
-          "suggestedWeight": 7,
-          "catalyst": "Potential CapIQ spinoff decision and Q3 2026 earnings showing ratings revenue acceleration from continued HY issuance boom"
-        },
-        {
-          "rank": 8,
-          "ticker": "ANET",
-          "name": "Arista Networks, Inc.",
-          "sector": "Information Technology",
+          "rank": 5,
+          "ticker": "AMGN",
+          "name": "Amgen Inc.",
+          "sector": "Health Care",
           "category": "growth",
           "score": 86,
           "conviction": "high",
           "suggestedWeight": 7,
-          "catalyst": "S&P 100 inclusion September 21 (forced index buying) + Q3 2026 earnings with $3.3B revenue guidance confirmation"
+          "catalyst": "MariTide Phase 3 obesity trial interim data readout and Q3 FY26 earnings (expected late October 2026)"
         },
         {
-          "rank": 9,
-          "ticker": "MU",
-          "name": "Micron Technology, Inc.",
-          "sector": "Information Technology",
+          "rank": 6,
+          "ticker": "VRTX",
+          "name": "Vertex Pharmaceuticals Inc.",
+          "sector": "Health Care",
           "category": "growth",
           "score": 84,
           "conviction": "high",
           "suggestedWeight": 7,
-          "catalyst": "Q4 FY2026 earnings (September/October) with HBM revenue ramp and fiscal 2027 HBM capacity guide"
+          "catalyst": "Suzetrigine (non-opioid pain) commercial launch trajectory update and Q3 2026 earnings with CF royalty pool expansion data"
+        },
+        {
+          "rank": 7,
+          "ticker": "MPC",
+          "name": "Marathon Petroleum Corp.",
+          "sector": "Energy",
+          "category": "value",
+          "score": 83,
+          "conviction": "high",
+          "suggestedWeight": 7,
+          "catalyst": "Sustained crude price spike from Saudi/Iran geopolitical shock and Q3 2026 earnings with crack spread margin update (expected late October)"
+        },
+        {
+          "rank": 8,
+          "ticker": "SPGI",
+          "name": "S&P Global Inc.",
+          "sector": "Financials",
+          "category": "growth",
+          "score": 80,
+          "conviction": "high",
+          "suggestedWeight": 6,
+          "catalyst": "September FOMC decision — either a hold or a hike increases bond market activity and rating agency workload; Q3 2026 earnings with ratings revenue update"
+        },
+        {
+          "rank": 9,
+          "ticker": "BAC",
+          "name": "Bank of America Corp.",
+          "sector": "Financials",
+          "category": "value",
+          "score": 77,
+          "conviction": "high",
+          "suggestedWeight": 5,
+          "catalyst": "September FOMC decision (September 15-16) — a 25bp hike would directly expand net interest margins; Q3 2026 earnings with NIM and loan-loss reserve update (expected mid-October)"
         },
         {
           "rank": 10,
-          "ticker": "BAC",
-          "name": "Bank of America Corporation",
-          "sector": "Financials",
-          "category": "value",
-          "score": 82,
+          "ticker": "FCX",
+          "name": "Freeport-McMoRan Inc.",
+          "sector": "Materials",
+          "category": "growth",
+          "score": 75,
           "conviction": "high",
-          "suggestedWeight": 7,
-          "catalyst": "Q3 2026 earnings (mid-October) showing NIM expansion and capital markets revenue step-up on HY issuance record activity"
+          "suggestedWeight": 4,
+          "catalyst": "Copper price inflection from tightening global supply (Peru/Chile production disruptions) and AI data center construction ramp acceleration in Q4 2026"
         },
         {
           "rank": 1,
@@ -10461,54 +10461,54 @@
           "name": "SPDR Gold Shares ETF",
           "sector": "Commodities",
           "category": "defensive",
-          "score": 93,
+          "score": 90,
           "conviction": "high",
-          "suggestedWeight": 7,
-          "catalyst": "August CPI print on September 11 — a hot print (>0.3% core MoM) re-ignites hike fears and sends DXY lower, boosting gold; geopolitical re-escalation in Hormuz is a secondary catalyst"
+          "suggestedWeight": 8,
+          "catalyst": "August CPI print September 11 — a hot print reinforces stagflation fear and gold bid; sustained Saudi/Iran geopolitical escalation maintains the risk premium"
         },
         {
           "rank": 2,
           "ticker": "SCHD",
           "name": "Schwab US Dividend Equity ETF",
-          "sector": "Multi-Sector Dividend Equity",
+          "sector": "Multi-Sector Income",
           "category": "defensive",
-          "score": 90,
+          "score": 84,
           "conviction": "high",
-          "suggestedWeight": 5,
-          "catalyst": "Any risk-off event (hot CPI, Fed hike, Hormuz re-escalation) rotates institutional capital toward dividend-quality names — SCHD is the direct beneficiary of that defensive rotation flow"
+          "suggestedWeight": 7,
+          "catalyst": "Continued yield curve steepening (2s10s +42bp and rising) benefits SCHD's financial sector holdings; any risk-off driven by CPI/FOMC outcome supports flight to quality dividend names"
         },
         {
           "rank": 3,
           "ticker": "BRK.B",
           "name": "Berkshire Hathaway Inc. Class B",
-          "sector": "Financials / Diversified",
+          "sector": "Financials / Conglomerate",
           "category": "defensive",
-          "score": 88,
+          "score": 82,
           "conviction": "high",
           "suggestedWeight": 6,
-          "catalyst": "Q3 2026 earnings report showing continued investment deployment of cash hoard and operating earnings from insurance/railroad franchises"
+          "catalyst": "Q3 2026 earnings (November) revealing how Berkshire deployed capital into the geopolitical shock; any additional equity purchases disclosed via 13F or 13D amendments"
         },
         {
           "rank": 4,
-          "ticker": "GS",
-          "name": "The Goldman Sachs Group, Inc.",
-          "sector": "Financials",
+          "ticker": "IEF",
+          "name": "iShares 7-10 Year Treasury Bond ETF",
+          "sector": "Fixed Income",
           "category": "defensive",
-          "score": 83,
-          "conviction": "high",
+          "score": 72,
+          "conviction": "medium",
           "suggestedWeight": 5,
-          "catalyst": "Q3 2026 earnings (mid-October) with investment banking fee acceleration from record HY/IG issuance and M&A advisory pipeline reopening"
+          "catalyst": "August CPI print September 11 (soft print = immediate IEF rally); September FOMC hold decision = IEF gains 2-3%"
         },
         {
           "rank": 5,
           "ticker": "NEM",
-          "name": "Newmont Corporation",
-          "sector": "Materials",
+          "name": "Newmont Corp.",
+          "sector": "Materials / Gold Mining",
           "category": "defensive",
-          "score": 80,
+          "score": 70,
           "conviction": "medium",
           "suggestedWeight": 3,
-          "catalyst": "Q3 2026 earnings with gold production volumes and all-in sustaining cost (AISC) metrics showing FCF expansion at current gold prices"
+          "catalyst": "Saudi/Iran geopolitical escalation sustaining gold above $4,500/oz through Q4; Q3 2026 production and cost guidance update (expected late October)"
         }
       ]
     }
