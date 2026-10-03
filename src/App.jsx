@@ -337,6 +337,7 @@ function PickRow({ pick, onClick, period = "day" }) {
           }}>
             · {pick.score}
           </span>
+          <RankChange pick={pick} />
         </div>
         <div style={{
           fontSize: 12, color: C.muted, marginTop: 2,
@@ -466,6 +467,112 @@ function Stat({ label, value, accent }) {
   );
 }
 
+function RankChange({ pick }) {
+  const C = usePalette();
+  if (pick.isNew) return <span style={{ fontFamily: "var(--halo-mono)", fontSize: 9.5, fontWeight: 800, color: C.primary, letterSpacing: "0.08em" }}>NEW</span>;
+  if (!pick.rankChange) return null;
+  const up = pick.rankChange > 0;
+  return (
+    <span style={{ fontFamily: "var(--halo-mono)", fontSize: 10.5, fontWeight: 700, color: up ? C.pos : C.neg }}>
+      {up ? "▲" : "▼"}{Math.abs(pick.rankChange)}
+    </span>
+  );
+}
+
+// Factor ranges match the scoring engine (scripts/research.js).
+const FACTOR_META = {
+  momentum:  { label: "Momentum",   min: -3, max: 3 },
+  revisions: { label: "Revisions",  min: -2, max: 2 },
+  quality:   { label: "Quality",    min: -2, max: 2 },
+  valuation: { label: "Valuation",  min: -2, max: 2 },
+  catalyst:  { label: "Catalyst",   min: 0,  max: 2 },
+  risk:      { label: "Risk",       min: 0,  max: 2, invert: true },
+  stability: { label: "Stability",  min: -3, max: 3 },
+  regimeFit: { label: "Regime fit", min: -2, max: 2 },
+};
+
+function FactorBreakdown({ analysis }) {
+  const C = usePalette();
+  if (!analysis?.factors) return null;
+  return (
+    <div style={{ padding: "0 20px 14px" }}>
+      <SectionLabel>Factor breakdown · composite {analysis.composite?.toFixed(2)}</SectionLabel>
+      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: "10px 12px", display: "flex", flexDirection: "column", gap: 7 }}>
+        {Object.entries(analysis.factors).map(([k, v]) => {
+          const meta = FACTOR_META[k] || { label: k, min: -2, max: 2 };
+          const good = meta.invert ? v <= 0 : v > 0;
+          const color = v === 0 ? C.muted : good ? C.pos : C.neg;
+          const span = Math.max(Math.abs(meta.min), Math.abs(meta.max));
+          const pct = Math.min(100, Math.abs(v) / span * 100);
+          return (
+            <div key={k} style={{ display: "grid", gridTemplateColumns: "78px 1fr 40px", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 12, color: C.muted }}>{meta.label}</span>
+              <div style={{ height: 6, borderRadius: 3, background: C.subtle, overflow: "hidden" }}>
+                <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: 3 }} />
+              </div>
+              <span style={{ fontFamily: "var(--halo-mono)", fontSize: 11.5, fontWeight: 700, color, textAlign: "right" }}>
+                {v > 0 ? "+" : ""}{v}
+              </span>
+            </div>
+          );
+        })}
+        {analysis.adjustments?.length > 0 && (
+          <div style={{ fontSize: 11.5, color: C.warn, marginTop: 2 }}>Adjustments: {analysis.adjustments.join(" · ")}</div>
+        )}
+        {analysis.evidence && (
+          <div style={{ fontSize: 12, color: C.text, lineHeight: 1.55, borderTop: `1px solid ${C.hairline}`, paddingTop: 7, marginTop: 2 }}>
+            {analysis.evidence}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ChangesCard({ data }) {
+  const C = usePalette();
+  const ch = data?.changes;
+  if (!ch && !data?.regimeEvidence) return null;
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <SectionLabel accent={C.primary}>today's changes</SectionLabel>
+      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: "10px 12px", fontSize: 12.5, color: C.text, lineHeight: 1.6 }}>
+        {data?.regimeEvidence && <div style={{ marginBottom: 6 }}><b style={{ color: C.ink }}>Regime · {data.macroOutlook}, shield {data.defensiveScore}:</b> {data.regimeEvidence}</div>}
+        {ch && <div><b style={{ color: C.pos }}>Added:</b> {ch.added?.length ? ch.added.join(", ") : "none"}</div>}
+        {ch?.dropped?.length > 0 && (
+          <div style={{ marginTop: 4 }}>
+            <b style={{ color: C.neg }}>Dropped:</b>
+            {ch.dropped.map(d => <div key={d.ticker} style={{ color: C.muted, fontSize: 12 }}>· <b style={{ color: C.ink }}>{d.ticker}</b> — {d.reason}</div>)}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function TrackRecordCard({ record }) {
+  const C = usePalette();
+  if (!record) return null;
+  const sign = (v) => v == null ? "—" : `${v >= 0 ? "+" : ""}${v.toFixed(1)}%`;
+  const tone = (v) => v == null ? C.ink : v >= 0 ? C.pos : C.neg;
+  const flagged = (record.holdings || []).filter(h => h.review);
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <SectionLabel accent={tone(record.growthVsSpyPct)}>track record · since {record.fromDate}</SectionLabel>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8 }}>
+        <Stat label="Growth book" value={sign(record.growthBookPct)} accent={tone(record.growthBookPct)} />
+        <Stat label="SPY" value={sign(record.spyPct)} />
+        <Stat label="vs SPY" value={sign(record.growthVsSpyPct)} accent={tone(record.growthVsSpyPct)} />
+      </div>
+      <div style={{ fontSize: 12, color: C.muted, marginTop: 8, lineHeight: 1.6 }}>
+        {record.hitRate10d != null && <>10-day hit rate vs SPY: <b style={{ color: C.ink }}>{record.hitRate10d}%</b> of {record.hitSample} picks. </>}
+        Full 15-name book {sign(record.fullBookPct)} over {record.sessions} rebalances.
+        {flagged.length > 0 && <> Under review: <b style={{ color: C.neg }}>{flagged.map(h => h.ticker).join(", ")}</b>.</>}
+      </div>
+    </div>
+  );
+}
+
 function SectionLabel({ children, accent }) {
   const C = usePalette();
   return (
@@ -585,6 +692,8 @@ function DetailSheet({ pick, onClose }) {
           <Stat label="Weight"  value={pick.suggestedWeight != null ? `${pick.suggestedWeight}%` : "—"} />
           <Stat label="Horizon" value={pick.horizon || "—"} />
         </div>
+
+        <FactorBreakdown analysis={pick.analysis} />
 
         {pick.rationale && (
           <div style={{ padding: "0 20px 14px" }}>
@@ -1424,6 +1533,8 @@ function HaloApp() {
           {/* ════════ RESEARCH ════════ */}
           {!loading && !error && tab === "research" && (
             <div style={{ animation: "tabIn 0.3s cubic-bezier(0.32, 0.72, 0, 1)" }}>
+              <TrackRecordCard record={data?.trackRecord} />
+              <ChangesCard data={data} />
               {data?.summary && (
                 <div style={{
                   background: isDark
