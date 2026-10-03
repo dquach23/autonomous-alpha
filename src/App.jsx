@@ -466,6 +466,29 @@ function Stat({ label, value, accent }) {
   );
 }
 
+function TrackRecordCard({ record }) {
+  const C = usePalette();
+  if (!record) return null;
+  const sign = (v) => v == null ? "—" : `${v >= 0 ? "+" : ""}${v.toFixed(1)}%`;
+  const tone = (v) => v == null ? C.ink : v >= 0 ? C.pos : C.neg;
+  const flagged = (record.holdings || []).filter(h => h.review);
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <SectionLabel accent={tone(record.growthVsSpyPct)}>track record · since {record.fromDate}</SectionLabel>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8 }}>
+        <Stat label="Growth book" value={sign(record.growthBookPct)} accent={tone(record.growthBookPct)} />
+        <Stat label="SPY" value={sign(record.spyPct)} />
+        <Stat label="vs SPY" value={sign(record.growthVsSpyPct)} accent={tone(record.growthVsSpyPct)} />
+      </div>
+      <div style={{ fontSize: 12, color: C.muted, marginTop: 8, lineHeight: 1.6 }}>
+        {record.hitRate10d != null && <>10-day hit rate vs SPY: <b style={{ color: C.ink }}>{record.hitRate10d}%</b> of {record.hitSample} picks. </>}
+        Full 15-name book {sign(record.fullBookPct)} over {record.sessions} rebalances.
+        {flagged.length > 0 && <> Under review: <b style={{ color: C.neg }}>{flagged.map(h => h.ticker).join(", ")}</b>.</>}
+      </div>
+    </div>
+  );
+}
+
 function SectionLabel({ children, accent }) {
   const C = usePalette();
   return (
@@ -1424,6 +1447,7 @@ function HaloApp() {
           {/* ════════ RESEARCH ════════ */}
           {!loading && !error && tab === "research" && (
             <div style={{ animation: "tabIn 0.3s cubic-bezier(0.32, 0.72, 0, 1)" }}>
+              <TrackRecordCard record={data?.trackRecord} />
               {data?.summary && (
                 <div style={{
                   background: isDark

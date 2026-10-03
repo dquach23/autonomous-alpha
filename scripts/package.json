@@ -9,7 +9,7 @@
     "icons": "node icons/build-icons.js"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.39.0"
+    "@anthropic-ai/sdk": "^0.131.0"
   },
   "devDependencies": {
     "sharp": "^0.33.5"

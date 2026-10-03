@@ -13,22 +13,45 @@ Every weekday at 22:00 UTC (post-close, year-round)
        ↓
 GitHub Actions triggers research.js
        ↓
-Quant screen computed locally from real price data (Yahoo Finance, 1y daily):
-  trailing 1M/3M/6M/12M returns, relative strength vs SPY,
-  distance from 52-week high, 50dma trend — for the FULL universe
+Factor screen computed locally from real price data (Yahoo Finance, 2y daily):
+  volatility-adjusted 12-1M / 6-1M momentum, 52w-high proximity,
+  volatility, drawdown, 50/200dma trend + EXTENDED / DOWNTREND / BROKEN flags
        ↓
-Claude AI runs 6 phases with live web search, grounded in the screen:
-  1. Macro Climate
-  2. Sector Rotation
-  3. Price & Earnings Momentum  ← reads the computed screen as ground truth
-  4. Smart Money Tracking
-  5. Risk Assessment
-  6. Top 10 Picks + 5 Defensive Synthesis
+Track record: the previously published books are scored vs SPY
+  (cumulative return, 10-day hit rate, per-holding since-entry return)
+       ↓
+Research phases (Claude Sonnet 5.5 + live web search, hard search caps):
+  1. Macro Climate  2. Sector Rotation  3. Price & Earnings Momentum
+  4. Smart Money    5. Risk Assessment
+       ↓
+Synthesis (Claude Opus 5.5, no web search, schema-constrained JSON):
+  Top 10 growth book + 5 defensive, reading the screen + track record
+       ↓
+Code-level validation: dedupe, 10 + 5 sleeves, conviction caps,
+  weights normalized to 100%, sector-cap warnings
        ↓
 Results saved to public/picks.json
        ↓
 Auto-commit pushed → Vercel redeploys → app updates
 ```
+
+### Pick quality mechanics
+
+- **Better momentum math.** Momentum is measured 12-1 and 6-1 months (the most
+  recent month is skipped because 1-month returns tend to reverse) and divided by
+  volatility, so a steady compounder outranks a spike with the same return.
+- **Risk flags.** `EXTENDED` (>15% above 50dma or +20% in a month) names are not
+  initiated and are excluded from the challenger list; `DOWNTREND` (below 200dma) and
+  `BROKEN` (>25% off high) names need an explicit catalyst to be held.
+- **Feedback loop.** Every run computes how the published book actually did vs
+  SPY. Holdings lagging SPY by 8+ points since entry *and* below their 50/200dma
+  are marked ⚠REVIEW and must be exited unless there's new evidence. The track
+  record is shown on the Research tab.
+- **Calibrated conviction.** At most 3 "high" names in the growth book and 2 in the
+  defensive sleeve. Weights are sized by conviction and inverse volatility.
+- **Defensive sleeve on data.** Defensive candidates are ranked on momentum, low
+  volatility and shallow drawdowns, so the sleeve rotates with the regime instead
+  of holding the same five names indefinitely.
 
 ### Freshness mechanics (anti-staleness)
 
@@ -47,9 +70,9 @@ respond to the market instead of anchoring on yesterday's list:
   reason), and a rotating universe group gets extra scrutiny so the whole
   universe is re-examined roughly every two weeks.
 
-The three "stable" phases (macro, sector rotation, smart money) are cached for
-28 hours and only get a quick delta-update on Tue–Thu, cutting search and token
-usage by ~60% on most days. A full refresh runs every Monday (weekend gap) and
+The four "stable" phases (macro, sector rotation, smart money, risk) are cached
+for 28 hours. On Tue–Thu they are refreshed by **one** combined delta call with a
+single web search, so those days make 3 API calls instead of 6. A full refresh runs every Monday (weekend gap) and
 Friday (weekly report — end of trading week).
 
 The schedule uses 22:00 UTC so the workflow always fires after the 4 PM ET
@@ -162,7 +185,14 @@ halo/
 
 - **GitHub Actions**: free (well within free tier)
 - **Vercel**: free (static hosting)
-- **Anthropic API**: ~$0.10–0.30 per daily run; phase caching cuts cost on Tue–Thu
+- **Anthropic API**: research on Claude Sonnet 5.5 ($2/$10 per MTok, a third
+  cheaper than Sonnet 4.6), synthesis on Claude Opus 5.5. Tue–Thu runs make 3 calls
+  (1 combined delta, momentum, synthesis); Mon/Fri make 6. Web searches are capped
+  per call with `max_uses` and use the dynamic-filtering search tool, which trims
+  the tokens search results add. Each run logs its token and search totals,
+  which are saved under `metadata.usage` in `picks.json`.
+- Models are overridable with the `HALO_RESEARCH_MODEL` / `HALO_SYNTHESIS_MODEL`
+  env vars (e.g. set the synthesis to `claude-sonnet-5-5` for the cheapest setup).
 
 Monthly cost: **< $5**
 

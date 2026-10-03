@@ -1,14 +1,15 @@
 /**
  * Halo - Daily Research Engine (1x/day at market close)
- * Runs 6 research phases using Claude AI + web search, grounded in a
- * locally-computed quantitative factor screen (1y of real price data for the
- * full universe: trailing returns, relative strength vs SPY, 52w-high
- * distance, trend). The screen drives daily pick freshness: holding-staleness
- * stats, a rotating spotlight group, and a challenger list of high-momentum
- * names not currently held are all fed into the synthesis prompt so
- * continuity is earned with data instead of anchored on yesterday's list.
- * Stable phases (macro, sectors, smart money) are cached for 28h and only
- * delta-updated on Tue–Thu, cutting searches and tokens by ~60% on most days.
+ * Runs research phases using Claude + web search, grounded in a locally
+ * computed factor screen (2y of real prices for the full universe:
+ * volatility-adjusted 12-1M / 6-1M momentum, 52w-high proximity, trend and
+ * risk flags). Each run also scores the book it previously published against
+ * SPY and feeds that track record into the synthesis, so the engine learns
+ * from realized results instead of only its own narrative.
+ * Stable phases (macro, sectors, smart money, risk) are cached for 28h and
+ * refreshed Tue–Thu by ONE combined delta call (1 search). Research runs on
+ * Sonnet 5.5; the final portfolio synthesis runs on Opus 5.5 with
+ * schema-constrained JSON output, then is validated and repaired in code.
  * Saves results to ../public/picks.json for the frontend to consume
  */
 
@@ -27,13 +28,30 @@ const CYCLE_INFO = { number: 1, label: "After-Market", timeET: "5:00 PM ET" };
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+// ── Models ────────────────────────────────────────────────────────────────────
+// Research phases are retrieval + summarization over web search: Sonnet 5.5 is
+// both cheaper ($2/$10 per MTok) and stronger than the Sonnet 4.6 it replaces.
+// The final portfolio synthesis is the one call where reasoning quality moves
+// the picks, so it runs on Opus 5.5 with no web search attached. Both are
+// overridable from the workflow env without a code change.
+const RESEARCH_MODEL  = process.env.HALO_RESEARCH_MODEL  || "claude-sonnet-5-5";
+const SYNTHESIS_MODEL = process.env.HALO_SYNTHESIS_MODEL || "claude-opus-5-5";
+const WEB_SEARCH_TOOL = "web_search_20260209"; // dynamic filtering trims result tokens
+// Server-side refusal fallback: a policy decline is re-run on a fallback model
+// inside the same call instead of failing the phase.
+const FALLBACK_BETA   = "server-side-fallback-2026-07-01";
+
 // ── Phase caching ─────────────────────────────────────────────────────────────
 // Stable phases (macro climate, sector rotation, smart money) change slowly —
 // reuse yesterday's output and do a quick delta search instead of full research.
 // Volatile phases (momentum, risk) always run fresh since they track daily prices.
 // Full refresh every Friday (weekly report — end of trading week) and Monday (weekend gap).
 const CACHE_TTL_MS  = 28 * 60 * 60 * 1000; // 28 hours
-const STABLE_PHASES = new Set(["macro", "sectors", "smart"]);
+// Risk is cached too: single-name price risk is now covered daily by the
+// locally computed screen (trend, volatility, drawdown), so the narrative risk
+// phase only needs a full rewrite on refresh days.
+const STABLE_PHASES = new Set(["macro", "sectors", "smart", "risk"]);
+const UPDATE_MARKER = "\n\n--- TODAY'S UPDATE ---\n";
 
 function isCacheValid(existingData) {
   if (!existingData?.generatedAt) return false;
@@ -46,32 +64,51 @@ function needsFullRefresh() {
   return day === 1 || day === 5; // Monday (weekend gap) or Friday (weekly report)
 }
 
-// Delta prompts: pass cached context, ask for targeted 1-search update
-function getDeltaPrompt(phaseId, cachedText, today) {
-  const snippet = cachedText.slice(0, 2000);
-  const map = {
-    macro: `You are an expert macro economist. Today is ${today}.
-Yesterday's macro analysis:
----
-${snippet}
----
-Do at most 1 web search to check for significant macro developments since yesterday (new Fed signals, a surprise inflation/GDP print, or a major market-moving event). If nothing material has changed, briefly confirm the prior analysis still holds and note any minor updates. Keep your response concise — 2–3 short paragraphs.`,
+// Strip any prior day's appended update so cached phase text doesn't grow
+// unboundedly across Tue–Thu (each day re-bases on the last full refresh).
+function baseText(text = "") {
+  const i = text.indexOf(UPDATE_MARKER);
+  return i >= 0 ? text.slice(0, i) : text;
+}
 
-    sectors: `You are a sector rotation strategist. Today is ${today}.
-Yesterday's sector rotation analysis:
----
-${snippet}
----
-Do at most 1 web search to check for notable sector leadership shifts since yesterday. Update the ranking only if materially new information has emerged; otherwise confirm it holds. Keep your response concise.`,
+// One combined delta call replaces four separate ones on cache days: a single
+// web search covering macro, sectors, smart money and cross-asset risk, with
+// the answer split back into per-phase updates by section header.
+const DELTA_SECTIONS = [
+  { id: "macro",   label: "MACRO",       focus: "new Fed signals, a surprise inflation/jobs/GDP print, or a major market-moving event" },
+  { id: "sectors", label: "SECTORS",     focus: "notable sector leadership shifts or flows" },
+  { id: "smart",   label: "SMART MONEY", focus: "new 13F/13D disclosures, block trades, or public statements by major funds" },
+  { id: "risk",    label: "RISK",        focus: "changes in VIX term structure, HY spreads, USD, breadth, or a new tail risk" },
+];
 
-    smart: `You are an expert tracker of institutional investors. Today is ${today}.
-Recent smart money tracking data (past 1–2 days):
----
-${snippet}
----
-Do at most 1 web search for new 13F disclosures, block trades, or public statements by major hedge funds or billionaire investors since this analysis. Smart money moves are stable short-term — only surface genuinely new information. Keep your response concise.`,
-  };
-  return map[phaseId];
+function getCombinedDeltaPrompt(cached, today) {
+  const blocks = DELTA_SECTIONS.map(s =>
+    `### ${s.label} (prior analysis, excerpt)\n${baseText(cached[s.id]).slice(0, 1500)}`).join("\n\n");
+  return `You are the overnight desk analyst for a long-only portfolio manager. Today is ${today}.
+
+Below are excerpts of the most recent full research on four stable topics. Use at most 1 web search to check what changed since then. Only report genuinely new, material information; if nothing material changed for a topic, say "No material change." for it.
+
+${blocks}
+
+Respond with exactly these four headers, each followed by 2–4 concise sentences:
+## MACRO
+## SECTORS
+## SMART MONEY
+## RISK`;
+}
+
+function splitCombinedDelta(text) {
+  const out = {};
+  DELTA_SECTIONS.forEach((s, i) => {
+    const start = text.indexOf(`## ${s.label}`);
+    if (start < 0) return;
+    const next = DELTA_SECTIONS.slice(i + 1)
+      .map(n => text.indexOf(`## ${n.label}`, start + 1))
+      .filter(x => x > start);
+    const end = next.length ? Math.min(...next) : text.length;
+    out[s.id] = text.slice(start + s.label.length + 3, end).trim();
+  });
+  return out;
 }
 
 function isFriday() {
@@ -125,7 +162,11 @@ function getPhases(collected, today, universe, historyDigest = "", extras = {}) 
     stalenessText = "",    // holding streaks + never-picked names
     challengers = [],      // top quant names not currently held
     spotlight = null,      // today's rotating universe group
+    trackRecordText = "",  // realized performance of the published book vs SPY
+    defensiveScreen = "",  // defensive candidates ranked on vol/drawdown/trend
   } = extras;
+  // Cap each research input so a verbose phase can't balloon synthesis cost.
+  const clip = (t, n = 4000) => !t ? "" : t.length > n ? t.slice(0, n) + "…" : t;
   return [
     {
       id: "macro",
@@ -179,7 +220,7 @@ Rank top→bottom for a 1–5 year long-only investor. For each, give: relative 
       prompt: `You are a quantitative analyst running a multi-factor momentum + quality screen. Today is ${today}.
 
 ${quantTable
-  ? `TODAY'S COMPUTED FACTOR SCREEN for the full universe — real price data (trailing total returns, relative strength vs SPY, distance from 52-week high, trend). Treat these numbers as ground truth for price momentum; do NOT re-derive returns from memory:
+  ? `TODAY'S COMPUTED FACTOR SCREEN for the full universe — real price data (volatility-adjusted 12-1M / 6-1M momentum, relative strength vs SPY, volatility, drawdown, trend, risk flags). Treat these numbers as ground truth for price momentum; do NOT re-derive returns from memory:
 
 ${quantTable}`
   : `Universe: ${universe.join(", ")}\n(Computed price screen unavailable today — use web search to establish 3M/6M relative strength vs SPY.)`}
@@ -189,12 +230,12 @@ Your job — combine the price screen above with FUNDAMENTAL momentum you verify
 - **Earnings surprise rate**: % beat on last 4 quarters of EPS
 - **Quality overlay**: gross margin trend, FCF yield, ROIC trajectory (penalize stocks with deteriorating fundamentals even if price is mooning)
 
-Prioritize your searches on names the screen ranks highly that are NOT already obvious consensus picks — that is where verification adds the most value.
+Prioritize your searches on names the screen ranks highly that are NOT already obvious consensus picks — that is where verification adds the most value. A high price score with falling estimates is a trap; a mid score with sharply rising estimates is an opportunity.
 ${spotlight ? `
 TODAY'S SPOTLIGHT GROUP: **${spotlight.label}** (${spotlight.tickers.join(", ")}). Give each spotlight name one line of assessment even if it doesn't make your top list — this group rotates daily so the entire universe gets a fresh look over time.
 ` : ""}
 Output:
-1. The TOP 10 names with the strongest combined price + fundamental momentum. For each: ticker, a 1-sentence rationale citing screen numbers plus fundamental data, and flag any "extended" names (price momentum dangerously ahead of fundamentals — common warning sign of late-stage rallies).
+1. The TOP 10 names with the strongest combined price + fundamental momentum. For each: ticker, a 1-sentence rationale citing screen numbers plus fundamental data, and say whether fundamentals confirm the price trend. Treat EXTENDED-flagged names as "wait for a pullback" unless estimates are rising faster than price.
 ${challengers.length > 0 ? `2. CHALLENGER ASSESSMENT: for each of these high-momentum names that are NOT in the current book — ${challengers.join(", ")} — one sentence on whether today's data supports inclusion. Be honest: if one deserves a slot over an incumbent, say so plainly.` : ""}`,
     },
     {
@@ -239,90 +280,46 @@ Be specific. Name real risks, not generic warnings.`,
     {
       id: "picks",
       label: "Daily Top 10 Picks + 5 Defensive",
-      prompt: `You are an elite long-only portfolio manager building a high-conviction, well-diversified concentrated book. Today is ${today}.
+      prompt: `You are an elite long-only portfolio manager running a concentrated, diversified book for a 1–5 year horizon. Your job is to beat SPY on a risk-adjusted basis — not to be busy, and not to be loyal to yesterday's list. Today is ${today}.
 
-You have access to today's research:
-
+═══ TODAY'S RESEARCH ═══
 MACRO CONTEXT:
-${collected.macro || "(no macro context available)"}
+${clip(collected.macro) || "(unavailable)"}
 
 SECTOR ROTATION:
-${collected.sectors || "(no sector context available)"}
+${clip(collected.sectors) || "(unavailable)"}
 
-MOMENTUM SCREEN:
-${collected.momentum || "(no momentum screen available)"}
+MOMENTUM & FUNDAMENTALS:
+${clip(collected.momentum, 5000) || "(unavailable)"}
 
 SMART MONEY:
-${collected.smart || "(no smart money data available)"}
+${clip(collected.smart) || "(unavailable)"}
 
 RISK ASSESSMENT:
-${collected.risk || "(no risk data available)"}
-${quantCompact ? `\nTODAY'S QUANTITATIVE SCREEN (computed from real price data — this is ground truth for any momentum/trend claim you make):\n${quantCompact}\n` : ""}${historyDigest ? `\nYOUR RECENT POSITIONING (last 7 trading days):\n${historyDigest}\n${stalenessText ? `\nHOLDING STALENESS:\n${stalenessText}\n` : ""}
-CONTINUITY vs FRESHNESS — read carefully:
-- Build today's book from TODAY'S evidence FIRST, then compare against your recent positioning. Never start from yesterday's list and hunt for reasons to keep it.
-- Carrying a name over requires a current, data-backed reason (a screen number, a datapoint from today's research). "It was in the book yesterday" is not a reason.
-- Any name held 15+ consecutive days must be explicitly re-underwritten: its rationale must cite fresh evidence from today's research or the quant screen — or the name gets replaced.
-${challengers.length > 0 ? `- CHALLENGERS to evaluate today (highest-momentum universe names not currently held): ${challengers.join(", ")}. Include the ones today's data supports. For any you reject in favor of an incumbent, the summary must say specifically why the incumbent wins on today's numbers — not by default.\n` : ""}- Re-derive the defensive sleeve from the CURRENT regime (rates, credit spreads, USD, VIX) every day. Duration vs gold vs staples vs utilities vs dividend equity should shift as the regime shifts — do not copy yesterday's sleeve forward unexamined.
-- Thesis continuity is still a virtue when it is earned: a name that keeps re-qualifying on fresh data should stay. What is forbidden is continuity by inertia.
-- In the summary, note carry-overs vs. changes and the data-based reason for each.
-` : ""}
+${clip(collected.risk) || "(unavailable)"}
+${quantCompact ? `\n═══ QUANT FACTOR SCREEN (computed from real prices — ground truth for any price/trend claim) ═══\n${quantCompact}\n` : ""}${defensiveScreen ? `\n${defensiveScreen}\n` : ""}${trackRecordText ? `\n═══ YOUR TRACK RECORD (realized, vs SPY) ═══\n${trackRecordText}\nLearn from this. If the book has lagged SPY, today's picks must change something that explains the lag (e.g. stop buying EXTENDED names, cut names in DOWNTREND, rely more on the factor screen) — say what in the summary.\n` : ""}${historyDigest ? `\n═══ RECENT POSITIONING (last 7 cycles) ═══\n${historyDigest}\n${stalenessText ? `\nHOLDING STALENESS:\n${stalenessText}\n` : ""}` : ""}
+═══ HOW TO DECIDE ═══
+1. Start from evidence, not from yesterday's list. A holding stays only if it would be bought fresh today. "It was in the book" is never a reason; any name held 15+ days needs fresh evidence cited in its rationale.
+2. The factor screen surfaces candidates; fundamentals decide. The best longs sit at an intersection: strong factor score AND rising estimates/quality AND a dated catalyst. A name with a weak score needs a specific contrarian catalyst — being early without a catalyst is the same as being wrong.
+3. Respect the flags. Do not initiate a position in a name flagged EXTENDED (short-term reversal risk — wait for a pullback; holding an existing position is fine). Names flagged DOWNTREND or BROKEN need an explicit catalyst-backed reason to be held or bought.
+4. Sell discipline: any holding marked ⚠REVIEW is exited unless today's research gives a new, specific reason the thesis is intact.
+5. Avoid crowded consensus trades where everyone already owns it and expectations are priced in; prefer under-appreciated second-order beneficiaries of a theme.
+${challengers.length > 0 ? `6. Challengers (top-ranked factor names not currently held): ${challengers.join(", ")}. Evaluate each; if you keep an incumbent over a challenger, the summary must say why on today's numbers.\n` : ""}
+═══ PORTFOLIO CONSTRUCTION (hard rules) ═══
+- Exactly 15 picks: 10 growth-book picks (category growth/value/income), ranked 1–10, then 5 defensive picks (category defensive), ranked 1–5. Growth book first in the array.
+- Growth book: max 3 per GICS sector, at least 5 sectors, no three names that are one factor bet (e.g. NVDA+AVGO+AMD).
+- Defensive sleeve: re-derive daily from the current regime and the defensive ranking above. Span at least 3 of: long-duration Treasuries, gold, dividend/quality equity ETFs, utilities, staples. No doubling one exposure (TLT and IEF). Do not hold a defensive name in a DOWNTREND just because it is "defensive".
+- Conviction must discriminate: at most 3 "high" in the growth book and 2 in the defensive sleeve; the rest "medium" or "speculative".
+- suggestedWeight: integers 3–15 summing to ~100 across all 15. Size by conviction and inversely to volatility (high-vol names smaller). Total defensive weight should track defensiveScore (shield 3 → ~15–20%, shield 7 → ~40–50%).
+- Asymmetry: upside should plausibly be ≥2x the downside over the horizon.
 
-Universe: ${universe.join(", ")}
+═══ FIELDS ═══
+score 0–100 (your overall conviction score) · horizon e.g. "1-3 years" · rationale 2–3 sentences citing at least one screen number AND one fundamental/catalyst datapoint from the research · catalyst = the single most important dated upcoming event · catalystWindow · entryNote = valuation vs history and technical position (use screen numbers) · exitTrigger = the specific observable that would make you sell · keyRisk · smartMoneyBacking.
+summary: 3–4 sentences — regime call; how the two sleeves express it; what changed vs yesterday and why (carry-overs vs. adds/drops, with data); the dominant risk.
+diversificationNote: 1–2 sentences naming growth-book sectors, defensive exposures, and any factor concentration accepted.
+macroOutlook: one of Bullish / Cautiously Bullish / Neutral / Cautious / Bearish. defensiveScore: 1 (full risk-on) – 10 (full defensive).
 
-YOUR JOB: produce TWO complementary sleeves that together form a complete portfolio for a 1–5 year hold horizon:
-  • **Growth book** — the 10 highest risk-adjusted non-defensive long ideas (category: growth / value / income).
-  • **Defensive sleeve** — the 5 highest-conviction defensive picks/ETFs (category: defensive). Always include this sleeve regardless of macro outlook; size the rest of the book around defensiveScore.
-
-15 picks total. They must function together as one portfolio.
-
-PORTFOLIO CONSTRUCTION RULES (HARD CONSTRAINTS):
-1. **Sleeve composition**: exactly 10 non-defensive picks (category ∈ {growth, value, income}) AND exactly 5 defensive picks (category = defensive). No more, no fewer.
-2. **Growth-book diversification**: across the 10 non-defensive picks, at most 3 from the same GICS sector, and they must collectively span at least 5 distinct sectors. No exceptions.
-3. **Defensive-sleeve diversification**: the 5 defensive picks must span at least 3 of these exposures — long-duration treasuries (TLT/IEF), gold (GLD/IAU), broad dividend/quality income ETFs (SCHD/VYM), utilities, consumer staples. Do not double up on the same exposure (e.g. don't pick both TLT and IEF).
-4. **Correlation awareness**: do not pick 3 names that all sell into the same end market (e.g. NVDA + AVGO + AMD is one factor exposure, not three). Pick complementary exposures across the growth book.
-5. **Conviction bar**: only "high" conviction names should get suggestedWeight ≥ 10%. Most picks should be 4–9%. Avoid concentrated single-name risk above 15%.
-6. **Asymmetry**: each pick's upside should plausibly be 2x or more vs its downside risk over the horizon. If you can't articulate that, it doesn't belong here.
-7. **No yield traps, no falling knives, no crowded shorts** as longs.
-
-For each pick, return ALL of the following fields. Be concrete and quantitative.
-
-CRITICAL: Respond with ONLY a single valid JSON object. No markdown fences, no prose before or after. Start with { and end with }.
-
-{
-  "picks": [
-    {
-      "rank": 1,
-      "ticker": "XXXX",
-      "score": 94,
-      "name": "Full Company Name",
-      "sector": "GICS sector",
-      "horizon": "1-3 years",
-      "category": "growth",
-      "conviction": "high",
-      "suggestedWeight": 10,
-      "rationale": "2-3 sentences. Cite specific catalysts (earnings beat, product cycle, regulatory event) and why NOW is a reasonable entry. Reference at least one piece of evidence from the macro / sector / momentum / smart money research above.",
-      "catalyst": "The single most important upcoming catalyst (e.g. 'Q1 earnings April 24 with guidance reset', 'GLP-1 Phase 3 readout June')",
-      "catalystWindow": "Specific timeframe (e.g. 'next 4 weeks', 'June–August', 'next 2 quarters')",
-      "entryNote": "Pricing/timing context — current valuation vs history, technical level (e.g. 'trading at 22x fwd EPS vs 5y avg of 27x; consolidating above 50dma')",
-      "exitTrigger": "What would invalidate the thesis and force you to sell (e.g. 'gross margin compression below 70%', 'loss of hyperscaler design wins')",
-      "keyRisk": "The single biggest risk to this thesis, named specifically",
-      "smartMoneyBacking": true
-    }
-  ],
-  "summary": "3-4 sentences. Open with the macro/regime call. State how the 10 growth picks plus the 5 defensive picks express that view as a portfolio. Note carry-overs from prior days and any new additions. Close with the dominant risk you're underwriting.",
-  "diversificationNote": "1-2 sentences explicitly naming the sectors covered in the growth book and the exposures in the defensive sleeve, plus any factor concentration you accepted (e.g. 'two AI-infrastructure names — NVDA, AVGO — share secular exposure but different points in the value chain; defensive sleeve spans long duration, gold, dividend equity').",
-  "macroOutlook": "Cautiously Bullish",
-  "defensiveScore": 4
-}
-
-Rules:
-- category must be exactly one of: "growth", "defensive", "value", "income"
-- conviction must be exactly one of: "high", "medium", "speculative"
-- suggestedWeight is an integer 3–15 representing % of the equity allocation; all 15 weights should sum to roughly 100
-- macroOutlook must be exactly one of: "Bullish", "Cautiously Bullish", "Neutral", "Cautious", "Bearish"
-- defensiveScore is 1-10 (1 = full risk-on, 10 = full defensive)
-- Include exactly 15 picks: 10 with category != "defensive" (rank 1–10 by conviction) followed by 5 with category == "defensive" (rank 1–5 by conviction). Order the picks array growth-book first, defensive sleeve second.
-- All string fields are required and must be substantive (no "TBD", no empty strings)`,
+Universe: ${universe.join(", ")}`,
     },
   ];
 }
@@ -340,8 +337,9 @@ function yahooSymbol(ticker) {
 }
 
 async function fetchTickerQuote(ticker) {
-  // 1y of history so real 1M/3M/6M/12M momentum can be computed locally.
-  const url = `${YAHOO_CHART_BASE}${encodeURIComponent(yahooSymbol(ticker))}?range=1y&interval=1d`;
+  // 2y of history: 12-1 momentum and the 200dma need >252 sessions, and the
+  // extra year backs the track-record scorecard.
+  const url = `${YAHOO_CHART_BASE}${encodeURIComponent(yahooSymbol(ticker))}?range=2y&interval=1d`;
   const res = await fetch(url, { headers: { "User-Agent": YAHOO_UA } });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const json = await res.json();
@@ -356,32 +354,57 @@ async function fetchTickerQuote(ticker) {
   }
   if (series.length < 2) throw new Error("insufficient close history");
   const c = series.map(p => p.c);
-  const close = c[c.length - 1];
-  const prevClose = c[c.length - 2];
-  const weekIdx = Math.max(0, c.length - 1 - 5);
-  const trailingReturn = (days) => {
-    const idx = c.length - 1 - days;
-    if (idx < 0) return null;
-    return Number(((close / c[idx] - 1) * 100).toFixed(1));
+  return {
+    ...computeQuoteMetrics(c),
+    asOf: new Date(series[series.length - 1].t).toISOString().slice(0, 10),
+    // Dated closes back the track-record scorecard (not written to picks.json).
+    dates: series.map(p => new Date(p.t).toISOString().slice(0, 10)),
+    closes: c,
   };
-  const high52 = Math.max(...c);
-  const sma50 = c.length >= 50
-    ? c.slice(-50).reduce((a, b) => a + b, 0) / 50
-    : null;
+}
+
+// Pure function of a close series so it can be unit-tested without network.
+// Momentum uses the academic "12-1" / "6-1" construction (skip the most recent
+// month): 1-month returns mean-revert, so chasing them buys tops — which is
+// exactly what the old 1M-weighted composite did.
+function computeQuoteMetrics(c) {
+  const n = c.length;
+  const close = c[n - 1];
+  const at = (daysAgo) => (n - 1 - daysAgo >= 0 ? c[n - 1 - daysAgo] : null);
+  const ret = (from, to = close) => (from && to ? Number(((to / from - 1) * 100).toFixed(1)) : null);
+  const sma = (k) => (n >= k ? c.slice(-k).reduce((a, b) => a + b, 0) / k : null);
+  const sma50 = sma(50), sma200 = sma(200);
+  // Annualized volatility of daily returns over the last ~3 months.
+  const win = c.slice(-64);
+  const rets = [];
+  for (let i = 1; i < win.length; i++) rets.push(Math.log(win[i] / win[i - 1]));
+  const mean = rets.reduce((a, b) => a + b, 0) / (rets.length || 1);
+  const variance = rets.reduce((a, b) => a + (b - mean) ** 2, 0) / Math.max(1, rets.length - 1);
+  const vol = rets.length > 10 ? Number((Math.sqrt(variance * 252) * 100).toFixed(1)) : null;
+  // Max drawdown over the last 6 months.
+  let peak = -Infinity, mdd = 0;
+  for (const x of c.slice(-126)) { peak = Math.max(peak, x); mdd = Math.min(mdd, x / peak - 1); }
+  const high52 = Math.max(...c.slice(-252));
   return {
     close,
-    prevClose,
-    weekAgoClose: c[weekIdx],
-    asOf: new Date(series[series.length - 1].t).toISOString().slice(0, 10),
+    prevClose: c[n - 2],
+    weekAgoClose: c[Math.max(0, n - 1 - 5)],
     series: c.slice(-63), // UI sparkline stays ~3 months
     metrics: {
-      r1w:  trailingReturn(5),
-      r1m:  trailingReturn(21),
-      r3m:  trailingReturn(63),
-      r6m:  trailingReturn(126),
-      r12m: trailingReturn(251),
+      r1w:  ret(at(5)),
+      r1m:  ret(at(21)),
+      r3m:  ret(at(63)),
+      r6m:  ret(at(126)),
+      r12m: ret(at(251)),
+      mom12_1: ret(at(251), at(21)),
+      mom6_1:  ret(at(126), at(21)),
+      vol,
+      maxDD6m: Number((mdd * 100).toFixed(1)),
       pctFrom52wHigh: Number(((close / high52 - 1) * 100).toFixed(1)),
-      above50dma: sma50 != null ? close > sma50 : null,
+      pctVs50dma:  sma50  ? Number(((close / sma50  - 1) * 100).toFixed(1)) : null,
+      pctVs200dma: sma200 ? Number(((close / sma200 - 1) * 100).toFixed(1)) : null,
+      above50dma:  sma50  ? close > sma50  : null,
+      above200dma: sma200 ? close > sma200 : null,
     },
   };
 }
@@ -431,45 +454,91 @@ function fmtSigned(v) {
   return (v >= 0 ? "+" : "") + v.toFixed(1);
 }
 
+function zScores(values) {
+  const xs = values.filter(v => v != null && Number.isFinite(v));
+  if (xs.length < 3) return values.map(() => 0);
+  const mean = xs.reduce((a, b) => a + b, 0) / xs.length;
+  const sd = Math.sqrt(xs.reduce((a, b) => a + (b - mean) ** 2, 0) / xs.length) || 1;
+  // Winsorize at ±3 so one parabolic name can't dominate the ranking.
+  return values.map(v => (v == null || !Number.isFinite(v)) ? 0 : Math.max(-3, Math.min(3, (v - mean) / sd)));
+}
+
+// Cross-sectional, risk-adjusted factor score. Momentum is measured 12-1 and
+// 6-1 (skipping the reversal-prone last month), scaled by volatility so a
+// steady compounder outranks a lottery ticket with the same return, plus a
+// 52-week-high proximity term (names near highs with low vol tend to persist).
+// Flags mark the setups that burned the old book: buying extended spikes,
+// holding names in downtrends.
 function buildQuantScreen(quotes, universe) {
   const spy = quotes["SPY"]?.metrics ?? null;
-  const rows = [];
+  const base = [];
   for (const ticker of universe) {
     const m = quotes[ticker]?.metrics;
     if (!m) continue;
-    const rel = (r, s) => (r != null && s != null) ? Number((r - s).toFixed(1)) : null;
-    const rel1m = spy ? rel(m.r1m, spy.r1m) : null;
-    const rel3m = spy ? rel(m.r3m, spy.r3m) : null;
-    const rel6m = spy ? rel(m.r6m, spy.r6m) : null;
-    // Composite momentum: weight 3M/6M relative strength most, 1M least
-    // (short windows are noise, long windows are stale).
-    const score =
-      0.2 * (rel1m ?? m.r1m ?? 0) +
-      0.4 * (rel3m ?? m.r3m ?? 0) +
-      0.4 * (rel6m ?? m.r6m ?? 0);
-    rows.push({ ticker, score: Number(score.toFixed(1)), m, rel1m, rel3m, rel6m });
+    const rel = (r, s) => (r != null && s != null) ? Number((r - s).toFixed(1)) : r;
+    const volAdj = (r) => (r != null && m.vol) ? r / m.vol : null;
+    base.push({
+      ticker, m,
+      rel3m:  rel(m.r3m, spy?.r3m),
+      rel6m:  rel(m.r6m, spy?.r6m),
+      rel12_1: rel(m.mom12_1, spy?.mom12_1),
+      ra12: volAdj(m.mom12_1 ?? m.r6m),
+      ra6:  volAdj(m.mom6_1 ?? m.r3m),
+      prox: m.pctFrom52wHigh,
+    });
   }
+  const z12 = zScores(base.map(r => r.ra12));
+  const z6  = zScores(base.map(r => r.ra6));
+  const zH  = zScores(base.map(r => r.prox));
+  const rows = base.map((r, i) => {
+    const flags = [];
+    if (r.m.above200dma === false) flags.push("DOWNTREND");
+    if ((r.m.pctVs50dma ?? 0) > 15 || (r.m.r1m ?? 0) > 20) flags.push("EXTENDED");
+    if ((r.m.pctFrom52wHigh ?? 0) < -25) flags.push("BROKEN");
+    const score = 0.45 * z12[i] + 0.35 * z6[i] + 0.20 * zH[i];
+    return { ...r, score: Number(score.toFixed(2)), flags };
+  });
   rows.sort((a, b) => b.score - a.score);
+  rows.forEach((r, i) => { r.rank = i + 1; });
   const line = (r) =>
-    `${r.ticker.padEnd(6)} 1M ${fmtSigned(r.m.r1m)}%  3M ${fmtSigned(r.m.r3m)}%  6M ${fmtSigned(r.m.r6m)}%  ` +
-    `vsSPY(3M) ${fmtSigned(r.rel3m)}  off52wHi ${fmtSigned(r.m.pctFrom52wHigh)}%  ` +
-    `${r.m.above50dma == null ? "" : r.m.above50dma ? ">50dma" : "<50dma"}`;
+    `${String(r.rank).padStart(3)}. ${r.ticker.padEnd(6)} score ${fmtSigned(r.score)}  ` +
+    `12-1M ${fmtSigned(r.m.mom12_1)}%  6-1M ${fmtSigned(r.m.mom6_1)}%  1M ${fmtSigned(r.m.r1m)}%  ` +
+    `vsSPY(6M) ${fmtSigned(r.rel6m)}  vol ${r.m.vol ?? "—"}%  maxDD6m ${fmtSigned(r.m.maxDD6m)}%  ` +
+    `off52wHi ${fmtSigned(r.m.pctFrom52wHigh)}%  vs200dma ${fmtSigned(r.m.pctVs200dma)}%` +
+    (r.flags.length ? `  [${r.flags.join(",")}]` : "");
   const header = spy
-    ? `Benchmark SPY: 1M ${fmtSigned(spy.r1m)}%  3M ${fmtSigned(spy.r3m)}%  6M ${fmtSigned(spy.r6m)}%\n`
+    ? `Benchmark SPY: 1M ${fmtSigned(spy.r1m)}%  3M ${fmtSigned(spy.r3m)}%  6M ${fmtSigned(spy.r6m)}%  12-1M ${fmtSigned(spy.mom12_1)}%  vol ${spy.vol ?? "—"}%\n` +
+      `Score = z-scored, volatility-adjusted 12-1M and 6-1M momentum + 52w-high proximity (higher is better). ` +
+      `Flags: DOWNTREND = below 200dma; EXTENDED = >15% above 50dma or +20% in 1M (short-term reversal risk); BROKEN = >25% off 52w high.\n`
     : "";
-  const table = rows.length
-    ? header + "Ranked by composite relative momentum (best → worst):\n" + rows.map(line).join("\n")
-    : "";
-  // Compact variant for the synthesis prompt: leaders + laggards only.
+  const table = rows.length ? header + "Ranked best → worst:\n" + rows.map(line).join("\n") : "";
   const compact = rows.length
     ? header +
-      "Momentum leaders (top 25):\n" + rows.slice(0, 25).map(line).join("\n") +
+      "Factor leaders (top 25):\n" + rows.slice(0, 25).map(line).join("\n") +
       (rows.length > 35
-        ? "\nMomentum laggards (bottom 10 — avoid or underweight without a strong contrarian thesis):\n" +
+        ? "\nFactor laggards (bottom 10 — avoid without a strong, catalyst-backed contrarian thesis):\n" +
           rows.slice(-10).map(line).join("\n")
         : "")
     : "";
   return { rows, table, compact };
+}
+
+// Defensive sleeve gets its own ranking: what matters there is low volatility,
+// shallow drawdowns and an intact trend — not raw momentum.
+function buildDefensiveScreen(quotes, defensiveTickers) {
+  const rows = defensiveTickers
+    .map(t => ({ ticker: t, m: quotes[t]?.metrics }))
+    .filter(r => r.m);
+  if (rows.length === 0) return "";
+  const zMom = zScores(rows.map(r => r.m.mom6_1 ?? r.m.r6m));
+  const zVol = zScores(rows.map(r => -(r.m.vol ?? 0)));
+  const zDD  = zScores(rows.map(r => r.m.maxDD6m));
+  rows.forEach((r, i) => { r.score = Number((0.4 * zMom[i] + 0.3 * zVol[i] + 0.3 * zDD[i]).toFixed(2)); });
+  rows.sort((a, b) => b.score - a.score);
+  return "Defensive candidates ranked by 6-1M momentum + low vol + shallow drawdown:\n" + rows.map(r =>
+    `${r.ticker.padEnd(5)} score ${fmtSigned(r.score)}  6-1M ${fmtSigned(r.m.mom6_1)}%  3M ${fmtSigned(r.m.r3m)}%  ` +
+    `vol ${r.m.vol ?? "—"}%  maxDD6m ${fmtSigned(r.m.maxDD6m)}%  ${r.m.above200dma === false ? "[DOWNTREND]" : ">200dma"}`
+  ).join("\n");
 }
 
 // ─── Staleness stats: how long has each current holding been in the book? ────
@@ -501,6 +570,116 @@ function buildStalenessStats(history, universe) {
   return { text, currentTickers };
 }
 
+// ─── Track record: how have the published picks actually done? ──────────────
+// Closes the loop the engine never had: every run scores the book it published
+// against SPY using the same price data, and the synthesis prompt sees it.
+// A pick is marked at the last close at or before its publish time (ET), so
+// the numbers are what a follower could roughly have captured.
+function priceDateForEntry(entry) {
+  const t = new Date(entry.generatedAt || `${entry.date}T23:00:00Z`).getTime();
+  return new Date(t - 5 * 3_600_000).toISOString().slice(0, 10); // ~ET
+}
+
+function closeOnOrBefore(q, date) {
+  if (!q?.dates) return null;
+  let lo = 0, hi = q.dates.length - 1, idx = -1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (q.dates[mid] <= date) { idx = mid; lo = mid + 1; } else hi = mid - 1;
+  }
+  return idx >= 0 ? { idx, close: q.closes[idx] } : null;
+}
+
+function buildTrackRecord(history, quotes, { maxEntries = 60 } = {}) {
+  const entries = (history?.entries ?? []).filter(e => !e.error).slice(-maxEntries);
+  const spy = quotes["SPY"];
+  if (entries.length < 2 || !spy?.dates) return { text: "", summary: null };
+
+  const legRet = (ticker, d0, d1) => {
+    const a = closeOnOrBefore(quotes[ticker], d0), b = closeOnOrBefore(quotes[ticker], d1);
+    return (a && b && a.close > 0) ? b.close / a.close - 1 : null;
+  };
+  const mean = (xs) => xs.length ? xs.reduce((x, y) => x + y, 0) / xs.length : null;
+
+  // Chain each day's book over the interval until the next publish.
+  let growth = 1, book = 1, bench = 1, legs = 0;
+  for (let i = 0; i < entries.length; i++) {
+    const d0 = priceDateForEntry(entries[i]);
+    const d1 = i + 1 < entries.length ? priceDateForEntry(entries[i + 1]) : spy.dates[spy.dates.length - 1];
+    if (d1 <= d0) continue;
+    const picks = entries[i].picks || [];
+    const g = mean(picks.filter(p => p.category !== "defensive").map(p => legRet(p.ticker, d0, d1)).filter(r => r != null));
+    let wSum = 0, wRet = 0;
+    for (const p of picks) {
+      const r = legRet(p.ticker, d0, d1);
+      const w = p.suggestedWeight || 1;
+      if (r != null) { wSum += w; wRet += w * r; }
+    }
+    const s = legRet("SPY", d0, d1);
+    if (g == null || s == null || wSum === 0) continue;
+    growth *= 1 + g; book *= 1 + wRet / wSum; bench *= 1 + s; legs++;
+  }
+
+  // Hit rate: did each growth pick beat SPY over the 10 sessions after publish?
+  let hits = 0, tries = 0;
+  for (const e of entries) {
+    const d0 = priceDateForEntry(e);
+    const s0 = closeOnOrBefore(spy, d0);
+    if (!s0 || s0.idx + 10 >= spy.dates.length) continue;
+    const d1 = spy.dates[s0.idx + 10];
+    const s = legRet("SPY", d0, d1);
+    for (const p of (e.picks || []).filter(p => p.category !== "defensive")) {
+      const r = legRet(p.ticker, d0, d1);
+      if (r == null || s == null) continue;
+      tries++; if (r > s) hits++;
+    }
+  }
+
+  // Current holdings: performance since the start of their current streak.
+  const last = entries[entries.length - 1];
+  const holdings = (last.picks || []).map(p => {
+    let start = entries.length - 1;
+    while (start > 0 && (entries[start - 1].picks || []).some(x => x.ticker === p.ticker)) start--;
+    const d0 = priceDateForEntry(entries[start]);
+    const dNow = spy.dates[spy.dates.length - 1];
+    const r = legRet(p.ticker, d0, dNow), s = legRet("SPY", d0, dNow);
+    const m = quotes[p.ticker]?.metrics;
+    const excess = (r != null && s != null) ? (r - s) * 100 : null;
+    // Sell-discipline flag: lagging SPY by 8+ pts since entry AND trend broken.
+    const review = excess != null && excess < -8 && m && (m.above50dma === false || m.above200dma === false);
+    return { ticker: p.ticker, category: p.category, since: entries[start].date, days: entries.length - start,
+             ret: r != null ? r * 100 : null, excess, review };
+  });
+
+  const pct = (x) => Number(((x - 1) * 100).toFixed(1));
+  const summary = {
+    sessions: legs,
+    fromDate: entries[0].date,
+    growthBookPct: pct(growth),
+    fullBookPct: pct(book),
+    spyPct: pct(bench),
+    growthVsSpyPct: Number((pct(growth) - pct(bench)).toFixed(1)),
+    hitRate10d: tries ? Number((hits / tries * 100).toFixed(0)) : null,
+    hitSample: tries,
+    holdings: holdings.map(h => ({ ...h,
+      ret: h.ret != null ? Number(h.ret.toFixed(1)) : null,
+      excess: h.excess != null ? Number(h.excess.toFixed(1)) : null })),
+  };
+  if (legs === 0) return { text: "", summary: null };
+
+  const f = (v) => v == null ? "—" : fmtSigned(v);
+  const text =
+    `Since ${summary.fromDate} (${legs} rebalances): growth book ${f(summary.growthBookPct)}%, ` +
+    `full 15-name book ${f(summary.fullBookPct)}%, SPY ${f(summary.spyPct)}% → growth book vs SPY ${f(summary.growthVsSpyPct)} pts.\n` +
+    (summary.hitRate10d != null ? `10-session hit rate (growth picks beating SPY): ${summary.hitRate10d}% of ${tries} picks — 50% is a coin flip.\n` : "") +
+    `Current holdings since entry (return / vs SPY): ` +
+    summary.holdings.map(h => `${h.ticker} ${f(h.ret)}%/${f(h.excess)} (${h.days}d)${h.review ? " ⚠REVIEW" : ""}`).join(", ") +
+    (summary.holdings.some(h => h.review)
+      ? `\n⚠REVIEW = lagging SPY by 8+ pts since entry AND below its 50dma or 200dma. Exit these unless today's research gives a specific, new reason the thesis is intact.`
+      : "");
+  return { text, summary };
+}
+
 // ─── Retry helper with exponential backoff for transient API failures ────────
 // Retries on 429 (rate limit), 5xx, and network errors. Anthropic SDK errors
 // expose `status`; APIError subclasses share this shape. Non-retryable errors
@@ -526,52 +705,130 @@ async function withRetry(fn, label, { attempts = 3, baseDelayMs = 1500 } = {}) {
   throw lastErr;
 }
 
+// ─── API call helpers ────────────────────────────────────────────────────────
+function textOf(message) {
+  return message.content.filter(b => b.type === "text").map(b => b.text).join("\n");
+}
+
+let usageTotals = { input: 0, output: 0, cacheRead: 0, searches: 0, calls: 0 };
+function logUsage(label, message) {
+  const u = message.usage || {};
+  const searches = u.server_tool_use?.web_search_requests ?? 0;
+  usageTotals.input += (u.input_tokens || 0) + (u.cache_creation_input_tokens || 0);
+  usageTotals.cacheRead += u.cache_read_input_tokens || 0;
+  usageTotals.output += u.output_tokens || 0;
+  usageTotals.searches += searches;
+  usageTotals.calls++;
+  console.log(`     ↳ ${label}: ${message.model} in ${u.input_tokens ?? "?"} / out ${u.output_tokens ?? "?"} tok, ${searches} search(es), stop=${message.stop_reason}`);
+}
+
+// Streaming keeps long generations clear of HTTP timeouts; finalMessage()
+// returns the same object a non-streaming call would.
+let fallbackSupported = true;
+async function callClaude(label, params) {
+  let message;
+  try {
+    message = await withRetry(() => fallbackSupported
+      ? client.beta.messages.stream({ betas: [FALLBACK_BETA], fallbacks: "default", ...params }).finalMessage()
+      : client.messages.stream(params).finalMessage(), label);
+  } catch (err) {
+    // If the account/model rejects the fallback beta, don't lose the run over it.
+    if (!(fallbackSupported && err instanceof Anthropic.BadRequestError && /fallback/i.test(err.message))) throw err;
+    console.warn(`  ⚠️  Refusal-fallback beta rejected (${err.message}); continuing without it`);
+    fallbackSupported = false;
+    message = await withRetry(() => client.messages.stream(params).finalMessage(), label);
+  }
+  logUsage(label, message);
+  if (message.stop_reason === "refusal") throw new Error(`${label}: model declined (refusal)`);
+  return message;
+}
+
+function researchSystem(today, maxSearches) {
+  return `You are an autonomous financial research AI. Today is ${today}.
+Use web search to find CURRENT, REAL market data and news. Be specific and data-driven: cite actual numbers, company names, dates and recent events. Avoid vague generalities.
+You have at most ${maxSearches} web search(es) — pick queries that return the most signal. Be concise: dense bullet points beat prose.`;
+}
+
 // ─── Run a single research phase with web search ──────────────────────────────
-async function runPhase(phaseConfig, today, maxTokens = 4000) {
+async function runPhase(phaseConfig, today, { maxTokens = 6000, maxSearches = 2 } = {}) {
   console.log(`\n  🔍 Running: ${phaseConfig.label}...`);
-
-  const response = await withRetry(() => client.messages.create({
-    model: "claude-sonnet-4-6",
+  const message = await callClaude(phaseConfig.label, {
+    model: RESEARCH_MODEL,
     max_tokens: maxTokens,
-    tools: [{ type: "web_search_20250305", name: "web_search" }],
-    system: `You are an autonomous financial research AI. Today is ${today}.
-Use web search to find CURRENT, REAL market data and news. Be specific and data-driven.
-Cite actual numbers, company names, and recent events. Avoid vague generalities.
-SEARCH LIMIT: Use at most 2 web searches per phase. Choose your queries carefully to get the most signal per search.`,
+    output_config: { effort: "medium" },
+    tools: [{ type: WEB_SEARCH_TOOL, name: "web_search", max_uses: maxSearches }],
+    system: researchSystem(today, maxSearches),
     messages: [{ role: "user", content: phaseConfig.prompt }],
-  }), phaseConfig.label);
-
-  // Extract text from all content blocks
-  const text = response.content
-    .filter((b) => b.type === "text")
-    .map((b) => b.text)
-    .join("\n");
-
+  });
+  const text = textOf(message);
   console.log(`  ✅ ${phaseConfig.label} complete (${text.length} chars)`);
   return text;
 }
 
-// ─── Run a delta (cached) phase — 1 search, smaller token budget ─────────────
-async function runDeltaPhase(phaseId, phaseLabel, cachedText, today) {
-  console.log(`\n  ⚡ Delta update: ${phaseLabel} (cache hit)...`);
+// ─── Combined delta update for all cached phases — 1 call, 1 search ─────────
+async function runCombinedDelta(cachedPhases, today) {
+  console.log(`\n  ⚡ Delta update: ${DELTA_SECTIONS.map(s => s.label.toLowerCase()).join(", ")} (cache hit)...`);
+  const message = await callClaude("Combined delta", {
+    model: RESEARCH_MODEL,
+    max_tokens: 3000,
+    output_config: { effort: "low" },
+    tools: [{ type: WEB_SEARCH_TOOL, name: "web_search", max_uses: 1 }],
+    system: researchSystem(today, 1),
+    messages: [{ role: "user", content: getCombinedDeltaPrompt(cachedPhases, today) }],
+  });
+  const parts = splitCombinedDelta(textOf(message));
+  const out = {};
+  for (const s of DELTA_SECTIONS) {
+    const base = baseText(cachedPhases[s.id]);
+    out[s.id] = parts[s.id] ? base + UPDATE_MARKER + parts[s.id] : base;
+  }
+  console.log(`  ✅ Delta complete (${Object.keys(parts).length}/${DELTA_SECTIONS.length} sections updated)`);
+  return out;
+}
 
-  const response = await withRetry(() => client.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 1500,
-    tools: [{ type: "web_search_20250305", name: "web_search" }],
-    system: `You are an autonomous financial research AI. Today is ${today}.
-Use web search sparingly — at most 1 search. Only search if you need to verify a specific recent development since yesterday.`,
-    messages: [{ role: "user", content: getDeltaPrompt(phaseId, cachedText, today) }],
-  }), `${phaseLabel} delta`);
+// ─── Portfolio synthesis: no web search, schema-constrained JSON ─────────────
+const STR = { type: "string" };
+const PICK_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    rank: { type: "integer" }, ticker: STR, score: { type: "integer" }, name: STR, sector: STR, horizon: STR,
+    category: { type: "string", enum: ["growth", "value", "income", "defensive"] },
+    conviction: { type: "string", enum: ["high", "medium", "speculative"] },
+    suggestedWeight: { type: "integer" },
+    rationale: STR, catalyst: STR, catalystWindow: STR, entryNote: STR, exitTrigger: STR, keyRisk: STR,
+    smartMoneyBacking: { type: "boolean" },
+  },
+  required: ["rank", "ticker", "score", "name", "sector", "horizon", "category", "conviction", "suggestedWeight",
+             "rationale", "catalyst", "catalystWindow", "entryNote", "exitTrigger", "keyRisk", "smartMoneyBacking"],
+};
+const PICKS_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    picks: { type: "array", items: PICK_SCHEMA },
+    summary: STR,
+    diversificationNote: STR,
+    macroOutlook: { type: "string", enum: ["Bullish", "Cautiously Bullish", "Neutral", "Cautious", "Bearish"] },
+    defensiveScore: { type: "integer" },
+  },
+  required: ["picks", "summary", "diversificationNote", "macroOutlook", "defensiveScore"],
+};
 
-  const updateText = response.content
-    .filter((b) => b.type === "text")
-    .map((b) => b.text)
-    .join("\n");
-
-  console.log(`  ✅ ${phaseLabel} delta complete (${updateText.length} chars)`);
-  // Merge: keep cached context visible to picks synthesis, append today's update
-  return cachedText + "\n\n--- TODAY'S UPDATE ---\n" + updateText;
+async function runSynthesis(phaseConfig) {
+  console.log(`\n  🧠 Synthesis on ${SYNTHESIS_MODEL}...`);
+  const message = await callClaude(phaseConfig.label, {
+    model: SYNTHESIS_MODEL,
+    max_tokens: 32000,
+    output_config: {
+      effort: "high",
+      format: { type: "json_schema", schema: PICKS_SCHEMA },
+    },
+    system: "You are the portfolio manager. Every number you cite must come from the research and screens provided — do not invent prices, multiples or dates.",
+    messages: [{ role: "user", content: phaseConfig.prompt }],
+  });
+  if (message.stop_reason === "max_tokens") throw new Error("synthesis truncated at max_tokens");
+  return textOf(message);
 }
 
 // ─── Robust JSON extraction ───────────────────────────────────────────────────
@@ -699,6 +956,67 @@ function extractJSON(text) {
   // Total failure — quarantine and throw richer error
   dumpBadPayload(text, lastErr?.message || "unknown");
   throw buildRichError(lastErr || new Error("No valid JSON found"), stripped);
+}
+
+// ─── Portfolio validation & repair ───────────────────────────────────────────
+// The prompt states the construction rules; this enforces the ones code can
+// enforce, so a sloppy generation can't ship a broken book (history has days
+// with the same ticker in both sleeves and 95% of picks tagged "high").
+const MAX_HIGH_GROWTH = 3;
+const MAX_HIGH_DEFENSIVE = 2;
+
+function normalizeWeights(picks) {
+  const raw = picks.map(p => Math.min(15, Math.max(3, Number(p.suggestedWeight) || 5)));
+  const total = raw.reduce((a, b) => a + b, 0) || 1;
+  const scaled = raw.map(w => Math.round(w * 100 / total));
+  const diff = 100 - scaled.reduce((a, b) => a + b, 0);
+  if (diff !== 0 && scaled.length) {
+    const i = scaled.indexOf(Math.max(...scaled));
+    scaled[i] += diff;
+  }
+  return picks.map((p, i) => ({ ...p, suggestedWeight: scaled[i] }));
+}
+
+function validatePortfolio(picks) {
+  const warnings = [];
+  const seen = new Set();
+  const unique = [];
+  for (const p of picks || []) {
+    const t = String(p.ticker || "").toUpperCase().trim();
+    if (!t) continue;
+    if (seen.has(t)) { warnings.push(`dropped duplicate ${t}`); continue; }
+    seen.add(t);
+    unique.push({ ...p, ticker: t });
+  }
+  let growth    = unique.filter(p => p.category !== "defensive");
+  let defensive = unique.filter(p => p.category === "defensive");
+  if (growth.length > 10)   { warnings.push(`trimmed growth book from ${growth.length} to 10`); growth = growth.slice(0, 10); }
+  if (defensive.length > 5) { warnings.push(`trimmed defensive sleeve from ${defensive.length} to 5`); defensive = defensive.slice(0, 5); }
+  if (growth.length < 10)   warnings.push(`growth book has only ${growth.length} names`);
+  if (defensive.length < 5) warnings.push(`defensive sleeve has only ${defensive.length} names`);
+
+  const capHigh = (list, max) => {
+    let n = 0;
+    return list.map(p => {
+      if (p.conviction !== "high") return p;
+      if (++n <= max) return p;
+      warnings.push(`demoted ${p.ticker} conviction high→medium (cap ${max})`);
+      return { ...p, conviction: "medium" };
+    });
+  };
+  growth    = capHigh(growth, MAX_HIGH_GROWTH);
+  defensive = capHigh(defensive, MAX_HIGH_DEFENSIVE);
+
+  const sectorCounts = {};
+  growth.forEach(p => { sectorCounts[p.sector] = (sectorCounts[p.sector] || 0) + 1; });
+  Object.entries(sectorCounts).filter(([, n]) => n > 3)
+    .forEach(([sec, n]) => warnings.push(`sector cap breached: ${n} names in ${sec}`));
+
+  const ranked = [
+    ...growth.map((p, i) => ({ ...p, rank: i + 1 })),
+    ...defensive.map((p, i) => ({ ...p, rank: i + 1 })),
+  ];
+  return { picks: normalizeWeights(ranked), warnings };
 }
 
 // ─── Quarantine an unparseable picks.json ────────────────────────────────────
@@ -956,10 +1274,14 @@ async function runResearch() {
   const quant     = buildQuantScreen(quotes, universe);
   const staleness = buildStalenessStats(history, universe);
   const spotlight = pickSpotlightGroup(universeData.groups);
+  const track     = buildTrackRecord(history, quotes);
   const currentSet   = new Set(staleness.currentTickers);
-  const defensiveSet = new Set(universeData.groups.find(g => g.key === "defensive")?.tickers ?? []);
+  const defensiveTickers = universeData.groups.find(g => g.key === "defensive")?.tickers ?? [];
+  const defensiveSet = new Set(defensiveTickers);
+  // Challengers skip EXTENDED names: chasing a vertical move is how the old
+  // book bought MU / MRVL / FCX near short-term tops.
   const challengers  = quant.rows
-    .filter(r => !currentSet.has(r.ticker) && !defensiveSet.has(r.ticker))
+    .filter(r => !currentSet.has(r.ticker) && !defensiveSet.has(r.ticker) && !r.flags.includes("EXTENDED"))
     .slice(0, 8)
     .map(r => r.ticker);
   const phaseExtras = {
@@ -968,58 +1290,66 @@ async function runResearch() {
     stalenessText: staleness.text,
     challengers,
     spotlight,
+    trackRecordText: track.text,
+    defensiveScreen: buildDefensiveScreen(quotes, defensiveTickers),
   };
   if (spotlight)          console.log(`  🔦 Spotlight group today: ${spotlight.label}`);
-  if (challengers.length) console.log(`  🥊 Challengers (high-momentum, not held): ${challengers.join(", ")}`);
+  if (challengers.length) console.log(`  🥊 Challengers (high-score, not held, not extended): ${challengers.join(", ")}`);
+  if (track.summary)      console.log(`  📊 Track record: growth ${track.summary.growthBookPct}% vs SPY ${track.summary.spyPct}% over ${track.summary.sessions} rebalances; 10d hit rate ${track.summary.hitRate10d ?? "—"}%`);
 
   // ── Run research phases 1–5 ──
   const collected = {};
   const phases    = getPhases(collected, today, universe, historyDigest, phaseExtras);
+  const cachedReady = useCache && [...STABLE_PHASES].every(id => cachedPhases[id]);
+
+  if (cachedReady) {
+    try {
+      Object.assign(collected, await runCombinedDelta(cachedPhases, today));
+      usedCachedPhases.push(...STABLE_PHASES);
+    } catch (err) {
+      console.error("  ❌ Combined delta failed:", err.message, "— reusing cached text as-is");
+      for (const id of STABLE_PHASES) collected[id] = baseText(cachedPhases[id]);
+      failedPhases.push("delta");
+    }
+  }
 
   for (const phase of phases.slice(0, 5)) {
+    if (collected[phase.id] !== undefined) continue; // served by the delta
     try {
-      if (useCache && STABLE_PHASES.has(phase.id) && cachedPhases[phase.id]) {
-        // Delta update: pass cache + do ≤1 search for what changed
-        collected[phase.id] = await runDeltaPhase(phase.id, phase.label, cachedPhases[phase.id], today);
-        usedCachedPhases.push(phase.id);
-      } else {
-        // Full fresh research with ≤2 searches
-        collected[phase.id] = await runPhase(phase, today, 4000);
-      }
-      await new Promise(r => setTimeout(r, 2000));
+      collected[phase.id] = await runPhase(phase, today);
     } catch (err) {
       console.error(`  ❌ Phase ${phase.label} failed:`, err.message);
       failedPhases.push(phase.id);
       // Fall back to last known cached phase if we have one — better stale data
       // than an error string in the synthesis prompt.
-      if (cachedPhases[phase.id]) {
-        console.warn(`     ↪ falling back to cached ${phase.label}`);
-        collected[phase.id] = cachedPhases[phase.id];
-      } else {
-        collected[phase.id] = ""; // Empty string is benign in synthesis prompt
-      }
+      collected[phase.id] = cachedPhases[phase.id] ? baseText(cachedPhases[phase.id]) : "";
     }
   }
 
-  if (useCache && usedCachedPhases.length > 0) {
-    console.log(`\n  💾 Cache used for: ${usedCachedPhases.join(", ")} (saved ${usedCachedPhases.length * 2} searches)`);
+  if (usedCachedPhases.length > 0) {
+    console.log(`\n  💾 Cache used for: ${usedCachedPhases.join(", ")} (1 combined delta call instead of ${usedCachedPhases.length} full phases)`);
   }
 
-  // ── Run picks phase with larger token budget (no web search — pure synthesis) ──
+  // ── Synthesis (no web search — pure reasoning over the research) ──
   console.log("\n  🏆 Generating Top 10 Picks + 5 Defensive (synthesizing all phases)...");
   let picks = null;
+  let validationWarnings = [];
   try {
     const picksPhase = getPhases(collected, today, universe, historyDigest, phaseExtras)[5];
-    const picksRaw   = await runPhase(picksPhase, today, 16000);
+    const picksRaw   = await runSynthesis(picksPhase);
     picks = extractJSON(picksRaw);
     // Validate we actually got picks
     if (!Array.isArray(picks.picks) || picks.picks.length === 0) {
       throw new Error("Picks array is missing or empty");
     }
+    const checked = validatePortfolio(picks.picks);
+    picks.picks = checked.picks;
+    validationWarnings = checked.warnings;
+    validationWarnings.forEach(w => console.warn(`  ⚠️  ${w}`));
     const growthTickers    = picks.picks.filter(p => p.category !== "defensive").map(p => p.ticker);
-    const defensiveTickers = picks.picks.filter(p => p.category === "defensive").map(p => p.ticker);
+    const defensiveTickersOut = picks.picks.filter(p => p.category === "defensive").map(p => p.ticker);
     console.log(`\n  🎯 GROWTH (${growthTickers.length}): ${growthTickers.join(", ")}`);
-    console.log(`  🛡  DEFENSIVE (${defensiveTickers.length}): ${defensiveTickers.join(", ")}`);
+    console.log(`  🛡  DEFENSIVE (${defensiveTickersOut.length}): ${defensiveTickersOut.join(", ")}`);
   } catch (err) {
     console.error("  ❌ Picks generation failed:", err.message);
     // Preserve previous picks rather than blanking the UI on a transient failure
@@ -1183,7 +1513,13 @@ async function runResearch() {
       quantScreenTickers: quant.rows.length,
       spotlightGroup:     spotlight?.key ?? null,
       challengers,
+      models:             { research: RESEARCH_MODEL, synthesis: SYNTHESIS_MODEL },
+      usage:              usageTotals,
+      validationWarnings,
     },
+
+    // Realized performance of the published book vs SPY (computed each run)
+    trackRecord: track.summary,
 
     ...(picks.error ? { error: picks.error } : {}),
   };
@@ -1199,6 +1535,7 @@ async function runResearch() {
   console.log(`✅ Results saved to ${OUTPUT_PATH}`);
   console.log(`📊 Macro Outlook: ${output.macroOutlook} | Defensive Score: ${output.defensiveScore}/10`);
   console.log(`🔄 ${CYCLE_INFO.label} run complete${cacheNote}`);
+  console.log(`💰 ${usageTotals.calls} API calls · ${usageTotals.input} in / ${usageTotals.output} out tokens · ${usageTotals.searches} web searches`);
   console.log("━".repeat(60));
 
   return output;
@@ -1215,7 +1552,15 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 }
 
 export {
+  client,
+  runResearch,
   buildQuantScreen,
+  buildDefensiveScreen,
+  buildTrackRecord,
+  computeQuoteMetrics,
+  validatePortfolio,
+  splitCombinedDelta,
+  baseText,
   buildStalenessStats,
   pickSpotlightGroup,
   fetchTickerQuote,
