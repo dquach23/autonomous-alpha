@@ -21,14 +21,20 @@ Track record: the previously published books are scored vs SPY
   (cumulative return, 10-day hit rate, per-holding since-entry return)
        ↓
 Research phases (Claude Sonnet 5.5 + live web search, hard search caps):
-  1. Macro Climate  2. Sector Rotation  3. Price & Earnings Momentum
+  1. Macro Climate  2. Sector Rotation  3. Fundamentals per candidate
   4. Smart Money    5. Risk Assessment
        ↓
-Synthesis (Claude Opus 5.5, no web search, schema-constrained JSON):
-  Top 10 growth book + 5 defensive, reading the screen + track record
+Factor scoring (Claude Opus 5.5, blind to current holdings):
+  each candidate rated on revisions / quality / valuation / catalyst / risk;
+  defensive names rated on regime fit; regime call from computed price data
        ↓
-Code-level validation: dedupe, 10 + 5 sleeves, conviction caps,
-  weights normalized to 100%, sector-cap warnings
+Deterministic ranking & construction (code):
+  composite = 35% momentum + 20% revisions + 15% quality + 15% valuation
+              + 15% catalyst − risk & flag penalties
+  buy top 10 / hold until below #15, ≤3 per sector, ≥5 sectors,
+  defensive sleeve diversified by exposure bucket, weights ∝ score / volatility
+       ↓
+Write-up (Claude Sonnet 5.5): theses for the chosen names — cannot change them
        ↓
 Results saved to public/picks.json
        ↓
@@ -36,6 +42,14 @@ Auto-commit pushed → Vercel redeploys → app updates
 ```
 
 ### Pick quality mechanics
+
+- **Analytical, not anchored.** The model never sees yesterday's list when it
+  rates stocks, and it doesn't choose the portfolio: code ranks every candidate
+  on a transparent composite, so the book moves exactly as much as the data
+  does. Each pick shows its factor breakdown, its rank change (▲/▼/NEW), and
+  every dropped name comes with the numeric reason (Research tab → Today's changes).
+- **Turnover buffer.** Holdings are kept while they still rank in the top 15 and
+  sold once they fall below it — names don't flip on noise, but stale names go.
 
 - **Better momentum math.** Momentum is measured 12-1 and 6-1 months (the most
   recent month is skipped because 1-month returns tend to reverse) and divided by
@@ -47,8 +61,9 @@ Auto-commit pushed → Vercel redeploys → app updates
   SPY. Holdings lagging SPY by 8+ points since entry *and* below their 50/200dma
   are marked ⚠REVIEW and must be exited unless there's new evidence. The track
   record is shown on the Research tab.
-- **Calibrated conviction.** At most 3 "high" names in the growth book and 2 in the
-  defensive sleeve. Weights are sized by conviction and inverse volatility.
+- **Calibrated conviction.** Conviction comes from the composite score (at most 3
+  "high" in the growth book). Weights are composite ÷ volatility, and the
+  defensive sleeve's total weight follows the regime's shield score.
 - **Defensive sleeve on data.** Defensive candidates are ranked on momentum, low
   volatility and shallow drawdowns, so the sleeve rotates with the regime instead
   of holding the same five names indefinitely.
@@ -187,12 +202,13 @@ halo/
 - **Vercel**: free (static hosting)
 - **Anthropic API**: research on Claude Sonnet 5.5 ($2/$10 per MTok, a third
   cheaper than Sonnet 4.6), synthesis on Claude Opus 5.5. Tue–Thu runs make 3 calls
-  (1 combined delta, momentum, synthesis); Mon/Fri make 6. Web searches are capped
+  (1 combined delta, fundamentals, scoring, write-up); Mon/Fri make 7. Web searches are capped
   per call with `max_uses` and use the dynamic-filtering search tool, which trims
   the tokens search results add. Each run logs its token and search totals,
   which are saved under `metadata.usage` in `picks.json`.
-- Models are overridable with the `HALO_RESEARCH_MODEL` / `HALO_SYNTHESIS_MODEL`
-  env vars (e.g. set the synthesis to `claude-sonnet-5-5` for the cheapest setup).
+- Models are overridable with the `HALO_RESEARCH_MODEL` / `HALO_SCORING_MODEL` /
+  `HALO_WRITEUP_MODEL` env vars (e.g. set scoring to `claude-sonnet-5-5` for the
+  cheapest setup). If scoring fails, the book is ranked on price factors alone.
 
 Monthly cost: **< $5**
 

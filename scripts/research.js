@@ -8,8 +8,10 @@
  * from realized results instead of only its own narrative.
  * Stable phases (macro, sectors, smart money, risk) are cached for 28h and
  * refreshed Tue–Thu by ONE combined delta call (1 search). Research runs on
- * Sonnet 5.5; the final portfolio synthesis runs on Opus 5.5 with
- * schema-constrained JSON output, then is validated and repaired in code.
+ * Sonnet 5.5. Opus 5.5 then rates every candidate on separate factors without
+ * seeing current holdings; code combines those ratings with the price factors
+ * into a composite, ranks, and builds the portfolio under hard rules; Sonnet
+ * 5.5 writes the theses for the chosen names.
  * Saves results to ../public/picks.json for the frontend to consume
  */
 
@@ -31,11 +33,13 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 // ── Models ────────────────────────────────────────────────────────────────────
 // Research phases are retrieval + summarization over web search: Sonnet 5.5 is
 // both cheaper ($2/$10 per MTok) and stronger than the Sonnet 4.6 it replaces.
-// The final portfolio synthesis is the one call where reasoning quality moves
-// the picks, so it runs on Opus 5.5 with no web search attached. Both are
+// Factor scoring is the one call where judgment moves the rankings, so it runs
+// on Opus 5.5 (no web search; compact structured output keeps it cheap). The
+// write-up only explains a fixed portfolio, so it runs on Sonnet 5.5. All are
 // overridable from the workflow env without a code change.
 const RESEARCH_MODEL  = process.env.HALO_RESEARCH_MODEL  || "claude-sonnet-5-5";
-const SYNTHESIS_MODEL = process.env.HALO_SYNTHESIS_MODEL || "claude-opus-5-5";
+const SCORING_MODEL   = process.env.HALO_SCORING_MODEL   || process.env.HALO_SYNTHESIS_MODEL || "claude-opus-5-5";
+const WRITEUP_MODEL   = process.env.HALO_WRITEUP_MODEL   || "claude-sonnet-5-5";
 const WEB_SEARCH_TOOL = "web_search_20260209"; // dynamic filtering trims result tokens
 // Server-side refusal fallback: a policy decline is re-run on a fallback model
 // inside the same call instead of failing the phase.
@@ -155,18 +159,12 @@ function pickSpotlightGroup(groups) {
 // portfolio manager would consult before making allocation decisions. Prompts
 // are deliberately demanding — concrete numbers, specific levels, named
 // catalysts — because vague output corrupts the synthesis.
-function getPhases(collected, today, universe, historyDigest = "", extras = {}) {
+function getPhases(today, universe, extras = {}) {
   const {
-    quantTable = "",       // full computed factor screen (momentum phase)
-    quantCompact = "",     // leaders + laggards digest (picks synthesis)
-    stalenessText = "",    // holding streaks + never-picked names
-    challengers = [],      // top quant names not currently held
+    quantTable = "",       // computed factor screen for today's candidates
+    candidates = [],       // growth candidates the scorer will rate
     spotlight = null,      // today's rotating universe group
-    trackRecordText = "",  // realized performance of the published book vs SPY
-    defensiveScreen = "",  // defensive candidates ranked on vol/drawdown/trend
   } = extras;
-  // Cap each research input so a verbose phase can't balloon synthesis cost.
-  const clip = (t, n = 4000) => !t ? "" : t.length > n ? t.slice(0, n) + "…" : t;
   return [
     {
       id: "macro",
@@ -217,26 +215,20 @@ Rank top→bottom for a 1–5 year long-only investor. For each, give: relative 
     {
       id: "momentum",
       label: "Price & Earnings Momentum",
-      prompt: `You are a quantitative analyst running a multi-factor momentum + quality screen. Today is ${today}.
+      prompt: `You are a fundamental analyst preparing evidence for a factor-scoring committee. Today is ${today}.
 
 ${quantTable
-  ? `TODAY'S COMPUTED FACTOR SCREEN for the full universe — real price data (volatility-adjusted 12-1M / 6-1M momentum, relative strength vs SPY, volatility, drawdown, trend, risk flags). Treat these numbers as ground truth for price momentum; do NOT re-derive returns from memory:
+  ? `Price factors for today's candidates are already computed from real data (treat as ground truth — do not re-derive returns):\n\n${quantTable}`
+  : `(Computed price screen unavailable today.)`}
 
-${quantTable}`
-  : `Universe: ${universe.join(", ")}\n(Computed price screen unavailable today — use web search to establish 3M/6M relative strength vs SPY.)`}
+For EACH candidate below, report the fundamental evidence the committee needs. Use web search (max 3) on the names where recent data is most likely to have changed — recent earnings, guidance changes, large estimate revisions. For the rest use what you know, and say "no recent change" rather than inventing numbers.
 
-Your job — combine the price screen above with FUNDAMENTAL momentum you verify via web search (max 2 searches):
-- **Earnings revisions**: analyst FY estimate revision direction last 4–13 weeks (up = good)
-- **Earnings surprise rate**: % beat on last 4 quarters of EPS
-- **Quality overlay**: gross margin trend, FCF yield, ROIC trajectory (penalize stocks with deteriorating fundamentals even if price is mooning)
+Candidates: ${candidates.join(", ")}
+${spotlight ? `Also cover the rotating spotlight group: ${spotlight.tickers.filter(t => !candidates.includes(t)).join(", ") || "(already covered)"}.\n` : ""}
+Output one line per ticker, in this exact shape:
+TICKER | revisions: <direction + magnitude of FY EPS/revenue estimate changes, last ~3 months> | last quarter: <beat/miss + guidance> | valuation: <fwd P/E or EV/sales vs own 5y average> | quality: <margin/FCF/ROIC trend> | next catalyst: <dated event>
 
-Prioritize your searches on names the screen ranks highly that are NOT already obvious consensus picks — that is where verification adds the most value. A high price score with falling estimates is a trap; a mid score with sharply rising estimates is an opportunity.
-${spotlight ? `
-TODAY'S SPOTLIGHT GROUP: **${spotlight.label}** (${spotlight.tickers.join(", ")}). Give each spotlight name one line of assessment even if it doesn't make your top list — this group rotates daily so the entire universe gets a fresh look over time.
-` : ""}
-Output:
-1. The TOP 10 names with the strongest combined price + fundamental momentum. For each: ticker, a 1-sentence rationale citing screen numbers plus fundamental data, and say whether fundamentals confirm the price trend. Treat EXTENDED-flagged names as "wait for a pullback" unless estimates are rising faster than price.
-${challengers.length > 0 ? `2. CHALLENGER ASSESSMENT: for each of these high-momentum names that are NOT in the current book — ${challengers.join(", ")} — one sentence on whether today's data supports inclusion. Be honest: if one deserves a slot over an incumbent, say so plainly.` : ""}`,
+Keep each line under 60 words. No preamble, no ranking — the committee does the ranking.`,
     },
     {
       id: "smart",
@@ -276,50 +268,6 @@ Cover:
 4. **Cross-asset risk signals** — VIX term structure (contango / backwardation), HY credit spread direction, USD trajectory, breadth (% of S&P above 200dma). Flag any divergences between equity strength and credit / breadth.
 
 Be specific. Name real risks, not generic warnings.`,
-    },
-    {
-      id: "picks",
-      label: "Daily Top 10 Picks + 5 Defensive",
-      prompt: `You are an elite long-only portfolio manager running a concentrated, diversified book for a 1–5 year horizon. Your job is to beat SPY on a risk-adjusted basis — not to be busy, and not to be loyal to yesterday's list. Today is ${today}.
-
-═══ TODAY'S RESEARCH ═══
-MACRO CONTEXT:
-${clip(collected.macro) || "(unavailable)"}
-
-SECTOR ROTATION:
-${clip(collected.sectors) || "(unavailable)"}
-
-MOMENTUM & FUNDAMENTALS:
-${clip(collected.momentum, 5000) || "(unavailable)"}
-
-SMART MONEY:
-${clip(collected.smart) || "(unavailable)"}
-
-RISK ASSESSMENT:
-${clip(collected.risk) || "(unavailable)"}
-${quantCompact ? `\n═══ QUANT FACTOR SCREEN (computed from real prices — ground truth for any price/trend claim) ═══\n${quantCompact}\n` : ""}${defensiveScreen ? `\n${defensiveScreen}\n` : ""}${trackRecordText ? `\n═══ YOUR TRACK RECORD (realized, vs SPY) ═══\n${trackRecordText}\nLearn from this. If the book has lagged SPY, today's picks must change something that explains the lag (e.g. stop buying EXTENDED names, cut names in DOWNTREND, rely more on the factor screen) — say what in the summary.\n` : ""}${historyDigest ? `\n═══ RECENT POSITIONING (last 7 cycles) ═══\n${historyDigest}\n${stalenessText ? `\nHOLDING STALENESS:\n${stalenessText}\n` : ""}` : ""}
-═══ HOW TO DECIDE ═══
-1. Start from evidence, not from yesterday's list. A holding stays only if it would be bought fresh today. "It was in the book" is never a reason; any name held 15+ days needs fresh evidence cited in its rationale.
-2. The factor screen surfaces candidates; fundamentals decide. The best longs sit at an intersection: strong factor score AND rising estimates/quality AND a dated catalyst. A name with a weak score needs a specific contrarian catalyst — being early without a catalyst is the same as being wrong.
-3. Respect the flags. Do not initiate a position in a name flagged EXTENDED (short-term reversal risk — wait for a pullback; holding an existing position is fine). Names flagged DOWNTREND or BROKEN need an explicit catalyst-backed reason to be held or bought.
-4. Sell discipline: any holding marked ⚠REVIEW is exited unless today's research gives a new, specific reason the thesis is intact.
-5. Avoid crowded consensus trades where everyone already owns it and expectations are priced in; prefer under-appreciated second-order beneficiaries of a theme.
-${challengers.length > 0 ? `6. Challengers (top-ranked factor names not currently held): ${challengers.join(", ")}. Evaluate each; if you keep an incumbent over a challenger, the summary must say why on today's numbers.\n` : ""}
-═══ PORTFOLIO CONSTRUCTION (hard rules) ═══
-- Exactly 15 picks: 10 growth-book picks (category growth/value/income), ranked 1–10, then 5 defensive picks (category defensive), ranked 1–5. Growth book first in the array.
-- Growth book: max 3 per GICS sector, at least 5 sectors, no three names that are one factor bet (e.g. NVDA+AVGO+AMD).
-- Defensive sleeve: re-derive daily from the current regime and the defensive ranking above. Span at least 3 of: long-duration Treasuries, gold, dividend/quality equity ETFs, utilities, staples. No doubling one exposure (TLT and IEF). Do not hold a defensive name in a DOWNTREND just because it is "defensive".
-- Conviction must discriminate: at most 3 "high" in the growth book and 2 in the defensive sleeve; the rest "medium" or "speculative".
-- suggestedWeight: integers 3–15 summing to ~100 across all 15. Size by conviction and inversely to volatility (high-vol names smaller). Total defensive weight should track defensiveScore (shield 3 → ~15–20%, shield 7 → ~40–50%).
-- Asymmetry: upside should plausibly be ≥2x the downside over the horizon.
-
-═══ FIELDS ═══
-score 0–100 (your overall conviction score) · horizon e.g. "1-3 years" · rationale 2–3 sentences citing at least one screen number AND one fundamental/catalyst datapoint from the research · catalyst = the single most important dated upcoming event · catalystWindow · entryNote = valuation vs history and technical position (use screen numbers) · exitTrigger = the specific observable that would make you sell · keyRisk · smartMoneyBacking.
-summary: 3–4 sentences — regime call; how the two sleeves express it; what changed vs yesterday and why (carry-overs vs. adds/drops, with data); the dominant risk.
-diversificationNote: 1–2 sentences naming growth-book sectors, defensive exposures, and any factor concentration accepted.
-macroOutlook: one of Bullish / Cautiously Bullish / Neutral / Cautious / Bearish. defensiveScore: 1 (full risk-on) – 10 (full defensive).
-
-Universe: ${universe.join(", ")}`,
     },
   ];
 }
@@ -520,7 +468,7 @@ function buildQuantScreen(quotes, universe) {
           rows.slice(-10).map(line).join("\n")
         : "")
     : "";
-  return { rows, table, compact };
+  return { rows, table, compact, header, line };
 }
 
 // Defensive sleeve gets its own ranking: what matters there is low volatility,
@@ -529,16 +477,17 @@ function buildDefensiveScreen(quotes, defensiveTickers) {
   const rows = defensiveTickers
     .map(t => ({ ticker: t, m: quotes[t]?.metrics }))
     .filter(r => r.m);
-  if (rows.length === 0) return "";
+  if (rows.length === 0) return { rows: [], text: "" };
   const zMom = zScores(rows.map(r => r.m.mom6_1 ?? r.m.r6m));
   const zVol = zScores(rows.map(r => -(r.m.vol ?? 0)));
   const zDD  = zScores(rows.map(r => r.m.maxDD6m));
   rows.forEach((r, i) => { r.score = Number((0.4 * zMom[i] + 0.3 * zVol[i] + 0.3 * zDD[i]).toFixed(2)); });
   rows.sort((a, b) => b.score - a.score);
-  return "Defensive candidates ranked by 6-1M momentum + low vol + shallow drawdown:\n" + rows.map(r =>
+  const text = "Defensive candidates ranked by 6-1M momentum + low vol + shallow drawdown:\n" + rows.map(r =>
     `${r.ticker.padEnd(5)} score ${fmtSigned(r.score)}  6-1M ${fmtSigned(r.m.mom6_1)}%  3M ${fmtSigned(r.m.r3m)}%  ` +
     `vol ${r.m.vol ?? "—"}%  maxDD6m ${fmtSigned(r.m.maxDD6m)}%  ${r.m.above200dma === false ? "[DOWNTREND]" : ">200dma"}`
   ).join("\n");
+  return { rows, text };
 }
 
 // ─── Staleness stats: how long has each current holding been in the book? ────
@@ -786,49 +735,391 @@ async function runCombinedDelta(cachedPhases, today) {
   return out;
 }
 
-// ─── Portfolio synthesis: no web search, schema-constrained JSON ─────────────
-const STR = { type: "string" };
-const PICK_SCHEMA = {
-  type: "object",
-  additionalProperties: false,
-  properties: {
-    rank: { type: "integer" }, ticker: STR, score: { type: "integer" }, name: STR, sector: STR, horizon: STR,
-    category: { type: "string", enum: ["growth", "value", "income", "defensive"] },
-    conviction: { type: "string", enum: ["high", "medium", "speculative"] },
-    suggestedWeight: { type: "integer" },
-    rationale: STR, catalyst: STR, catalystWindow: STR, entryNote: STR, exitTrigger: STR, keyRisk: STR,
-    smartMoneyBacking: { type: "boolean" },
-  },
-  required: ["rank", "ticker", "score", "name", "sector", "horizon", "category", "conviction", "suggestedWeight",
-             "rationale", "catalyst", "catalystWindow", "entryNote", "exitTrigger", "keyRisk", "smartMoneyBacking"],
+// ─── Analytical portfolio engine ─────────────────────────────────────────────
+// The old design asked one model call to "pick 15 stocks" while showing it
+// yesterday's list; it anchored, and the book barely moved for 60 days. Now:
+//   1. SCORE   — the model rates every candidate on separate fundamental
+//                factors WITHOUT seeing current holdings (blind scoring).
+//   2. RANK    — code combines those ratings with the computed price factors
+//                into one composite, then builds the book under hard rules.
+//   3. WRITE   — a cheaper model writes the theses for the names code chose;
+//                it cannot change the selection.
+// Every pick carries its factor breakdown, so each ranking is explainable and
+// moves whenever its inputs move.
+
+const FACTOR_WEIGHTS = {
+  momentum: 0.35,  // computed: vol-adjusted 12-1M / 6-1M + 52w-high proximity (z-score)
+  revisions: 0.20, // analyst estimate revisions, -2..+2
+  quality: 0.15,   // margins / FCF / ROIC trend, -2..+2
+  valuation: 0.15, // vs own history & peers given growth, -2..+2
+  catalyst: 0.15,  // dated catalyst in the next ~2 quarters, 0..2 (centered)
 };
-const PICKS_SCHEMA = {
+const RISK_PENALTY_PER_POINT = 0.15;     // model-rated idiosyncratic risk, 0..2
+const FLAG_PENALTY = { EXTENDED_NEW: 0.40, DOWNTREND: 0.25, BROKEN: 0.25, REVIEW: 0.60 };
+// Turnover buffer ("buy top 10, sell below 15"): a holding is kept while it
+// still ranks inside the top 15 on today's data, so names don't flip in and
+// out on rating noise — but anything that genuinely falls away is sold.
+const HOLD_BUFFER_RANK = 15;
+const GROWTH_CANDIDATES = 28;
+
+// Exposure buckets for the defensive sleeve (diversification is enforced here).
+const DEFENSIVE_BUCKETS = {
+  TLT: "treasuries", IEF: "treasuries", GLD: "gold",
+  SCHD: "dividend ETF", VYM: "dividend ETF",
+  D: "utilities", SO: "utilities", DUK: "utilities", NEE: "utilities",
+  KO: "staples", PG: "staples", PEP: "staples", CL: "staples", PM: "staples",
+  VZ: "telecom", T: "telecom",
+};
+const BUCKET_CAP = { treasuries: 1, gold: 1, "dividend ETF": 1, utilities: 2, staples: 2, telecom: 1 };
+
+const clampInt = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.round(Number(v) || 0)));
+
+function buildCandidates(quant, holdings, defensiveSet, spotlight, groups = []) {
+  const growthRows = quant.rows.filter(r => !defensiveSet.has(r.ticker));
+  const pool = new Set(growthRows.slice(0, GROWTH_CANDIDATES).map(r => r.ticker));
+  // Best two names from every universe group, so the sector rules always have
+  // enough breadth to fill the book from.
+  for (const g of groups) {
+    if (g.key === "defensive") continue;
+    growthRows.filter(r => g.tickers.includes(r.ticker)).slice(0, 2).forEach(r => pool.add(r.ticker));
+  }
+  // Incumbents are always re-scored (so they can be cut on evidence), and the
+  // spotlight group's best names get a look even if they rank mid-pack.
+  holdings.filter(t => !defensiveSet.has(t)).forEach(t => pool.add(t));
+  if (spotlight) {
+    growthRows.filter(r => spotlight.tickers.includes(r.ticker)).slice(0, 3).forEach(r => pool.add(r.ticker));
+  }
+  return growthRows.filter(r => pool.has(r.ticker)).map(r => r.ticker);
+}
+
+// Regime inputs computed from prices, so the macro call is anchored to data
+// rather than to yesterday's wording.
+function buildRegimeStats(quotes) {
+  const m = (t) => quotes[t]?.metrics;
+  const spy = m("SPY");
+  if (!spy) return "";
+  const fmt = (t) => {
+    const x = m(t);
+    return x ? `${t}: 1M ${fmtSigned(x.r1m)}% 3M ${fmtSigned(x.r3m)}% vs200dma ${fmtSigned(x.pctVs200dma)}% vol ${x.vol ?? "—"}%` : null;
+  };
+  return ["SPY", "TLT", "IEF", "GLD", "XLU", "SCHD"].map(fmt).filter(Boolean).join("\n") +
+    `\nSPY drawdown from 52w high: ${fmtSigned(spy.pctFrom52wHigh)}%, max drawdown 6M: ${fmtSigned(spy.maxDD6m)}%`;
+}
+
+const SCORING_SCHEMA = {
   type: "object",
   additionalProperties: false,
   properties: {
-    picks: { type: "array", items: PICK_SCHEMA },
-    summary: STR,
-    diversificationNote: STR,
-    macroOutlook: { type: "string", enum: ["Bullish", "Cautiously Bullish", "Neutral", "Cautious", "Bearish"] },
-    defensiveScore: { type: "integer" },
+    regime: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        macroOutlook: { type: "string", enum: ["Bullish", "Cautiously Bullish", "Neutral", "Cautious", "Bearish"] },
+        defensiveScore: { type: "integer" },
+        evidence: { type: "string" },
+      },
+      required: ["macroOutlook", "defensiveScore", "evidence"],
+    },
+    growth: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          ticker: { type: "string" }, sector: { type: "string" },
+          revisions: { type: "integer" }, quality: { type: "integer" }, valuation: { type: "integer" },
+          catalyst: { type: "integer" }, risk: { type: "integer" },
+          evidence: { type: "string" },
+        },
+        required: ["ticker", "sector", "revisions", "quality", "valuation", "catalyst", "risk", "evidence"],
+      },
+    },
+    defensive: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: { ticker: { type: "string" }, regimeFit: { type: "integer" }, evidence: { type: "string" } },
+        required: ["ticker", "regimeFit", "evidence"],
+      },
+    },
   },
-  required: ["picks", "summary", "diversificationNote", "macroOutlook", "defensiveScore"],
+  required: ["regime", "growth", "defensive"],
 };
 
-async function runSynthesis(phaseConfig) {
-  console.log(`\n  🧠 Synthesis on ${SYNTHESIS_MODEL}...`);
-  const message = await callClaude(phaseConfig.label, {
-    model: SYNTHESIS_MODEL,
-    max_tokens: 32000,
-    output_config: {
-      effort: "high",
-      format: { type: "json_schema", schema: PICKS_SCHEMA },
-    },
-    system: "You are the portfolio manager. Every number you cite must come from the research and screens provided — do not invent prices, multiples or dates.",
-    messages: [{ role: "user", content: phaseConfig.prompt }],
+function buildScoringPrompt({ today, collected, quantLines, defensiveText, regimeStats, candidates, defensiveTickers }) {
+  const clip = (t, n = 3500) => !t ? "(unavailable)" : t.length > n ? t.slice(0, n) + "…" : t;
+  return `You are the factor-scoring committee for a long-only equity fund. Today is ${today}.
+You do not pick stocks and you do not know what the fund currently owns. You rate each candidate on each factor, independently, from the evidence below. A separate deterministic process combines your ratings with computed price factors.
+
+═══ EVIDENCE ═══
+MACRO:
+${clip(collected.macro)}
+
+SECTOR ROTATION:
+${clip(collected.sectors)}
+
+FUNDAMENTALS BY CANDIDATE:
+${clip(collected.momentum, 9000)}
+
+SMART MONEY:
+${clip(collected.smart)}
+
+RISK:
+${clip(collected.risk)}
+
+COMPUTED REGIME DATA (real prices):
+${regimeStats || "(unavailable)"}
+
+COMPUTED PRICE FACTORS (real prices; already scored — do not rate momentum yourself):
+${quantLines}
+
+${defensiveText}
+
+═══ RATING SCALES (integers) ═══
+revisions  -2..+2  analyst EPS/revenue estimate revisions over ~3 months (-2 sharp cuts, 0 flat/unknown, +2 strong raises)
+quality    -2..+2  margin, FCF and ROIC trajectory (-2 deteriorating, +2 improving from a high base)
+valuation  -2..+2  price vs own history and peers, adjusted for growth (-2 priced for perfection, +2 clearly cheap)
+catalyst    0..2   0 none, 1 plausible catalyst in ~2 quarters, 2 dated, high-impact catalyst in ~2 quarters
+risk        0..2   idiosyncratic blow-up risk: 0 normal, 1 elevated (litigation, concentration, leverage), 2 severe
+regimeFit  -2..+2  (defensive names) how well this exposure fits the CURRENT regime per the computed regime data
+
+═══ RULES ═══
+- Be discriminating. Use the full range; most names should NOT get the same rating. If evidence is missing, use 0 and say "no data" — never invent numbers.
+- Each "evidence" field: one sentence citing the specific datapoint(s) behind the ratings.
+- Rate every growth candidate: ${candidates.join(", ")}
+- Rate every defensive name: ${defensiveTickers.join(", ")}
+- sector: the GICS sector of the company.
+- regime: macroOutlook and defensiveScore (1 full risk-on … 10 full defensive) derived from the computed regime data and the research. Re-derive from today's numbers; "evidence" must cite them.`;
+}
+
+function scoreToComposite(z) {
+  return Math.max(1, Math.min(99, Math.round(50 + 18 * z)));
+}
+
+// Combines model ratings + computed factors into a composite per candidate.
+function computeComposites({ quant, candidates, scoring, holdings, reviewSet }) {
+  const byTicker = new Map((scoring?.growth || []).map(g => [String(g.ticker).toUpperCase(), g]));
+  const rowOf = new Map(quant.rows.map(r => [r.ticker, r]));
+  const held = new Set(holdings);
+  return candidates.map(t => {
+    const r = rowOf.get(t);
+    const a = byTicker.get(t);
+    const f = {
+      momentum: r ? r.score : 0,
+      revisions: a ? clampInt(a.revisions, -2, 2) : 0,
+      quality: a ? clampInt(a.quality, -2, 2) : 0,
+      valuation: a ? clampInt(a.valuation, -2, 2) : 0,
+      catalyst: a ? clampInt(a.catalyst, 0, 2) - 1 : 0,
+    };
+    const risk = a ? clampInt(a.risk, 0, 2) : 0;
+    let composite = Object.entries(FACTOR_WEIGHTS).reduce((sum, [k, w]) => sum + w * f[k], 0);
+    const adjustments = [];
+    const add = (label, v) => { composite += v; adjustments.push(`${label} ${v >= 0 ? "+" : ""}${v.toFixed(2)}`); };
+    if (risk) add(`risk ${risk}`, -RISK_PENALTY_PER_POINT * risk);
+    const flags = r?.flags ?? [];
+    if (flags.includes("EXTENDED") && !held.has(t)) add("extended (new buy)", -FLAG_PENALTY.EXTENDED_NEW);
+    if (flags.includes("DOWNTREND")) add("downtrend", -FLAG_PENALTY.DOWNTREND);
+    if (flags.includes("BROKEN")) add("broken", -FLAG_PENALTY.BROKEN);
+    if (reviewSet.has(t)) add("sell-discipline review", -FLAG_PENALTY.REVIEW);
+    return {
+      ticker: t,
+      sector: a?.sector || "Unclassified",
+      composite: Number(composite.toFixed(3)),
+      factors: { ...f, catalyst: f.catalyst + 1, risk, momentum: Number(f.momentum.toFixed(2)) },
+      adjustments,
+      flags,
+      evidence: a?.evidence || "",
+      vol: r?.m?.vol ?? null,
+      scored: Boolean(a),
+    };
+  }).sort((x, y) => y.composite - x.composite);
+}
+
+// Greedy selection under the hard rules: ≤3 per sector, ≥5 sectors, with the
+// turnover buffer applied first.
+function selectGrowthBook(ranked, { holdings = [], size = 10, maxPerSector = 3, minSectors = 5 } = {}) {
+  const book = [];
+  const count = {};
+  const held = new Set(holdings);
+  const kept = ranked.slice(0, HOLD_BUFFER_RANK).filter(c => held.has(c.ticker) && !c.adjustments.some(a => a.startsWith("sell-discipline")));
+  for (const c of [...kept, ...ranked]) {
+    if (book.includes(c)) continue;
+    if (book.length >= size) break;
+    if ((count[c.sector] || 0) >= maxPerSector) continue;
+    book.push(c); count[c.sector] = (count[c.sector] || 0) + 1;
+  }
+  // Too concentrated? Swap the weakest pick in the most crowded sector for the
+  // best-ranked name from a sector not yet represented.
+  let guard = 0;
+  while (new Set(book.map(b => b.sector)).size < minSectors && guard++ < 10) {
+    const have = new Set(book.map(b => b.sector));
+    const incoming = ranked.find(c => !have.has(c.sector) && !book.includes(c));
+    if (!incoming) break;
+    const crowded = Object.entries(count).sort((a, b) => b[1] - a[1])[0][0];
+    const outIdx = book.map(b => b.sector).lastIndexOf(crowded);
+    count[crowded]--; count[incoming.sector] = (count[incoming.sector] || 0) + 1;
+    book.splice(outIdx, 1, incoming);
+    book.sort((a, b) => b.composite - a.composite);
+  }
+  // Not enough sector breadth among candidates: fill remaining slots by rank.
+  for (const c of ranked) {
+    if (book.length >= size) break;
+    if (!book.includes(c)) { book.push(c); book.relaxed = true; }
+  }
+  const relaxed = book.relaxed;
+  book.sort((a, b) => b.composite - a.composite);
+  book.relaxed = relaxed;
+  return book;
+}
+
+function selectDefensiveSleeve(defRows, scoring, size = 5) {
+  const fit = new Map((scoring?.defensive || []).map(d => [String(d.ticker).toUpperCase(), d]));
+  const ranked = defRows.map(r => {
+    const d = fit.get(r.ticker);
+    const regimeFit = d ? clampInt(d.regimeFit, -2, 2) : 0;
+    const downtrend = r.m.above200dma === false;
+    const composite = r.score + 0.5 * regimeFit - (downtrend ? 0.5 : 0);
+    return {
+      ticker: r.ticker, bucket: DEFENSIVE_BUCKETS[r.ticker] || "other",
+      composite: Number(composite.toFixed(3)),
+      factors: { stability: r.score, regimeFit },
+      adjustments: downtrend ? ["downtrend -0.50"] : [],
+      flags: downtrend ? ["DOWNTREND"] : [],
+      evidence: d?.evidence || "", vol: r.m.vol ?? null,
+    };
+  }).sort((a, b) => b.composite - a.composite);
+  const sleeve = [], used = {};
+  for (const c of ranked) {
+    if (sleeve.length >= size) break;
+    if ((used[c.bucket] || 0) >= (BUCKET_CAP[c.bucket] ?? 1)) continue;
+    sleeve.push(c); used[c.bucket] = (used[c.bucket] || 0) + 1;
+  }
+  return sleeve;
+}
+
+// Weights: conviction from composite rank, size ∝ composite / volatility,
+// sleeve split set by the regime's defensive score.
+function assignWeights(growth, defensive, defensiveScore) {
+  const defTotal = Math.max(15, Math.min(60, 5 + 5 * defensiveScore));
+  const raw = (list, total) => {
+    const base = list.map(c => Math.max(0.05, c.composite + 1) / Math.max(10, c.vol ?? 25));
+    const sum = base.reduce((a, b) => a + b, 0) || 1;
+    return base.map(b => b / sum * total);
+  };
+  const gw = raw(growth, 100 - defTotal), dw = raw(defensive, defTotal);
+  return { growthWeights: gw, defensiveWeights: dw, defensiveTotal: defTotal };
+}
+
+function convictionFor(c, idx) {
+  if (idx < 3 && c.composite >= 0.5) return "high";
+  if (c.composite < 0.1 || (c.flags || []).length > 0) return "speculative";
+  return "medium";
+}
+
+function buildPortfolio({ growthRanked, defensiveSleeve, scoring, holdings = [] }) {
+  const growthBook = selectGrowthBook(growthRanked, { holdings });
+  if (growthBook.relaxed) console.warn("  ⚠️  Sector cap relaxed: not enough sector breadth among candidates");
+  const shield = clampInt(scoring?.regime?.defensiveScore ?? 5, 1, 10);
+  const { growthWeights, defensiveWeights } = assignWeights(growthBook, defensiveSleeve, shield);
+  const growth = growthBook.map((c, i) => ({
+    rank: i + 1, ticker: c.ticker, sector: c.sector, category: "growth",
+    conviction: convictionFor(c, i), suggestedWeight: Math.round(growthWeights[i]),
+    score: scoreToComposite(c.composite),
+    analysis: { composite: c.composite, factors: c.factors, adjustments: c.adjustments, flags: c.flags, evidence: c.evidence },
+  }));
+  const defensive = defensiveSleeve.map((c, i) => ({
+    rank: i + 1, ticker: c.ticker, sector: c.bucket, category: "defensive",
+    conviction: i < 2 && c.composite > 0.5 ? "high" : "medium", suggestedWeight: Math.round(defensiveWeights[i]),
+    score: scoreToComposite(c.composite),
+    analysis: { composite: c.composite, factors: c.factors, adjustments: c.adjustments, flags: c.flags, evidence: c.evidence },
+  }));
+  return { picks: [...growth, ...defensive], shield };
+}
+
+// Day-over-day changes with the data behind them, so churn is explainable.
+function computeChanges(picks, prevEntry, growthRanked) {
+  const prev = new Map((prevEntry?.picks || []).map(p => [p.ticker, p]));
+  const now = new Set(picks.map(p => p.ticker));
+  const rankPos = new Map(growthRanked.map((c, i) => [c.ticker, { pos: i + 1, c }]));
+  const annotated = picks.map(p => {
+    const before = prev.get(p.ticker);
+    const sameSleeve = before && (before.category === "defensive") === (p.category === "defensive");
+    return { ...p, rankChange: sameSleeve ? before.rank - p.rank : null, isNew: !sameSleeve };
   });
-  if (message.stop_reason === "max_tokens") throw new Error("synthesis truncated at max_tokens");
-  return textOf(message);
+  const dropped = [...prev.values()].filter(p => !now.has(p.ticker)).map(p => {
+    const r = rankPos.get(p.ticker);
+    return {
+      ticker: p.ticker,
+      reason: r
+        ? `composite ${r.c.composite.toFixed(2)} now ranks #${r.pos} of ${growthRanked.length}` +
+          (r.pos <= HOLD_BUFFER_RANK ? " — displaced by the sector cap or sell-discipline" : ` — below the top-${HOLD_BUFFER_RANK} hold buffer`) +
+          (r.c.adjustments.length ? ` (${r.c.adjustments.join(", ")})` : "")
+        : (p.category === "defensive" ? "outranked within the defensive sleeve / bucket cap" : "fell out of the candidate pool"),
+    };
+  });
+  return { picks: annotated, dropped, added: annotated.filter(p => p.isNew).map(p => p.ticker) };
+}
+
+const STR = { type: "string" };
+const WRITEUP_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    picks: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          ticker: STR, name: STR, horizon: STR, rationale: STR, catalyst: STR, catalystWindow: STR,
+          entryNote: STR, exitTrigger: STR, keyRisk: STR, smartMoneyBacking: { type: "boolean" },
+        },
+        required: ["ticker", "name", "horizon", "rationale", "catalyst", "catalystWindow", "entryNote", "exitTrigger", "keyRisk", "smartMoneyBacking"],
+      },
+    },
+    summary: STR,
+    diversificationNote: STR,
+  },
+  required: ["picks", "summary", "diversificationNote"],
+};
+
+function buildWriteupPrompt({ today, picks, changes, scoring, collected, quant, trackRecordText }) {
+  const rowOf = new Map(quant.rows.map(r => [r.ticker, r]));
+  const lines = picks.map(p => {
+    const r = rowOf.get(p.ticker);
+    const px = r ? ` | price: 12-1M ${fmtSigned(r.m.mom12_1)}%, 1M ${fmtSigned(r.m.r1m)}%, off52wHi ${fmtSigned(r.m.pctFrom52wHigh)}%, vs200dma ${fmtSigned(r.m.pctVs200dma)}%` : "";
+    return `${p.category === "defensive" ? "DEF" : "GRW"} #${p.rank} ${p.ticker} (${p.sector}) weight ${p.suggestedWeight}% conviction ${p.conviction} | composite ${p.analysis.composite} | factors ${JSON.stringify(p.analysis.factors)}${p.analysis.adjustments.length ? ` | adj: ${p.analysis.adjustments.join(", ")}` : ""}${px} | evidence: ${p.analysis.evidence}`;
+  }).join("\n");
+  const clip = (t, n = 2500) => !t ? "" : t.length > n ? t.slice(0, n) + "…" : t;
+  return `You are writing the daily portfolio brief. Today is ${today}. The portfolio below was selected by a deterministic factor model — you do not change it; you explain it precisely.
+
+PORTFOLIO (already final):
+${lines}
+
+CHANGES VS PREVIOUS BOOK: added ${changes.added.join(", ") || "none"}; dropped ${changes.dropped.map(d => `${d.ticker} (${d.reason})`).join("; ") || "none"}.
+REGIME: ${scoring?.regime?.macroOutlook ?? "Neutral"}, defensive score ${scoring?.regime?.defensiveScore ?? "—"} — ${scoring?.regime?.evidence ?? ""}
+${trackRecordText ? `TRACK RECORD:\n${trackRecordText}\n` : ""}
+SUPPORTING RESEARCH (fundamentals by candidate):
+${clip(collected.momentum, 6000)}
+
+For every ticker (same tickers, any order): name (full company/fund name); horizon (e.g. "1-3 years"); rationale (2–3 sentences tying the factor scores to the evidence — cite numbers); catalyst (the most important dated upcoming event); catalystWindow; entryNote (valuation vs history + technical position, using the price data given); exitTrigger (a specific observable that would cut the position); keyRisk; smartMoneyBacking (true only if the research shows notable institutional buying).
+summary: 3–4 sentences — regime call with its numbers, how the two sleeves express it, what changed today and the data that drove it, the dominant risk.
+diversificationNote: 1–2 sentences on sector spread, defensive exposures, and any factor concentration.
+Use only numbers present above. Be analytical and specific; no filler.`;
+}
+
+async function runStructured(label, model, effort, prompt, schema, system) {
+  console.log(`\n  🧠 ${label} on ${model}...`);
+  const message = await callClaude(label, {
+    model,
+    max_tokens: 32000,
+    output_config: { effort, format: { type: "json_schema", schema } },
+    system,
+    messages: [{ role: "user", content: prompt }],
+  });
+  if (message.stop_reason === "max_tokens") throw new Error(`${label} truncated at max_tokens`);
+  return extractJSON(textOf(message));
 }
 
 // ─── Robust JSON extraction ───────────────────────────────────────────────────
@@ -1223,7 +1514,6 @@ async function runResearch() {
   const universeData = loadUniverseData();
   const universe     = universeData.groups.flatMap(g => g.tickers);
   const history      = loadHistory();
-  const historyDigest = buildHistoryDigest(history);
 
   console.log("━".repeat(60));
   console.log("🚀 HALO - Daily Research Engine");
@@ -1275,31 +1565,26 @@ async function runResearch() {
   const staleness = buildStalenessStats(history, universe);
   const spotlight = pickSpotlightGroup(universeData.groups);
   const track     = buildTrackRecord(history, quotes);
-  const currentSet   = new Set(staleness.currentTickers);
   const defensiveTickers = universeData.groups.find(g => g.key === "defensive")?.tickers ?? [];
   const defensiveSet = new Set(defensiveTickers);
-  // Challengers skip EXTENDED names: chasing a vertical move is how the old
-  // book bought MU / MRVL / FCX near short-term tops.
-  const challengers  = quant.rows
-    .filter(r => !currentSet.has(r.ticker) && !defensiveSet.has(r.ticker) && !r.flags.includes("EXTENDED"))
-    .slice(0, 8)
-    .map(r => r.ticker);
+  const defScreen  = buildDefensiveScreen(quotes, defensiveTickers);
+  const candidates = buildCandidates(quant, staleness.currentTickers, defensiveSet, spotlight, universeData.groups);
+  const candidateSet = new Set(candidates);
+  const quantLines = quant.rows.filter(r => candidateSet.has(r.ticker)).map(quant.line).join("\n");
+  const reviewSet  = new Set((track.summary?.holdings || []).filter(h => h.review).map(h => h.ticker));
   const phaseExtras = {
-    quantTable:    quant.table,
-    quantCompact:  quant.compact,
-    stalenessText: staleness.text,
-    challengers,
+    quantTable: quant.header + quantLines,
+    candidates,
     spotlight,
-    trackRecordText: track.text,
-    defensiveScreen: buildDefensiveScreen(quotes, defensiveTickers),
   };
-  if (spotlight)          console.log(`  🔦 Spotlight group today: ${spotlight.label}`);
-  if (challengers.length) console.log(`  🥊 Challengers (high-score, not held, not extended): ${challengers.join(", ")}`);
-  if (track.summary)      console.log(`  📊 Track record: growth ${track.summary.growthBookPct}% vs SPY ${track.summary.spyPct}% over ${track.summary.sessions} rebalances; 10d hit rate ${track.summary.hitRate10d ?? "—"}%`);
+  if (spotlight)    console.log(`  🔦 Spotlight group today: ${spotlight.label}`);
+  console.log(`  🎯 ${candidates.length} growth candidates to score: ${candidates.join(", ")}`);
+  if (track.summary) console.log(`  📊 Track record: growth ${track.summary.growthBookPct}% vs SPY ${track.summary.spyPct}% over ${track.summary.sessions} rebalances; 10d hit rate ${track.summary.hitRate10d ?? "—"}%`);
+  if (reviewSet.size) console.log(`  ⚠️  Sell-discipline review: ${[...reviewSet].join(", ")}`);
 
   // ── Run research phases 1–5 ──
   const collected = {};
-  const phases    = getPhases(collected, today, universe, historyDigest, phaseExtras);
+  const phases    = getPhases(today, universe, phaseExtras);
   const cachedReady = useCache && [...STABLE_PHASES].every(id => cachedPhases[id]);
 
   if (cachedReady) {
@@ -1313,15 +1598,15 @@ async function runResearch() {
     }
   }
 
-  for (const phase of phases.slice(0, 5)) {
+  for (const phase of phases) {
     if (collected[phase.id] !== undefined) continue; // served by the delta
     try {
-      collected[phase.id] = await runPhase(phase, today);
+      collected[phase.id] = await runPhase(phase, today, phase.id === "momentum" ? { maxTokens: 8000, maxSearches: 3 } : undefined);
     } catch (err) {
       console.error(`  ❌ Phase ${phase.label} failed:`, err.message);
       failedPhases.push(phase.id);
       // Fall back to last known cached phase if we have one — better stale data
-      // than an error string in the synthesis prompt.
+      // than an error string in the scoring prompt.
       collected[phase.id] = cachedPhases[phase.id] ? baseText(cachedPhases[phase.id]) : "";
     }
   }
@@ -1330,26 +1615,75 @@ async function runResearch() {
     console.log(`\n  💾 Cache used for: ${usedCachedPhases.join(", ")} (1 combined delta call instead of ${usedCachedPhases.length} full phases)`);
   }
 
-  // ── Synthesis (no web search — pure reasoning over the research) ──
-  console.log("\n  🏆 Generating Top 10 Picks + 5 Defensive (synthesizing all phases)...");
+  // ── Score → rank → construct → write up ──
   let picks = null;
   let validationWarnings = [];
+  let changes = { added: [], dropped: [] };
+  let growthRanked = [];
   try {
-    const picksPhase = getPhases(collected, today, universe, historyDigest, phaseExtras)[5];
-    const picksRaw   = await runSynthesis(picksPhase);
-    picks = extractJSON(picksRaw);
-    // Validate we actually got picks
-    if (!Array.isArray(picks.picks) || picks.picks.length === 0) {
-      throw new Error("Picks array is missing or empty");
+    let scoring = null;
+    try {
+      scoring = await runStructured("Factor scoring", SCORING_MODEL, "high",
+        buildScoringPrompt({
+          today, collected, quantLines, defensiveText: defScreen.text,
+          regimeStats: buildRegimeStats(quotes), candidates, defensiveTickers,
+        }),
+        SCORING_SCHEMA,
+        "You are a disciplined, evidence-driven equity analyst. Rate, don't advocate. Every rating must be traceable to the evidence provided.");
+      const missing = candidates.filter(t => !(scoring.growth || []).some(g => String(g.ticker).toUpperCase() === t));
+      if (missing.length) validationWarnings.push(`scorer skipped ${missing.join(", ")} (rated neutral)`);
+    } catch (err) {
+      // Degrade to a price-factor-only book rather than failing the cycle.
+      console.error("  ❌ Factor scoring failed:", err.message, "— ranking on computed factors only");
+      failedPhases.push("scoring");
+      validationWarnings.push(`scoring failed (${err.message}); ranked on price factors only`);
     }
+
+    growthRanked = computeComposites({ quant, candidates, scoring, holdings: staleness.currentTickers, reviewSet });
+    const defensiveSleeve = selectDefensiveSleeve(defScreen.rows, scoring);
+    const built = buildPortfolio({ growthRanked, defensiveSleeve, scoring, holdings: staleness.currentTickers });
+    const prevEntry = history.entries[history.entries.length - 1];
+    const diff = computeChanges(built.picks, prevEntry, growthRanked);
+    changes = { added: diff.added, dropped: diff.dropped };
+    console.log("\n  📐 Composite ranking (top 15):");
+    growthRanked.slice(0, 15).forEach((c, i) => console.log(
+      `     ${String(i + 1).padStart(2)}. ${c.ticker.padEnd(6)} ${c.composite.toFixed(2).padStart(6)}  ${JSON.stringify(c.factors)}${c.adjustments.length ? "  " + c.adjustments.join(", ") : ""}`));
+
+    let writeup = null;
+    try {
+      writeup = await runStructured("Portfolio write-up", WRITEUP_MODEL, "medium",
+        buildWriteupPrompt({ today, picks: diff.picks, changes, scoring, collected, quant, trackRecordText: track.text }),
+        WRITEUP_SCHEMA,
+        "You are the portfolio manager's analyst. Explain the given portfolio precisely; never alter it. Every number you cite must come from the prompt.");
+    } catch (err) {
+      console.error("  ❌ Write-up failed:", err.message, "— publishing with evidence notes only");
+      failedPhases.push("writeup");
+    }
+    const text = new Map((writeup?.picks || []).map(w => [String(w.ticker).toUpperCase(), w]));
+    const fallbackText = (p) => ({
+      name: p.ticker, horizon: "1-3 years",
+      rationale: p.analysis.evidence || `Composite ${p.analysis.composite} on ${JSON.stringify(p.analysis.factors)}.`,
+      catalyst: "See research", catalystWindow: "—", entryNote: "—", exitTrigger: "Composite falls out of the top ranks", keyRisk: "—",
+      smartMoneyBacking: false,
+    });
+    picks = {
+      picks: diff.picks.map(p => {
+        const { ticker: _t, ...w } = text.get(p.ticker) || fallbackText(p);
+        return { ...p, ...w };
+      }),
+      summary: writeup?.summary || `Factor-ranked book. Added: ${changes.added.join(", ") || "none"}. Dropped: ${changes.dropped.map(d => d.ticker).join(", ") || "none"}.`,
+      diversificationNote: writeup?.diversificationNote || "",
+      macroOutlook: scoring?.regime?.macroOutlook ?? existingData?.macroOutlook ?? "Neutral",
+      defensiveScore: built.shield,
+      regimeEvidence: scoring?.regime?.evidence ?? "",
+    };
     const checked = validatePortfolio(picks.picks);
     picks.picks = checked.picks;
-    validationWarnings = checked.warnings;
+    validationWarnings.push(...checked.warnings);
     validationWarnings.forEach(w => console.warn(`  ⚠️  ${w}`));
-    const growthTickers    = picks.picks.filter(p => p.category !== "defensive").map(p => p.ticker);
-    const defensiveTickersOut = picks.picks.filter(p => p.category === "defensive").map(p => p.ticker);
-    console.log(`\n  🎯 GROWTH (${growthTickers.length}): ${growthTickers.join(", ")}`);
-    console.log(`  🛡  DEFENSIVE (${defensiveTickersOut.length}): ${defensiveTickersOut.join(", ")}`);
+    console.log(`\n  🎯 GROWTH: ${picks.picks.filter(p => p.category !== "defensive").map(p => p.ticker).join(", ")}`);
+    console.log(`  🛡  DEFENSIVE: ${picks.picks.filter(p => p.category === "defensive").map(p => p.ticker).join(", ")}`);
+    console.log(`  🔁 Added: ${changes.added.join(", ") || "none"} · Dropped: ${changes.dropped.map(d => d.ticker).join(", ") || "none"}`);
   } catch (err) {
     console.error("  ❌ Picks generation failed:", err.message);
     // Preserve previous picks rather than blanking the UI on a transient failure
@@ -1416,6 +1750,7 @@ async function runResearch() {
         score:      p.score,
         conviction: p.conviction,
         suggestedWeight: p.suggestedWeight,
+        composite:  p.analysis?.composite,
         catalyst:   p.catalyst,
       })),
       ...(picks.error ? { error: picks.error } : {}),
@@ -1512,14 +1847,21 @@ async function runResearch() {
       historyEntries:     history.entries.length,
       quantScreenTickers: quant.rows.length,
       spotlightGroup:     spotlight?.key ?? null,
-      challengers,
-      models:             { research: RESEARCH_MODEL, synthesis: SYNTHESIS_MODEL },
+      candidates,
+      models:             { research: RESEARCH_MODEL, scoring: SCORING_MODEL, writeup: WRITEUP_MODEL },
       usage:              usageTotals,
       validationWarnings,
     },
 
     // Realized performance of the published book vs SPY (computed each run)
     trackRecord: track.summary,
+    regimeEvidence: picks.regimeEvidence ?? "",
+    changes,
+    // Full composite ranking of today's candidates (explains every in/out)
+    ranking: growthRanked.slice(0, 20).map((c, i) => ({
+      rank: i + 1, ticker: c.ticker, sector: c.sector, composite: c.composite,
+      factors: c.factors, adjustments: c.adjustments,
+    })),
 
     ...(picks.error ? { error: picks.error } : {}),
   };
@@ -1553,6 +1895,12 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 
 export {
   client,
+  buildCandidates,
+  computeComposites,
+  selectGrowthBook,
+  selectDefensiveSleeve,
+  buildPortfolio,
+  computeChanges,
   runResearch,
   buildQuantScreen,
   buildDefensiveScreen,
