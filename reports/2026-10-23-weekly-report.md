@@ -1,0 +1,354 @@
+# Halo Weekly Report
+**Week of October 18, 2026** · Generated October 23, 2026
+**Macro Outlook:** Cautiously Bullish · **Shield:** 4/10
+
+## Synthesis
+
+The regime is Cautiously Bullish with a defensive score of 4: SPY is +6.4% above its 200dma, -0.8% off its 52w high, with 10.7% vol and +4.7% over 3M, but 1M is flat, SCHD (+2.7% 1M) is beating SPY and TLT/IEF are at -5.4%/-4.1% vs the 200dma. The growth sleeve takes the risk-on side (MU, MPC, AMD, TSM, plus energy and health care), while the defensive sleeve holds KO, SCHD and PM, with IEF at 3% and D at 0%. Today ABBV, WELL and MRK were added, and TMO (#20), V (#16) and EOG (#19) were dropped for falling below the top-15 hold buffer on composites of 0.28, 0.33 and 0.29. The dominant risk is that the growth book trails SPY (+1.9% vs SPY +4.6%, -2.7 pts) with a 43% hit rate, and most fundamentals are unverified apart from MU's.
+
+**Diversification:** The growth sleeve is spread across Information Technology (MU, AMD, TSM), Energy (MPC, XOM), Health Care (LLY, ABBV, MRK), Consumer Staples (TGT) and Real Estate (WELL), with defensives in staples (KO, PM), a dividend ETF (SCHD) and treasuries (IEF). Factor concentration is high on momentum, since most growth names score on momentum while revisions are 0 for all but MU, and semiconductor and energy names are correlated within their groups.}
+
+---
+
+## Top 10 Picks · Growth Book (this week's portfolio)
+
+### 1. MU — Micron Technology, Inc.
+**Score** 73/100 · **Sector** Information Technology · **Horizon** 6-12 months · **Category** growth · **Conviction** high · **Weight** 5%
+
+**Thesis.** Top composite (1.285) is driven by momentum 2.1 and revisions 2. The live data confirms upward revisions, with FY EPS consensus ~$177 rising to ~$207 (+17%). FQ4 EPS was $33.42 vs $31.77 est, and revenue was +379% y/y. The risk adjustment of -0.15 reflects peak-cycle margins.
+
+**Catalyst.** FQ1 earnings (estimated, unconfirmed) _(window: ~Dec 23, 2026)_
+
+**Entry.** Trailing P/E is ~12, which looks low but sits on cycle-high margins. The stock is -16.6% over 1M and -24.7% off its 52w high, though still +25.7% vs the 200dma after +441.9% over 12-1M. The pullback gives a better entry than at the high, but the trend is damaged. Position is only 5d old at -1.9% (-2.1 vs SPY).
+
+**Exit trigger.** Consensus FY EPS revisions turn from upward to flat or down, or price closes below the 200dma (currently +25.7% above).
+
+**Key risk.** Memory peak-cycle mean reversion: margins and FCF are at cycle highs, so a drop in pricing would hit both earnings and the multiple.
+
+### 2. MPC — Marathon Petroleum Corporation
+**Score** 62/100 · **Sector** Energy · **Horizon** 3-6 months · **Category** growth · **Conviction** high · **Weight** 7%
+
+**Thesis.** Composite 0.648 rests almost entirely on momentum 2.28 (12-1M +113.1%); revisions are 0 because no data exists, and valuation is -1. Buybacks and MPLX cash flow support it, but refining margins are cyclical. It is the largest contributor to the growth book at +49.0% since entry (+44.8 vs SPY, 56d).
+
+**Catalyst.** Q3 earnings (unconfirmed) _(window: ~early Nov 2026)_
+
+**Entry.** Valuation is unverified; +66.6% vs the 200dma suggests an elevated multiple. The stock is +20.1% over 1M and only -3.5% off its 52w high, so entry is extended.
+
+**Exit trigger.** Q3 print or guidance showing refining margin compression, or a close below the 200dma after the extended run.
+
+**Key risk.** Cyclical refining margins mean-reverting from an extended, unverified-valuation level, with no revision data to confirm earnings support.
+
+### 3. AMD — Advanced Micro Devices, Inc.
+**Score** 61/100 · **Sector** Information Technology · **Horizon** 1-2 years · **Category** growth · **Conviction** high · **Weight** 4%
+
+**Thesis.** Composite 0.591: momentum 1.69 (12-1M +162.1%) and quality 1 offset valuation -1. Revisions are unverified (0). The data-center GPU/EPYC mix is lifting margins.
+
+**Catalyst.** Q3 earnings (unconfirmed) _(window: ~early Nov 2026)_
+
+**Entry.** Valuation is likely above its 5y average (unverified). The stock is -11.4% over 1M and -14.9% off its 52w high but +38.5% vs the 200dma. The position is 1d old at +0.0%.
+
+**Exit trigger.** Q3 results or guidance showing data-center margin mix stalling, or a close below the 200dma.
+
+**Key risk.** A premium valuation with unverified revisions leaves little room for an earnings miss after a +162.1% run.
+
+### 4. TGT — Target Corporation
+**Score** 61/100 · **Sector** Consumer Staples · **Horizon** 6-12 months · **Category** growth · **Conviction** medium · **Weight** 9%
+
+**Thesis.** Composite 0.584 combines momentum 1.24 and quality 1, with neutral revisions and valuation (both unverified). Margins are recovering from the 2024-25 trough and FCF is solid. 12-1M is +68.5%.
+
+**Catalyst.** Q3 earnings (approximate) _(window: ~mid-Nov 2026)_
+
+**Entry.** Valuation is unverified. The stock is -4.2% over 1M and -10.3% off its 52w high, but +15.1% vs the 200dma. The position is -0.4% (-0.2 vs SPY) after 13d.
+
+**Exit trigger.** Q3 margins fail to continue recovering from the trough, or price closes below the 200dma.
+
+**Key risk.** The margin recovery may stall, which would undercut a +68.5% 12-1M rally built on a rebound thesis.
+
+### 5. LLY — Eli Lilly and Company
+**Score** 59/100 · **Sector** Health Care · **Horizon** 1-3 years · **Category** growth · **Conviction** medium · **Weight** 7%
+
+**Thesis.** Composite 0.503: quality 2 (operating margin ~40%+ and expanding) and momentum 1.01, offset by valuation -1 (premium to pharma peers). Revisions are 0; an upward direction is only suspected on GLP-1 volume.
+
+**Catalyst.** Q3 earnings (approximate) _(window: ~late Oct/early Nov 2026)_
+
+**Entry.** It trades at a premium to peers (unverified vs history). The stock is +8.6% over 1M, -1.0% off its 52w high and +17.3% vs the 200dma, so it is near highs. The position is 1d old at +0.0%.
+
+**Exit trigger.** Q3 shows GLP-1 volume or margin expansion slowing, or a close below the 200dma.
+
+**Key risk.** A premium valuation near the 52w high means any slowdown in GLP-1 growth or margins could compress the multiple.
+
+### 6. ABBV — AbbVie Inc.
+**Score** 59/100 · **Sector** Health Care · **Horizon** 1-2 years · **Category** growth · **Conviction** medium · **Weight** 10%
+
+**Thesis.** New addition with composite 0.486: momentum 0.96 and quality 1; revisions and valuation are neutral at 0 because data is lacking. Strong FCF and Skyrizi/Rinvoq are offsetting Humira erosion.
+
+**Catalyst.** Q3 earnings (approximate) _(window: ~late Oct 2026)_
+
+**Entry.** No valuation data. The stock is +7.4% over 1M, -1.5% off its 52w high and +21.3% vs the 200dma, with 12-1M at +14.6%. It is a momentum-supported entry near highs.
+
+**Exit trigger.** Skyrizi/Rinvoq growth fails to cover Humira erosion in Q3, or price closes below the 200dma.
+
+**Key risk.** Humira erosion outpacing Skyrizi/Rinvoq growth, at a 10% weight with no valuation or revision data to cross-check.
+
+### 7. WELL — Welltower Inc.
+**Score** 58/100 · **Sector** Real Estate · **Horizon** 1-2 years · **Category** growth · **Conviction** medium · **Weight** 8%
+
+**Thesis.** New addition with composite 0.458: momentum 0.88 and quality 1, with revisions and valuation neutral (no data). Senior-housing occupancy gains are lifting NOI. 12-1M is +31.6%.
+
+**Catalyst.** Q3 earnings (approximate) _(window: ~late Oct 2026)_
+
+**Entry.** There is no P/FFO data, so valuation vs history is unknown. The stock is +1.6% over 1M, -7.1% off its 52w high and only +8.0% vs the 200dma, the least extended in the growth book.
+
+**Exit trigger.** Q3 shows senior-housing occupancy or NOI growth stalling, or a close below the 200dma.
+
+**Key risk.** The largest weight (11%) rests on an occupancy thesis with no valuation data, and the REIT is sensitive to rising yields.
+
+### 8. MRK — Merck & Co., Inc.
+**Score** 58/100 · **Sector** Health Care · **Horizon** 6-12 months · **Category** growth · **Conviction** medium · **Weight** 6%
+
+**Thesis.** New addition with composite 0.441, driven by momentum 1.26 (12-1M +72.2%); quality, revisions and valuation are all 0. Stable margins are balanced against the 2028 Keytruda patent cliff.
+
+**Catalyst.** Q3 earnings (approximate) _(window: ~late Oct 2026)_
+
+**Entry.** No valuation data. The stock is -0.7% over 1M, -4.2% off its 52w high and +19.4% vs the 200dma. It has consolidated after a large 12-1M gain.
+
+**Exit trigger.** Q3 guidance or pipeline news that weakens the post-Keytruda replacement story, or a close below the 200dma.
+
+**Key risk.** The 2028 Keytruda patent cliff versus a pipeline that must replace it.
+
+### 9. XOM — Exxon Mobil Corporation
+**Score** 57/100 · **Sector** Energy · **Horizon** 6-12 months · **Category** growth · **Conviction** medium · **Weight** 9%
+
+**Thesis.** Composite 0.416: momentum 0.76 and quality 1 (strong FCF, mid-teens ROIC); revisions are unverified and tied to crude and refining margins. It pairs with MPC as energy exposure. 12-1M is +40.8%.
+
+**Catalyst.** Q3 earnings (approximate) _(window: ~Oct 30-31, 2026)_
+
+**Entry.** No valuation data. The stock is +12.2% over 1M, only -0.5% off its 52w high and +16.7% vs the 200dma, so it is at the highs. The position is +0.6% (+0.2 vs SPY) after 6d.
+
+**Exit trigger.** Q3 shows weaker crude or refining margins, or a close below the 200dma.
+
+**Key risk.** Earnings are tied to crude and refining margins, and a commodity reversal after a run to the 52w high would hurt both XOM and MPC.
+
+### 10. TSM — Taiwan Semiconductor Manufacturing Company Limited
+**Score** 57/100 · **Sector** Information Technology · **Horizon** 1-3 years · **Category** growth · **Conviction** medium · **Weight** 6%
+
+**Thesis.** Composite 0.402: momentum 0.72 and quality 1 (gross margin above 55%, high ROIC); revisions are neutral (no recent change known) and valuation is unscored. 12-1M is +53.5%.
+
+**Catalyst.** Monthly sales release (approximate); Q4 earnings follow _(window: ~Nov 10, 2026; Q4 ~mid-Jan 2027)_
+
+**Entry.** No valuation data. The stock is -4.4% over 1M, -11.1% off its 52w high and only +8.9% vs the 200dma. The position is +2.8% (+1.9 vs SPY) after 3d.
+
+**Exit trigger.** Monthly sales show a clear slowdown, or a close below the 200dma (currently +8.9% above).
+
+**Key risk.** Semiconductor cycle exposure, which TSM shares with MU and AMD, with a thin cushion over the 200dma.
+
+---
+
+## Top 5 Defensive Picks/ETFs · Shield Sleeve
+
+### 1. KO — The Coca-Cola Company · 🛡 DEFENSIVE
+**Score** 80/100 · **Sector** staples · **Horizon** 1-3 years · **Category** defensive · **Conviction** high · **Weight** 7%
+
+**Thesis.** Top defensive composite (1.65): stability 1.15 and regimeFit 1. 6-1M is +18.7%, 3M +14.2%, vol 17.9% and max drawdown -6.9%. The risk-on tape limits the need for defensives.
+
+**Catalyst.** No dated catalyst in the research; trend persistence above the 200dma is the monitor _(window: None dated)_
+
+**Entry.** No valuation data. The stock is +4.6% over 1M, -1.3% off its 52w high and +14.0% vs the 200dma, so it is near highs. The position is +7.6% (+6.5 vs SPY) after 15d.
+
+**Exit trigger.** A close below the 200dma, or the regime shifting fully risk-on so the defensive score drops.
+
+**Key risk.** Relative underperformance if the risk-on tape strengthens and defensives lose their bid after a +24.4% 12-1M move.
+
+### 2. SCHD — Schwab U.S. Dividend Equity ETF · 🛡 DEFENSIVE
+**Score** 75/100 · **Sector** dividend ETF · **Horizon** 1-3 years · **Category** defensive · **Conviction** high · **Weight** 10%
+
+**Thesis.** Composite 1.41: stability 0.91 and regimeFit 1. 1M is +2.7% vs SPY flat, 3M +5.7%, and vol is 11.4%, which signals rotation into quality-value ballast. It carries the largest defensive weight at 10%.
+
+**Catalyst.** No dated catalyst; relative strength vs SPY is the monitor _(window: None dated)_
+
+**Entry.** No valuation data. The ETF is -1.6% off its 52w high and +7.9% vs the 200dma, a moderate extension. The position is +4.9% (+5.6 vs SPY) after 9d.
+
+**Exit trigger.** SCHD's 1M return falls back below SPY's, ending the rotation signal, or a close below the 200dma.
+
+**Key risk.** Rotation into quality-value reverses, or rising yields pressure dividend payers.
+
+### 3. PM — Philip Morris International Inc. · 🛡 DEFENSIVE
+**Score** 70/100 · **Sector** staples · **Horizon** 1-2 years · **Category** defensive · **Conviction** medium · **Weight** 4%
+
+**Thesis.** Composite 1.12: stability 0.62 and regimeFit 1. 6-1M is +16.0% and it is above its 200dma, but vol of 24.2% and a -10.0% drawdown temper its ballast value, so the weight is only 4%.
+
+**Catalyst.** No dated catalyst in the research; 200dma trend is the monitor _(window: None dated)_
+
+**Entry.** No valuation data. The stock is +3.8% over 1M, -3.9% off its 52w high and +9.4% vs the 200dma. The position is +4.2% (+4.4 vs SPY) after 13d.
+
+**Exit trigger.** A close below the 200dma, or another drawdown beyond the -10.0% already seen.
+
+**Key risk.** Volatility of 24.2% is well above the other defensives, so it may not deliver ballast in a selloff.
+
+### 4. IEF — iShares 7-10 Year Treasury Bond ETF · 🛡 DEFENSIVE
+**Score** 42/100 · **Sector** treasuries · **Horizon** 3-6 months · **Category** defensive · **Conviction** medium · **Weight** 3%
+
+**Thesis.** Composite -0.42: stability 0.58 but regimeFit -1 and a -0.50 downtrend adjustment. It is -4.1% vs the 200dma and 3M -2.8%, but vol is a low 5.4% and shorter duration leaves it less damaged than TLT. It stays in only as a small 3% ballast position.
+
+**Catalyst.** No dated catalyst; the yield trend is the monitor _(window: None dated)_
+
+**Entry.** Not an attractive entry on trend: -6.7% over 12-1M, -1.0% over 1M, -7.9% off its 52w high and -4.1% vs the 200dma. The position is +0.6% (-0.2 vs SPY) after 20d.
+
+**Exit trigger.** The downtrend deepens, with TLT/IEF falling further below their 200dmas (-5.4%/-4.1% now), or the weight is cut to zero in the next rebalance.
+
+**Key risk.** Rising yields, implied by the TLT/IEF downtrends, extend losses in a position meant to be ballast.
+
+### 5. D — Dominion Energy, Inc. · 🛡 DEFENSIVE
+**Score** 33/100 · **Sector** utilities · **Horizon** 3-6 months · **Category** defensive · **Conviction** medium · **Weight** 5%
+
+**Thesis.** Composite -0.96: stability 0.04 and regimeFit -1 plus a -0.50 downtrend adjustment, so the weight is 0%. 3M is -12.8% with a -15.9% drawdown as rising yields pressure rate-sensitive utilities. It is listed but not funded.
+
+**Catalyst.** No dated catalyst; the yield trend (TLT -5.4% vs 200dma) is the monitor _(window: None dated)_
+
+**Entry.** No entry now: -3.5% vs the 200dma, -13.1% off its 52w high and 1M -0.2%. The prior position is +1.1% (+1.8 vs SPY) after 9d.
+
+**Exit trigger.** Already at 0% weight; it would be considered only if it reclaims its 200dma and yields stabilize.
+
+**Key risk.** Rising yields continue to pressure rate-sensitive utilities.
+
+---
+
+## Week's Positioning Evolution
+
+| Date | Outlook | Shield | Tickers |
+|---|---|---|---|
+| 2026-10-17 | Cautiously Bullish | 4/10 | AMD, MU, MPC, LLY, V, XOM, ABBV, COP, TMO, TGT, KO, SCHD, PM, IEF, D |
+| 2026-10-20 | Cautiously Bullish | 4/10 | MPC, TSM, JNJ, TGT, PANW, MRK, XOM, WELL, ABBV, MU, KO, SCHD, PM, IEF, D |
+| 2026-10-21 | Cautiously Bullish | 4/10 | MPC, MU, V, XOM, ABBV, TGT, SNOW, MRK, TSM, EOG, SCHD, KO, PM, IEF, D |
+| 2026-10-22 | Neutral | 5/10 | MPC, MU, AMD, XOM, TGT, LLY, TSM, TMO, V, EOG, SCHD, KO, PM, IEF, D |
+| 2026-10-23 | Cautiously Bullish | 4/10 | MU, MPC, AMD, TGT, LLY, ABBV, WELL, MRK, XOM, TSM, KO, SCHD, PM, IEF, D |
+
+---
+
+## Research Phases
+
+### Macro Climate
+
+I couldn't retrieve any market data. Both of my allowed searches were used up, and neither returned usable results. The first search failed on a parsing error. The retry then hit the search limit. I won't give you specific numbers for Fed funds, yields, CPI, GDPNow, spreads or P/E, because I'd be making them up. A briefing on those would mislead you.
+
+What I can say without live data is how I'd structure the call and which indicators would decide each part of it.
+
+**1. Regime call.** I can't responsibly call the regime today. My framework is to treat it as late-cycle if three things hold together:
+- Core inflation is sticky above 2.5–3%.
+- The curve has un-inverted through bear-steepening, which means a rising term premium.
+- HY OAS is still tight, below about 350bp, while ISM Manufacturing sits near or below 50.
+
+If HY OAS is widening past about 450bp and payrolls have turned negative, I'd move to contraction. If the Fed is cutting into re-accelerating growth with ISM Manufacturing above 52, I'd call it mid-cycle or early-cycle.
+
+**2. What's working and what's breaking.** I'd apply this mapping once the data are confirmed:
+- **Late-cycle with sticky inflation:** this favors quality, free-cash-flow compounders, energy, and short-duration or pricing-power value. It hurts long-duration unprofitable growth, small caps with floating-rate debt, and rate-sensitive housing.
+- **Falling yields with a weakening labor market:** this favors defensives, utilities, healthcare and staples.
+- **Strong nowcast with a falling USD:** this favors cyclicals, industrials, materials and international exposure.
+
+**3. What to watch.** These are the highest-impact items. I haven't verified their dates:
+- The next CPI and PCE prints, especially supercore (services ex-housing).
+- The next FOMC meeting and its dot plot, to see whether the market-implied path matches the Fed's.
+- Q3 earnings season, in particular guidance and forward EPS revisions against the forward P/E multiple (the 10-year average is about 18.5x).
+
+If you'd like, ask me again with search capacity available, or paste in the current figures. I can then turn this into the full numerical brief.
+
+### Sector Rotation
+
+I couldn't pull current market data. Both searches were used up. The first failed on a parsing error and the second hit the tool limit, so I have no live figures for relative strength, revisions, forward P/E, or flows. I won't invent numbers and present them as current.
+
+Below is a framework ranking built on structural and cycle logic. The relative-strength tiers are provisional priors, not measurements. Check them against a live screen before you trade on them.
+
+**Ranking for a 1–5 year long-only mandate (top to bottom)**
+
+1. **Technology / AI infrastructure / semis**: leader (prior).
+   - Why now: earnings power and capex-driven revenue visibility are the strongest in the market, so I'd own it as the core overweight.
+   - Prefer the picks-and-shovels names (semis, networking, power and cooling) over application software.
+   - Valuation is probably rich against its own 10-year median. Size the position with that in mind and add on pullbacks.
+
+2. **Industrials (electrification, aerospace, defense)**: leader (prior).
+   - Why now: grid, data-center power, and defense budgets are multi-year demand drivers that come with backlogs.
+   - Machinery is more cyclical, so I'd favor electrification and aerospace over general machinery.
+   - Valuation is likely above its median, so I'd favor quality.
+
+3. **Financials (capital markets, large banks, insurance)**: coiling (prior).
+   - Why now: a steeper curve, deregulation, and an M&A and IPO recovery help earnings, and valuation is usually closer to fair than most sectors.
+   - Fintech is a higher-beta sleeve, and regional banks depend on credit quality.
+
+4. **Healthcare (split by subsector)**: coiling or lagging (prior).
+   - Pharma and devices: I'd overweight them as cheap-to-fair defensive growth.
+   - Biotech: a good M&A and rate-cut beneficiary.
+   - Managed care: avoid until medical cost trends and margins stabilize.
+   - Why now: the sector typically trades below its own median multiple, which gives a valuation cushion.
+
+5. **Communication Services**: leader or coiling (prior).
+   - Why now: the megacap platforms combine ad growth with AI monetization, but this is concentrated, Tech-adjacent exposure.
+   - Treat it as part of your total mega-cap budget rather than a separate bet.
+
+6. **Energy (midstream over upstream, clean selective)**: lagging (prior).
+   - Why now: midstream pays a yield and has a volume tailwind from AI-driven gas demand. Upstream depends on the oil price, and I'd hold it as a hedge rather …
+
+### Price & Earnings Momentum
+
+MU is the only name with data I checked live. The search budget ran out after one successful query, so every other line is from memory and unverified. I haven't given revision, valuation or margin figures for those names. Dates marked "~" are typical Q3-season timing, not confirmed.
+
+MPC | revisions: unverified, no live data | last quarter: not checked; stock +20% in 1M, so likely a strong refining-margin print | valuation: unverified; price +66.6% vs 200dma suggests a multiple well above its 5y average | quality: buybacks and midstream (MPLX) cash flow; margins cyclical | next catalyst: Q3 earnings ~early Nov 2026 (unconfirmed)
+MU | revisions: upward. FY EPS consensus about $177 now, expected to reach about $207 next year (+17%) | last quarter: FQ4 reported Sep 30, 2026. EPS $33.42 vs $31.77 est (beat); revenue $54.23B, +379% y/y, above consensus | valuation: trailing P/E about 12, low for a memory cycle peak | quality: margins and FCF at cycle highs; peak-cycle risk | next catalyst: FQ1 earnings ~Dec 23, 2026 (estimated, unconfirmed)
+AMD | revisions: unverified | last quarter: unchecked | valuation: unverified, likely above 5y average | quality: data-center GPU and EPYC mix lifting margins | next catalyst: Q3 earnings ~early Nov 2026 (unconfirmed)
+MRK | revisions: no recent change known | last quarter: unchecked | valuation: unverified | quality: Keytruda patent cliff (2028) vs pipeline; margins stable | next catalyst: Q3 earnings late Oct 2026 (~)
+TGT | revisions: unverified | last quarter: unchecked | valuation: unverified | quality: margins recovering from the 2024–25 trough; FCF solid | next catalyst: Q3 earnings ~mid-Nov 2026 (~)
+MRVL | revisions: unverified | last quarter: unchecked | valuation: unverified | quality: custom AI silicon ramp; margin trend unverified | next catalyst: FQ3 earnings ~late Nov/early Dec 2026 (~)
+CRWD | revisions: unverified | last quarter: unchecked | valuation: premium multiple; vs 5y average unverified | quality: FCF margin about 30%; ARR growth is the key metric | next catalyst: FQ3 earnings ~early Dec 2026 (~)
+SNOW | revisions: unverified | last quarter: unchecked | valuation: premium EV/sales; vs 5y average unverified | quality: non-GAAP operating margin about 8–10%; FCF positive | next catalyst: FQ3 earnings ~late Nov 2026 (~)
+PANW | revisions: unverified | last quarter: unchecked | valuation: unverified | quality: FCF margin above 35%; platformization | next catalyst: FQ1 earnings ~mid-Nov 2026 (~)
+LLY | revisions:…
+
+### Smart Money Tracking
+
+I couldn't pull current data. My two web searches were used up on a code error, and the second run hit the tool limit. I'm not going to invent 13F numbers or attribute theses to the wrong filings.
+
+**Timing:** Today is Oct 23, 2026, so the Q3 2026 13Fs aren't out yet. They're due about Nov 14. The latest public filings cover Q2 2026, which were filed in mid-August. Any "last 1–3 months" view from 13Fs is therefore about 2 months stale at best. It also leaves out shorts, non-US positions and most hedges.
+
+**What I can't give you:** Berkshire's latest deltas and cash, Duquesne, Pershing, Appaloosa, Scion, ARK, the Tiger/Coatue/Viking/Lone Pine/Citadel filings, and the recent Elliott, Trian and Starboard 13Ds. I have no verified data on any of them.
+
+**What to check, and where:**
+- **Filings:** Pull the Q2 2026 13F-HR filings from SEC EDGAR for each manager. Compare them with Q1 using WhaleWisdom, Dataroma or HedgeFollow. Search EDGAR for SC 13D and 13D/A filings from the past 90 days for activists.
+- **Berkshire:** Look at the cash and T-bill balance in the 10-Q. Check whether buybacks have continued, and whether there's a net sale of equities. Net selling over many consecutive quarters would be a defensive signal.
+- **Duquesne:** Look for the turnover pattern. Druckenmiller often exits positions within a quarter, so only the persistent holdings matter for a 1+ year view.
+- **Pershing:** The portfolio is concentrated in about 8–12 names. A new or exited position there is meaningful.
+- **Scion:** Burry deregistered Scion in late 2025, so there may be no 13F at all. Rely on his public commentary instead.
+- **ARK:** ARK publishes daily trades. Compare them with the 13F managers to find contrarian divergence.
+
+**How I'd read the Q3 filings when they land:**
+1. **Concentration:** Count how many managers hold the same new name. Three or more independent adds is a real theme. One manager's add is only an idea.
+2. **Selling:** Check which large-cap tech and AI names are being trimmed. Crowded winners are usually where the exits show up first.
+3. **Defensive tilt:** Look for four signs. One is Berkshire's cash share of assets. Another is added staples or healthcare. The third is GLD or TLT call positions. The fourth is index puts. Only count these as defensive if they're a meaningful share of the portfolio.
+
+If you'd like, ask me again and I can run fresh searches to fill in the specifics.
+
+### Risk Assessment
+
+**Data caveat:** My live search calls failed. The first attempt hit a parsing error and the retry hit the tool limit, so I have no current market data. Everything below is a framework from structural knowledge, not today's prices. I have no live figures for VIX, HY spreads, the dollar, breadth or valuations. Check every number against your terminal before acting.
+
+## 1. Single-stock blow-up risk (-25% or worse over 6–12 months)
+These are ranked by structural vulnerability, not by a measured probability.
+
+1. **PLTR.** It has historically traded at extreme multiples, often more than 50x sales. A modest growth deceleration or a government-contract slowdown could cause a large de-rating. Insider selling and retail ownership concentration add to the risk.
+2. **TSLA.** The valuation rests on robotaxi and Optimus optionality, not on auto earnings. Auto gross margins have been under pressure from price cuts and the loss of EV credits. There is also key-man and regulatory (NHTSA/FSD) overhang.
+3. **ALAB and ARM.** Both are high-multiple AI-infrastructure names.
+   - **ALAB:** it is a small-cap with customer concentration among a few hyperscalers.
+   - **ARM:** it has a premium multiple and a dependence on licensing and royalty disputes, including its fight with Qualcomm.
+   - Both are exposed to any cut in AI capex.
+4. **MU.** It is cyclical. Memory (HBM/DRAM) margins peak and then mean-revert hard. A drawdown of 25% or more is normal when pricing rolls over.
+5. **UNH, or alternatively ELV.** The risk is not valuation but medical-cost trends, Medicare Advantage rate and risk-adjustment pressure, and the DOJ probe. Managed care has already shown 30% or larger single-event drops.
+
+**Watch list:**
+- **NVDA:** customer concentration in a handful of hyperscalers, plus export-control risk (China).
+- **META and GOOGL:** antitrust remedies. For GOOGL these are the search and ad-tech cases. For META it is the FTC case.
+- **CRWD:** priced for perfection.
+- **FLUT, CELH and ENPH:** regulatory or margin-sensitive.
+
+## 2. Defensive opportunities
+1. **GLD.** It has low correlation to equities and hedges currency debasement and geopolitical risk. The caveat is that it may be extended after a big run, so size it with that in mind.
+2. **IEF.** It is the better duration hedge than TLT if inflation or term-premium risk persists. Its drawdown profile is smaller.
+3. **BRK.B.** It has a large cash pile, high-quality businesses and a reasonable multiple. It has historically held up in ri…
+
