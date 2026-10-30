@@ -2,181 +2,6 @@
   "version": 1,
   "entries": [
     {
-      "date": "2026-07-31",
-      "generatedAt": "2026-07-31T23:15:00.568Z",
-      "macroOutlook": "Cautiously Bullish",
-      "defensiveScore": 5,
-      "summary": "This is a late-cycle regime with deteriorating leading indicators — payrolls at 57k, Fed funds at 3.50-3.75% with three hawkish dissenters, a 2s10s re-steepening at +45bp from a historic inversion, and forward multiples at 20.1x on elevated earnings expectations that leave zero margin of safety. The 10-position growth book concentrates in the regime's three proven alpha sources — cybersecurity/AI infrastructure (PANW, CRWD, AVGO), capital-markets-levered Financials (SPGI, GS), Energy benefiting from $85 WTI and Strait of Hormuz re-escalation (MPC, EOG), defense (RTX), AI-platform mega-cap (GOOGL), and GLP-1 healthcare (LLY) — collectively spanning five distinct GICS sectors. Carry-overs: AVGO, SPGI, RTX, GOOGL, GS, GLD, SCHD, BRK.B, IEF, KO all re-underwritten on fresh today's data (Samsung $200B MOU for AVGO; SPGI Buy reaffirmations from five banks; WTI at $85 for energy names; Berkshire 13F catalyst for BRK.B; University of Michigan pickup for KO); new initiations are PANW (promoted to rank 1 on Aug 24 earnings proximity), MPC (Q2 print Aug 4), EOG (52-week high at $85 WTI), and LLY (carried forward from yesterday with fresh momentum re-qualification). PWR and VST are removed — both have broken momentum (PWR 3M -8.3% vsSPY -12.2, VST 3M -6.1% <50dma) with no fresh fundamental catalyst to override the trend signal. The dominant risk being underwritten is a September FOMC hike (63% probability) combined with a hot August 12 CPI print that triggers multiple compression across the growth book — the defensive sleeve (GLD, SCHD, BRK.B, IEF, KO) is explicitly sized to provide 23-24% of the portfolio as protection against that scenario.",
-      "diversificationNote": "Growth book spans five GICS sectors: Information Technology (PANW, CRWD, AVGO — three names, the maximum allowed, at different points in the AI stack: endpoint/cloud security, identity/threat intel, and custom silicon), Financials (SPGI, GS — ratings/data analytics vs. capital markets advisory), Energy (MPC, EOG — refining crack-spread beta vs. E&P FCF yield), Industrials (RTX — defense/aerospace, entirely distinct from the tech cluster), Communication Services (GOOGL — AI platform/cloud), and Health Care (LLY — GLP-1 pharmaceutical); PANW and CRWD share cybersecurity end-market exposure but different product architectures and customer segments (platform consolidation vs. endpoint/cloud detection). Defensive sleeve spans four distinct exposures: gold commodity hedge (GLD), broad dividend/quality income equity ETF (SCHD), conglomerate cash-fortress with optionality (BRK.B classified defensive given cash hoard and low beta), intermediate-duration Treasuries (IEF, sized medium given September hike risk), and consumer staples pricing-power anchor (KO) — no two defensive positions share the same risk factor.",
-      "picks": [
-        {
-          "rank": 1,
-          "ticker": "PANW",
-          "name": "Palo Alto Networks",
-          "sector": "Information Technology",
-          "category": "growth",
-          "score": 95,
-          "conviction": "high",
-          "suggestedWeight": 9,
-          "catalyst": "FQ4 2026 earnings report (August 24, after close) — consensus EPS ~$0.98 with revenue guidance reset"
-        },
-        {
-          "rank": 2,
-          "ticker": "CRWD",
-          "name": "CrowdStrike Holdings",
-          "sector": "Information Technology",
-          "category": "growth",
-          "score": 91,
-          "conviction": "high",
-          "suggestedWeight": 8,
-          "catalyst": "Q2 FY2027 earnings release (expected late August) — ARR growth and large deal metrics are the binary decision variable"
-        },
-        {
-          "rank": 3,
-          "ticker": "AVGO",
-          "name": "Broadcom Inc.",
-          "sector": "Information Technology",
-          "category": "growth",
-          "score": 90,
-          "conviction": "high",
-          "suggestedWeight": 9,
-          "catalyst": "FQ3 2026 earnings (expected September) and Samsung MOU revenue visibility — custom AI ASIC backlog update"
-        },
-        {
-          "rank": 4,
-          "ticker": "SPGI",
-          "name": "S&P Global Inc.",
-          "sector": "Financials",
-          "category": "growth",
-          "score": 88,
-          "conviction": "high",
-          "suggestedWeight": 8,
-          "catalyst": "Q3 2026 earnings (October) — Ratings revenue acceleration as refinancing wave continues into H2; share buyback program providing near-term earnings upside per Clear Street"
-        },
-        {
-          "rank": 5,
-          "ticker": "MPC",
-          "name": "Marathon Petroleum Corp.",
-          "sector": "Energy",
-          "category": "value",
-          "score": 87,
-          "conviction": "high",
-          "suggestedWeight": 8,
-          "catalyst": "Q2 2026 earnings (August 4) — refinery throughput and crack spread data against a $85 WTI backdrop"
-        },
-        {
-          "rank": 6,
-          "ticker": "RTX",
-          "name": "RTX Corporation",
-          "sector": "Industrials",
-          "category": "growth",
-          "score": 86,
-          "conviction": "high",
-          "suggestedWeight": 8,
-          "catalyst": "NATO defense spending commitment updates (fall 2026) and Q3 earnings (October) showcasing Pratt & Whitney engine backlog growth"
-        },
-        {
-          "rank": 7,
-          "ticker": "GOOGL",
-          "name": "Alphabet Inc.",
-          "sector": "Communication Services",
-          "category": "growth",
-          "score": 85,
-          "conviction": "high",
-          "suggestedWeight": 7,
-          "catalyst": "Barclays TPU-as-a-Service revenue ramp and Q3 2026 earnings (October) — Cloud revenue acceleration and ad recovery narrative"
-        },
-        {
-          "rank": 8,
-          "ticker": "GS",
-          "name": "Goldman Sachs Group Inc.",
-          "sector": "Financials",
-          "category": "growth",
-          "score": 84,
-          "conviction": "high",
-          "suggestedWeight": 7,
-          "catalyst": "Q3 2026 capital markets volume data and M&A advisory revenue — deal pipeline conversion is the primary earnings driver"
-        },
-        {
-          "rank": 9,
-          "ticker": "EOG",
-          "name": "EOG Resources Inc.",
-          "sector": "Energy",
-          "category": "value",
-          "score": 82,
-          "conviction": "high",
-          "suggestedWeight": 7,
-          "catalyst": "Q2 2026 earnings (report expected early August) — FCF yield confirmation at $85 WTI and shareholder return update"
-        },
-        {
-          "rank": 10,
-          "ticker": "LLY",
-          "name": "Eli Lilly and Company",
-          "sector": "Health Care",
-          "category": "growth",
-          "score": 81,
-          "conviction": "high",
-          "suggestedWeight": 7,
-          "catalyst": "Q3 2026 earnings (October) — Zepbound capacity expansion update and Mounjaro international market penetration data"
-        },
-        {
-          "rank": 1,
-          "ticker": "GLD",
-          "name": "SPDR Gold Shares ETF",
-          "sector": "Commodities",
-          "category": "defensive",
-          "score": 92,
-          "conviction": "high",
-          "suggestedWeight": 7,
-          "catalyst": "August 12 CPI print — a hot CPI would raise Fed hike probability, dollar pressure, and gold demand simultaneously"
-        },
-        {
-          "rank": 2,
-          "ticker": "SCHD",
-          "name": "Schwab U.S. Dividend Equity ETF",
-          "sector": "Multi-Sector Dividend",
-          "category": "defensive",
-          "score": 89,
-          "conviction": "high",
-          "suggestedWeight": 6,
-          "catalyst": "Continued institutional inflows into dividend equity ETFs as the yield curve re-steepening makes quality income names attractive"
-        },
-        {
-          "rank": 3,
-          "ticker": "BRK.B",
-          "name": "Berkshire Hathaway Class B",
-          "sector": "Financials",
-          "category": "defensive",
-          "score": 87,
-          "conviction": "high",
-          "suggestedWeight": 6,
-          "catalyst": "Q2 2026 13F filing (due August 14) — may reveal new positions or further GOOGL accumulation that catalyzes re-rating"
-        },
-        {
-          "rank": 4,
-          "ticker": "IEF",
-          "name": "iShares 7-10 Year Treasury Bond ETF",
-          "sector": "Fixed Income",
-          "category": "defensive",
-          "score": 74,
-          "conviction": "medium",
-          "suggestedWeight": 5,
-          "catalyst": "August 12 CPI print (soft reading would price out the September hike and rally IEF 2-4%) or September 5 payrolls below 75k"
-        },
-        {
-          "rank": 5,
-          "ticker": "KO",
-          "name": "The Coca-Cola Company",
-          "sector": "Consumer Staples",
-          "category": "defensive",
-          "score": 78,
-          "conviction": "medium",
-          "suggestedWeight": 5,
-          "catalyst": "Q3 2026 earnings (October) — pricing realization and emerging market volume data confirming no demand elasticity deterioration"
-        }
-      ]
-    },
-    {
       "date": "2026-08-03",
       "generatedAt": "2026-08-03T23:16:33.130Z",
       "macroOutlook": "Cautiously Bullish",
@@ -10768,6 +10593,196 @@
           "suggestedWeight": 5,
           "composite": -1.19,
           "catalyst": "No dated catalyst in the research"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-30",
+      "generatedAt": "2026-10-30T01:45:48.498Z",
+      "macroOutlook": "Cautiously Bullish",
+      "defensiveScore": 4,
+      "summary": "The regime is Cautiously Bullish with a defensive score of 4: SPY is +5.6% above its 200dma, 1.2% off its high, with 10.2% vol and a 6M max drawdown of only -4.5%, while leadership rotates toward income (SCHD +9.5% over 1M) and GLD at -10.8% vs its 200dma shows no fear bid. The growth sleeve holds MU, MPC, TSM, TMO, LLY, V, MRK, XOM, TGT and CVX, and the defensive sleeve holds SCHD, KO, PM, IEF and D. Today TSM, V, MRK and TGT were added, while AMD (0.35, #18 of 37), ABBV (0.32, #21), EMR (0.30, #22) and BRK.B (0.27, #23) were dropped for falling below the top-15 hold buffer. The dominant risk is that the growth book trails: +0.1% vs SPY +3.0% since 2026-07-31, with a 45% 10-session hit rate, and macro research is unverified.",
+      "diversificationNote": "The book spreads across Information Technology, Energy, Health Care, Financials and Consumer Staples, with defensive exposure in SCHD, KO, PM, IEF and D. Energy (MPC, XOM, CVX) and Health Care (TMO, LLY, MRK) are concentrated at three names each, and most revisions are unverified, so the growth sleeve leans on momentum.",
+      "picks": [
+        {
+          "rank": 1,
+          "ticker": "MU",
+          "name": "Micron Technology",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 76,
+          "conviction": "high",
+          "suggestedWeight": 6,
+          "composite": 1.467,
+          "catalyst": "FQ1'27 earnings"
+        },
+        {
+          "rank": 2,
+          "ticker": "MPC",
+          "name": "Marathon Petroleum",
+          "sector": "Energy",
+          "category": "growth",
+          "score": 66,
+          "conviction": "high",
+          "suggestedWeight": 6,
+          "composite": 0.877,
+          "catalyst": "Q3 earnings"
+        },
+        {
+          "rank": 3,
+          "ticker": "TSM",
+          "name": "Taiwan Semiconductor Manufacturing",
+          "sector": "Information Technology",
+          "category": "growth",
+          "score": 63,
+          "conviction": "high",
+          "suggestedWeight": 8,
+          "composite": 0.737,
+          "catalyst": "Monthly sales"
+        },
+        {
+          "rank": 4,
+          "ticker": "TMO",
+          "name": "Thermo Fisher Scientific",
+          "sector": "Health Care",
+          "category": "growth",
+          "score": 63,
+          "conviction": "medium",
+          "suggestedWeight": 9,
+          "composite": 0.703,
+          "catalyst": "Q4 earnings"
+        },
+        {
+          "rank": 5,
+          "ticker": "LLY",
+          "name": "Eli Lilly",
+          "sector": "Health Care",
+          "category": "growth",
+          "score": 61,
+          "conviction": "speculative",
+          "suggestedWeight": 7,
+          "composite": 0.619,
+          "catalyst": "Orforglipron updates"
+        },
+        {
+          "rank": 6,
+          "ticker": "V",
+          "name": "Visa",
+          "sector": "Financials",
+          "category": "growth",
+          "score": 60,
+          "conviction": "medium",
+          "suggestedWeight": 7,
+          "composite": 0.569,
+          "catalyst": "No specific dated event cited; steady revisions"
+        },
+        {
+          "rank": 7,
+          "ticker": "MRK",
+          "name": "Merck & Co.",
+          "sector": "Health Care",
+          "category": "growth",
+          "score": 60,
+          "conviction": "medium",
+          "suggestedWeight": 6,
+          "composite": 0.556,
+          "catalyst": "Keytruda subQ rollout; Q4 earnings"
+        },
+        {
+          "rank": 8,
+          "ticker": "XOM",
+          "name": "Exxon Mobil",
+          "sector": "Energy",
+          "category": "growth",
+          "score": 58,
+          "conviction": "medium",
+          "suggestedWeight": 8,
+          "composite": 0.426,
+          "catalyst": "Q3 earnings"
+        },
+        {
+          "rank": 9,
+          "ticker": "TGT",
+          "name": "Target Corporation",
+          "sector": "Consumer Staples",
+          "category": "growth",
+          "score": 57,
+          "conviction": "medium",
+          "suggestedWeight": 7,
+          "composite": 0.409,
+          "catalyst": "Q3 earnings"
+        },
+        {
+          "rank": 10,
+          "ticker": "CVX",
+          "name": "Chevron",
+          "sector": "Energy",
+          "category": "growth",
+          "score": 57,
+          "conviction": "medium",
+          "suggestedWeight": 8,
+          "composite": 0.388,
+          "catalyst": "Hess integration and FCF growth; Q3 results"
+        },
+        {
+          "rank": 1,
+          "ticker": "SCHD",
+          "name": "Schwab U.S. Dividend Equity ETF",
+          "sector": "dividend ETF",
+          "category": "defensive",
+          "score": 83,
+          "conviction": "high",
+          "suggestedWeight": 10,
+          "composite": 1.83,
+          "catalyst": "Continued rotation toward income"
+        },
+        {
+          "rank": 2,
+          "ticker": "KO",
+          "name": "Coca-Cola",
+          "sector": "staples",
+          "category": "defensive",
+          "score": 78,
+          "conviction": "high",
+          "suggestedWeight": 6,
+          "composite": 1.54,
+          "catalyst": "No dated catalyst cited"
+        },
+        {
+          "rank": 3,
+          "ticker": "PM",
+          "name": "Philip Morris International",
+          "sector": "staples",
+          "category": "defensive",
+          "score": 75,
+          "conviction": "medium",
+          "suggestedWeight": 4,
+          "composite": 1.4,
+          "catalyst": "No dated catalyst cited"
+        },
+        {
+          "rank": 4,
+          "ticker": "IEF",
+          "name": "iShares 7-10 Year Treasury Bond ETF",
+          "sector": "treasuries",
+          "category": "defensive",
+          "score": 55,
+          "conviction": "medium",
+          "suggestedWeight": 5,
+          "composite": 0.27,
+          "catalyst": "No dated catalyst cited"
+        },
+        {
+          "rank": 5,
+          "ticker": "D",
+          "name": "Dominion Energy",
+          "sector": "utilities",
+          "category": "defensive",
+          "score": 37,
+          "conviction": "medium",
+          "suggestedWeight": 3,
+          "composite": -0.73,
+          "catalyst": "No dated catalyst cited"
         }
       ]
     }
